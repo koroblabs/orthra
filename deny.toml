@@ -1,0 +1,57 @@
+[licenses]
+# Permissive only. Dictionaries and word lists are data under their own licenses, and this file
+# cannot see them -- they are recorded per pack, beside the data (`CLAUDE.md` §5).
+unused-allowed-license = "allow"
+allow = [
+    "MIT",
+    "MIT-0",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CC0-1.0",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib",
+]
+
+# The one crate that is not permissive, named rather than allowed generally, as phrost names its own.
+#
+# MPL-2.0 is file-level weak copyleft. Shipping spellbook unmodified inside orthra's binary asks only
+# that spellbook's own source stay available, which crates.io does, and it says nothing about the
+# code that links it. The obligation is real but bounded, and it is written here so that it can be
+# found and reversed: an FST dictionary (fst, MIT/Unlicense) is the way out, and the Phase 1
+# decision weighs this (`docs/01-architecture.md` §7).
+[[licenses.exceptions]]
+name = "spellbook"
+allow = ["MPL-2.0"]
+
+# Mozilla's certificate authorities, as data, for the HTTPS that fetches an installed pack's archive
+# (orthra-install, through ureq). The license is a permissive one for data.
+[[licenses.exceptions]]
+name = "webpki-roots"
+allow = ["CDLA-Permissive-2.0"]
+
+[[licenses.exceptions]]
+name = "webpki-root-certs"
+allow = ["CDLA-Permissive-2.0"]
+
+[bans]
+# Duplicate versions are a memory and compile-time cost, and this project's premise is being cheap.
+# Warn rather than deny so a transitive duplicate does not block work.
+multiple-versions = "warn"
+
+[advisories]
+yanked = "deny"
+ignore = [
+    # Unmaintained, not vulnerable: a proc-macro that runs at compile time, which gemm -- candle's
+    # matrix product on the CPU -- uses, and candle 0.11.1 has no release without it. Taken with
+    # the context tier's model runtime (`orthra-ml-local`); revisit with every candle bump.
+    { id = "RUSTSEC-2024-0436", reason = "paste: unmaintained compile-time macro under candle's gemm, no alternative in candle 0.11.1" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+# lspkit, the shared base with phrost, pinned by revision in Cargo.toml.
+allow-git = ["https://github.com/koroblabs/lspkit.git"]

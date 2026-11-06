@@ -1,0 +1,11 @@
+hypothesis: H3
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: reports all five Cyrillic words, with no suggestions. Differs: noise in an English project
+why: with no pack for Cyrillic enabled, Cyrillic words are not checked: silence, not noise
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /src/refresh.rs  expect
+> // TODO: перевірити, чи кеш не застарів після перезапуску.
+> fn refresh() {}

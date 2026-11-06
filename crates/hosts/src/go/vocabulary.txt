@@ -1,0 +1,30 @@
+# Words of Go and its ecosystem that are words in a Go file, whatever a dictionary says: keywords,
+# built-ins, the toolchain, and the most-used packages. A dictionary word needs no line here. One
+# word per line, sorted, so two additions merge without a conflict.
+chan
+cmd
+cobra
+ctx
+errorf
+fmt
+func
+gofmt
+golang
+golangci
+goroutine
+goroutines
+grpc
+iota
+pkg
+printf
+println
+protobuf
+rune
+runes
+sprintf
+stdlib
+struct
+structs
+uint
+uintptr
+viper

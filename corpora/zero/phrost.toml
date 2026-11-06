@@ -1,0 +1,9 @@
+# What this project has agreed to be told about itself, by code.
+#
+# Written by `orthra check --ratchet --update-baseline`. A count may fall; one that rises fails the check, and so does
+# a code nothing here mentions -- both are decisions rather than accidents, and this file
+# is the diff somebody reads.
+
+[counts]
+"known-typo" = 43
+"unknown-word" = 529

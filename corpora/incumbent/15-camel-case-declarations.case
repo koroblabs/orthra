@@ -1,0 +1,13 @@
+hypothesis: H1, H2
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: reports `recieve` (receive first); silent on `getURLsForIDs`. Agrees
+why: camelCase and PascalCase split into words, acronym runs included; the typo is in a declaration
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /src/api.ts  expect
+> export function getURLsForIDs(ids: string[]): string[] { return []; }
+> export class XMLHttpRequestWrapper {}
+> export const recieveTimeoutMs = 3000;
+               ^^^^^^^ known-typo -> receive

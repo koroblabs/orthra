@@ -1,0 +1,17 @@
+# en-US: built by tools/packs.py from the sources in SOURCES.md. Do not edit by hand.
+tag = "en-US"
+script = "Latn"
+# `rare` holds what SCOWL size 70 adds to the size-60 dictionary: accepted only when the known typos
+# do not name the word, since uncommon words are also common misspellings.
+dictionary = { hunspell = "en_US", rare = "en_US-rare" }
+typos = "typos.tsv"
+# Words accepted whatever their case, beside the dictionary: technical vocabulary. Each is accepted
+# alike; among corrections as near, an earlier file's come first: names and software terms, then
+# the words of programming languages.
+vocabulary = ["vocabulary.txt", "vocabulary.orthra.txt", "vocabulary.code.txt"]
+# Characters that do not end a word, and the one form each is checked in.
+word-internal = ["'", "’"]
+normalize = { "’" = "'" }
+# A comment line that starts with one of these and a colon names people, not prose:
+# `# Author: Jens Getreu <...>`.
+name-labels = ["author", "authors", "contributor", "contributors", "credits", "maintainer", "maintainers", "original author"]

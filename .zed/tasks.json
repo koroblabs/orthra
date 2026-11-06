@@ -1,0 +1,41 @@
+// Tasks for testing orthra on itself. They run the installed `orthra`, the one the editor runs:
+// reinstall with `cargo install --locked --path crates/cli` after a change.
+[
+  {
+    // Everything decided about the word under the cursor: the span, the word, what each pack
+    // said, the finding. The first thing to reach for when a squiggle, or a silence, looks wrong.
+    "label": "orthra: explain the word under the cursor",
+    "command": "orthra",
+    "args": [
+      "explain",
+      "$ZED_FILE:$ZED_ROW:$ZED_COLUMN"
+    ],
+    "use_new_terminal": false,
+    "allow_concurrent_runs": true
+  },
+  {
+    "label": "orthra: check this file",
+    "command": "orthra",
+    "args": ["check", "$ZED_FILE"]
+  },
+  {
+    "label": "orthra: check the project",
+    "command": "orthra",
+    "args": ["check", "$ZED_WORKTREE_ROOT"]
+  },
+  {
+    "label": "orthra: install from this checkout",
+    "command": "cargo",
+    "args": ["install", "--locked", "--path", "crates/cli"]
+  },
+  {
+    "label": "just pr-ready",
+    "command": "just",
+    "args": ["pr-ready"]
+  },
+  {
+    "label": "just zero",
+    "command": "just",
+    "args": ["zero"]
+  }
+]

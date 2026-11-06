@@ -1,0 +1,37 @@
+# Letters that look alike in Latin, Cyrillic and Greek: one set per line, a column per script, `-`
+# where a script has no such letter. A word that mixes scripts is offered in each script whose
+# letters can stand in for all of its others. Only letters that are drawn the same in common fonts:
+# Cyrillic `к` is near `k` and is left out.
+#
+# Latin	Cyrillic	Greek
+a	а	-
+c	с	-
+d	ԁ	-
+e	е	-
+h	һ	-
+i	і	-
+j	ј	-
+o	о	ο
+p	р	-
+q	ԛ	-
+s	ѕ	-
+w	ԝ	-
+x	х	-
+y	у	-
+A	А	Α
+B	В	Β
+C	С	-
+E	Е	Ε
+H	Н	Η
+I	І	Ι
+J	Ј	-
+K	К	Κ
+M	М	Μ
+N	-	Ν
+O	О	Ο
+P	Р	Ρ
+S	Ѕ	-
+T	Т	Τ
+X	Х	Χ
+Y	Ү	Υ
+Z	-	Ζ

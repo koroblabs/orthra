@@ -1,0 +1,14 @@
+hypothesis: H2
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: reports all three with the right first suggestion, case kept (Separate). Agrees
+why: a known typo carries its exact fix, in the case it was written
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /src/split.rs  expect
+> // Seperate the recieved values, then count what occured.
+     ^^^^^^^^ known-typo -> Separate
+                  ^^^^^^^^ known-typo -> received
+                                                   ^^^^^^^ known-typo -> occurred
+> fn split() {}

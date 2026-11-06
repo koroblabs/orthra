@@ -1,0 +1,12 @@
+hypothesis: H1
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: silent. Agrees
+why: an escape or a format placeholder glues letters onto a word: `nworld`, `tdone`
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /src/greet.rs  expect
+> pub fn greet(name: &str) -> String {
+>     format!("Hello\nworld, {name}! Took %d ms\tdone")
+> }

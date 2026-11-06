@@ -1,0 +1,36 @@
+# Words of Python and its ecosystem that are words in a Python file, whatever a dictionary says:
+# keywords, built-ins, the toolchain, and the most-used libraries. A dictionary word needs no line
+# here. One word per line, sorted, so two additions merge without a conflict.
+args
+asyncio
+classmethod
+cls
+conda
+conftest
+dataclass
+dataclasses
+def
+dict
+django
+elif
+enumerate
+flask
+functools
+init
+isinstance
+itertools
+kwargs
+len
+nonlocal
+numpy
+pandas
+pip
+pydantic
+pyproject
+pytest
+repr
+setuptools
+staticmethod
+str
+venv
+virtualenv

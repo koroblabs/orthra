@@ -1,0 +1,13 @@
+hypothesis: H3
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: reports `Thе` (Th, Thu, The) and `сount` (count, mount, fount) as misspellings, without saying a letter is Cyrillic. Partly agrees
+why: a Cyrillic letter inside a Latin word passes neither dictionary or looks right; it is its own finding, at the declaration and in prose, and not at the use
+
+//- /orthra.toml
+languages = ["en-US", "uk-UA"]
+
+//- /src/totals.rs  expect
+> /// Thе total of every item.
+      ^^^ mixed-script
+> pub fn total(сount: usize) -> usize { сount }
+               ^^^^^ mixed-script

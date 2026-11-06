@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+# Rust is installed by a step, not taken from the runner and not taken from a `container:`.
+#
+# Both of the obvious answers fail somewhere. GitHub's `ubuntu-latest` ships Rust and a Gitea or
+# `act` runner image does not, so trusting the runner gives `cargo: command not found`. Naming
+# `container: rust:1.97.1` fixes that and breaks the other end: `actions/checkout` is a JavaScript
+# action, GitHub injects a Node binary into a job container and other runners do not, so it becomes
+# `exec: "node": executable file not found`.
+#
+# Installing rustup leaves the actions running on the runner's own image, where their Node is, and
+# takes the compiler from `rust-toolchain.toml` -- so the version is pinned in one place rather than
+# two, and there is nothing to keep in step.
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: install the pinned toolchain
+        run: |
+          command -v rustup >/dev/null || curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain none
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all --check
+      # Same prettier version as `just lint`. Node is already on the runner for `actions/checkout`.
+      - run: npx --yes prettier@3.8.0 --check "**/*.md"
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: install the pinned toolchain
+        run: |
+          command -v rustup >/dev/null || curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain none
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - name: install cargo-nextest
+        run: curl -LsSf https://get.nexte.st/latest/linux | tar zxf - -C "$HOME/.cargo/bin"
+      - run: cargo nextest run --workspace
+
+  # The architecture's boundaries are the dependency graph, so they get their own job: a failure
+  # here should read as "the layering was violated", not as one test among hundreds.
+  structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: install the pinned toolchain
+        run: |
+          command -v rustup >/dev/null || curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain none
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test -p orthra-arch
+
+  # Installed rather than taken from `EmbarkStudios/cargo-deny-action`, which is a Docker action:
+  # running one inside a container is where a self-hosted runner is most likely to fail, and this
+  # job is the one whose failure should be about licenses rather than about the runner.
+  deny:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: install the pinned toolchain
+        run: |
+          command -v rustup >/dev/null || curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain none
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo install cargo-deny --locked --version 0.20.2
+      # Split, because the two halves fail for different reasons and only one of them needs the
+      # network. Bans, licenses and sources are decided entirely by `Cargo.lock` and this file, so
+      # they need no network beyond fetching lspkit -- and they are what this job is for.
+      - run: cargo deny check bans licenses sources
+      # The advisory database is a git clone cargo-deny makes itself, and on a runner where an
+      # anonymous GitHub clone is refused it fails with `could not read Username for
+      # 'https://github.com'` -- which reads as a broken lockfile and is a 401. `actions/checkout`
+      # above succeeds because it is handed a token; this hands the same one to git, scoped to this
+      # step through `GIT_CONFIG_*` rather than written into the runner's global config, because a
+      # self-hosted runner keeps whatever a job leaves in `~/.gitconfig`.
+      - name: check advisories
+        env:
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: url.https://x-access-token:${{ github.token }}@github.com/.insteadOf
+          GIT_CONFIG_VALUE_0: https://github.com/
+        run: cargo deny check advisories

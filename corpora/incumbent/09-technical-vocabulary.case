@@ -1,0 +1,13 @@
+hypothesis: H1
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: reports `dedupe` and `kubectl`. Differs
+why: the words programmers write in comments are words
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /src/tick.rs  expect
+> // Spawn an async task, take the mutex, deserialize the JSON via serde,
+> // dedupe the entries, then stringify; see the kubectl docs and the README.
+> // Enum, struct, impl, trait, iterator, middleware, webhook, localhost.
+> fn tick() {}

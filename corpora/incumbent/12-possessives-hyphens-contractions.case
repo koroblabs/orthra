@@ -1,0 +1,10 @@
+hypothesis: H1
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: silent. Agrees
+why: an apostrophe or a hyphen inside a word does not split it into fragments
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /docs/cache.md  expect
+> The user's well-known, re-entrant cache doesn't evict what it's given.

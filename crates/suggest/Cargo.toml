@@ -1,0 +1,13 @@
+[package]
+name = "orthra-suggest"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+description = "Candidates for one word, ranked."
+
+[dependencies]
+
+[lints]
+workspace = true

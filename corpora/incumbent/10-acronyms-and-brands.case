@@ -1,0 +1,11 @@
+hypothesis: H1
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: reports `CLI`. Differs
+why: acronyms, brand names and ALL-CAPS words are not misspellings
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /docs/platforms.md  expect
+> Use the HTTP API, not the gRPC one. Works on iOS and macOS, with PostgreSQL,
+> GitHub, JavaScript and TypeScript. NOTE: the CLI is case-sensitive.

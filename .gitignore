@@ -1,0 +1,7 @@
+/target
+/.claude
+.DS_Store
+*.profraw
+/.cache
+/.idea
+/dist

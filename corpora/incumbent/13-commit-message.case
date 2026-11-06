@@ -1,0 +1,17 @@
+hypothesis: H1, H2
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: reports `teh` (the first); silent on comment lines and trailers. Agrees
+why: a commit message is prose, its comment lines and trailers are not
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /COMMIT_EDITMSG  expect host=git-commit
+> Fix teh build on macOS
+      ^^^ known-typo -> the
+>
+> The linker flag broke after the toolchain bump.
+>
+> # Please enter the commit message for your changes.
+> Signed-off-by: Jane Doe <jane@example.com>
+> Co-authored-by: Bob Smith <bob@example.com>

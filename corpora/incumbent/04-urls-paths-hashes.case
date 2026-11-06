@@ -1,0 +1,13 @@
+hypothesis: H1
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: reports `orthra` inside the path `~/.cache/orthra/v2/idx.bin`. Differs: a path is not prose
+why: a URL, an address, a hash, a path, a UUID, a colour, a flag and a version are never words
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /src/links.rs  expect
+> // See https://docs.rs/tower-lsp-server/0.23/tower_lsp_server/struct.Client.html and mail
+> // jane@example.com; fixed in a3f9c2e, cached at ~/.cache/orthra/v2/idx.bin, request
+> // 550e8400-e29b-41d4-a716-446655440000, color #ff00aa, flag --no-verify, v1.2.3-rc.1.
+> fn noop() {}

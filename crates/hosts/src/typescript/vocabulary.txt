@@ -1,0 +1,25 @@
+# Words of TypeScript and its ecosystem that are words in a TypeScript file, whatever a dictionary
+# says: keywords, built-in types, the toolchain, and the most-used libraries. A dictionary word
+# needs no line here. One word per line, sorted, so two additions merge without a conflict.
+async
+axios
+bigint
+deno
+enum
+esbuild
+eslint
+jsx
+keyof
+lodash
+nodejs
+npm
+npx
+pnpm
+readonly
+tsconfig
+tsx
+typeof
+undefined
+vite
+vitest
+webpack

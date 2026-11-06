@@ -1,0 +1,11 @@
+hypothesis: reported
+source: Artem, relayed 2026-11-05: "it does not understand apostrophes, contractions"
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: silent. Agrees
+why: a contraction is one word whichever apostrophe it is typed with, and Markdown editors and macOS type the curly one
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /docs/notes.md  expect
+> We’re sure it doesn’t fail: you’ll see I’ve checked, they’d agree it isn’t broken, and we won’t
+> change what you can’t see. It’s the user’s cache and James’ notes, so don’t worry, y’all.

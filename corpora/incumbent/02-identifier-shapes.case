@@ -1,0 +1,15 @@
+hypothesis: H1, H2
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: reports `recieve` once (receive, relieve, reverie). Agrees
+why: acronyms, digits and abbreviations split into words a dictionary knows; the one real typo is in a declaration, so it is reported once, with its exact fix
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /src/server.rs  expect
+> pub struct HTTPServer;
+> pub const SHA256_LEN: usize = 32;
+> pub fn parse_json_v2(utf8_bytes: &[u8]) -> Option<u32> { None }
+> pub fn route(x86_64: bool, k8s_ns: &str) {}
+> pub fn recieve_message() {}
+         ^^^^^^^ known-typo -> receive

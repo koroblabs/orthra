@@ -1,0 +1,26 @@
+[package]
+name = "orthra-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+description = "Document to findings, finding to offers. The only API the server sees."
+
+[dependencies]
+orthra-checks.workspace = true
+orthra-context.workspace = true
+orthra-hosts.workspace = true
+orthra-lexicon.workspace = true
+orthra-packs.workspace = true
+orthra-segment.workspace = true
+orthra-text.workspace = true
+rustc-hash.workspace = true
+
+[dev-dependencies]
+expect-test.workspace = true
+orthra-harness.workspace = true
+orthra-testkit.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,134 @@
+[workspace]
+resolver = "3"
+members = [
+  "crates/checks",
+  "crates/cli",
+  "crates/context",
+  "crates/dict",
+  "crates/engine",
+  "crates/hosts",
+  "crates/install",
+  "crates/lexicon",
+  "crates/lib/harness",
+  "crates/lib/testkit",
+  "crates/lsp",
+  "crates/ml-http",
+  "crates/ml-local",
+  "crates/packs",
+  "crates/project",
+  "crates/segment",
+  "crates/suggest",
+  "crates/text",
+  "crates/tools/arch",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+authors = ["Korob Labs <opensource@koroblabs.com>"]
+# Built and released as one binary, never published crate by crate: lspkit is a git dependency,
+# which crates.io refuses, and `about.toml` leaves orthra's own crates out of the third-party
+# licenses for this.
+publish = false
+repository = "https://github.com/koroblabs/orthra"
+description = "A fast, quiet spell-checking language server."
+
+[workspace.dependencies]
+# Internal. Which of these may depend on which is not decided here: it is the allowed-edges matrix
+# in `crates/tools/arch/src/dependency_rules.rs`, and a test.
+orthra-checks = { path = "crates/checks" }
+orthra-context = { path = "crates/context" }
+orthra-dict = { path = "crates/dict" }
+orthra-engine = { path = "crates/engine" }
+orthra-harness = { path = "crates/lib/harness" }
+orthra-hosts = { path = "crates/hosts" }
+orthra-install = { path = "crates/install" }
+orthra-lexicon = { path = "crates/lexicon" }
+orthra-ml-http = { path = "crates/ml-http" }
+orthra-ml-local = { path = "crates/ml-local" }
+orthra-lsp = { path = "crates/lsp" }
+orthra-packs = { path = "crates/packs" }
+orthra-project = { path = "crates/project" }
+orthra-segment = { path = "crates/segment" }
+orthra-suggest = { path = "crates/suggest" }
+orthra-testkit = { path = "crates/lib/testkit" }
+orthra-text = { path = "crates/text" }
+
+# Shared with phrost: what a language server needs that is not about its language. Pinned to a
+# revision, so this build never changes because lspkit moved; see lspkit's CLAUDE.md §2.
+lspkit-arch = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
+lspkit-fixture = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
+lspkit-fuzz = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
+lspkit-heap = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
+lspkit-flow = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
+lspkit-perf = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
+lspkit-ratchet = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
+lspkit-runtime = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
+lspkit-walk = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
+lspkit-text = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
+
+# Third-party
+expect-test = "1.5.1"
+# Pinned with `=`, like every engine that decides what a file contains (`CLAUDE.md` §8.1).
+pulldown-cmark = { version = "=0.13.6", default-features = false }
+rustc-hash = "2"
+# The SHA-256 an installed pack's archive is checked against, and the archive itself: only the
+# deflate reader, in pure Rust, and none of the formats no pack uses.
+sha2 = "0.11.1"
+zip = { version = "9.4.0", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+# How an installed pack's archive is fetched, and how a sentence reaches a model the user runs: TLS in
+# Rust, checked against the system's certificates (so a company's own certificate authority works as
+# it does in a browser), and only by orthra-install and orthra-ml-http.
+ureq = { version = "3.5.1", default-features = false, features = ["rustls", "platform-verifier"] }
+serde_json = "1"
+# Pinned with `=`: spellbook calls itself a work in progress, and its API may move in a patch release.
+spellbook = "=0.4.2"
+# The context tier's model runtime, only in `orthra-ml-local` (`docs/04-context.md` §3). Pinned
+# with `=`, with no default features: CPU only until Metal is measured into the binary.
+candle-core = { version = "=0.11.1", default-features = false }
+candle-nn = { version = "=0.11.1", default-features = false }
+# The model's own threads, the pool candle computes on (`orthra-ml-local`).
+rayon = "1.12"
+# BERT's tokenizer strips accents through NFD (`orthra-ml-local`'s WordPiece).
+unicode-normalization = "0.1.25"
+# A compiled dictionary's forms (`orthra-dict`). Without its `levenshtein` feature, which builds a
+# DFA per query and gives up on long words: orthra walks it with its own bit-parallel automaton.
+fst = { version = "=0.4.7", default-features = false }
+text-size = "1.1.1"
+tokio = "1"
+toml = "1"
+# Tree-sitter and its grammars move together, each pinned with `=` (`CLAUDE.md` §8.1): a grammar is
+# built for one ABI range, a mismatch fails at runtime, and whoever installs from crates.io gets this
+# manifest, not the lockfile. The core reads ABI 13 to 15; the Rust grammar is ABI 15, TypeScript's
+# 14. `tree-sitter-language` is the glue every grammar's `LANGUAGE` is typed by.
+tree-sitter = "=0.27.1"
+tree-sitter-language = "=0.1.9"
+tree-sitter-go = "=0.25.0"
+tree-sitter-json = "=0.24.8"
+tree-sitter-php = "=0.25.1"
+tree-sitter-python = "=0.25.0"
+tree-sitter-rust = "=0.24.2"
+tree-sitter-toml-ng = "=0.7.0"
+tree-sitter-typescript = "=0.23.2"
+tree-sitter-yaml = "=0.7.2"
+unicode-script = "0.5"
+
+# Stated rather than left to the default, because something will depend on it. The server contains
+# a panic in a handler and answers that request with an error instead of dying, and
+# `panic = "abort"` would remove that silently: the code still compiles, the tests still pass, and
+# the first bug in a handler takes the editor's language server down again.
+[profile.release]
+panic = "unwind"
+
+[profile.dev]
+panic = "unwind"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unreachable_pub = "warn"
+missing_debug_implementations = "warn"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"

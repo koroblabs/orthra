@@ -1,0 +1,19 @@
+hypothesis: H1, H2
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: reports `qzx` inside inline code, `definately` (definitely first) and `xyzzy` in the fenced block. Differs on both code spans
+why: inline code, fenced code and link targets are not prose; the prose typo is
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /README.md  expect
+> # Using the `fooBarBaz` helper
+>
+> Call `qzxRender()` before anything else; it is definately required.
+                                                 ^^^^^^^^^^ known-typo -> definitely
+>
+> ```rust
+> let xyzzy = qzx_render(plugh);
+> ```
+>
+> See [the docs](https://example.com/qzx-render) for more.

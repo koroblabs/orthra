@@ -1,0 +1,11 @@
+# How orthra checks its own repository.
+
+# orthra's docs, comments and messages are written in American English: `behavior`, `license`.
+languages = ["en-US"]
+
+# Files that are not prose, as gitignore patterns from here.
+ignore = [
+  # Word lists: each word is one a dictionary lacks, which is why it is listed.
+  "crates/hosts/src/*/vocabulary.txt",
+  "packs/",
+]

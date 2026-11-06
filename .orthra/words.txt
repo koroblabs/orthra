@@ -1,0 +1,33 @@
+# orthra's own words: names of tools, people and scripts its docs talk about. One per line,
+# sorted, so that two branches adding a word merge without a conflict.
+adoc
+Adversarially
+codebook
+Codeception
+conftest
+Cyrl
+Damerau
+filesource
+gitcommit
+Grammarly
+Grazie
+Grek
+Hagiwara
+harper
+Latn
+ltex
+Memoises
+Mita
+nextest
+Nuspell
+Ollama
+Orthrus
+phan
+phpstan
+phrost
+phtml
+subagent
+subagents
+ureq
+Vitest
+Watsons

@@ -1,0 +1,12 @@
+# en-GB: built by tools/packs.py from the sources in SOURCES.md. Do not edit by hand.
+tag = "en-GB"
+script = "Latn"
+dictionary = { hunspell = "en_GB" }
+# English's known typos and technical vocabulary are en-US's: shared, not copied.
+typos = "../en-US/typos.tsv"
+vocabulary = ["../en-US/vocabulary.txt", "../en-US/vocabulary.orthra.txt", "../en-US/vocabulary.code.txt"]
+word-internal = ["'", "’"]
+normalize = { "’" = "'" }
+# A comment line that starts with one of these and a colon names people, not prose:
+# `# Author: Jens Getreu <...>`.
+name-labels = ["author", "authors", "contributor", "contributors", "credits", "maintainer", "maintainers", "original author"]

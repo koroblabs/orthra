@@ -1,0 +1,86 @@
+# cargo-about: the licenses of every crate linked into orthra, written into each release archive as
+# THIRD-PARTY-LICENSES.md (`.github/workflows/release.yml`, `tools/dist/pack.sh`). The licenses
+# accepted are deny.toml's, with its two exceptions: MPL-2.0 for spellbook and CDLA-Permissive-2.0
+# for webpki-roots. MPL-2.0 asks that a binary say where the source is: each crate is listed with
+# its repository.
+accepted = [
+    "MIT",
+    "MIT-0",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CC0-1.0",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib",
+    "MPL-2.0",
+    "CDLA-Permissive-2.0",
+]
+# The platforms a release is built for: a crate only another platform links is not in the binary.
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+]
+# What builds orthra or tests it is not in what is shipped.
+ignore-build-dependencies = true
+ignore-dev-dependencies = true
+
+# Crates published without their license files, whose texts cargo-about would fill in from the
+# license's template (`Copyright (c) <year> <copyright holders>`). These are the files at the commit
+# each was published from (`.cargo_vcs_info.json`), relative to the repository's root, fetched when
+# the list is generated and checked against their SHA-256. A new version whose file changed fails
+# the generation until its checksum is written here.
+[candle-core.clarify]
+license = "MIT OR Apache-2.0"
+[[candle-core.clarify.git]]
+path = "LICENSE-MIT"
+license = "MIT"
+checksum = "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+[[candle-core.clarify.git]]
+path = "LICENSE-APACHE"
+license = "Apache-2.0"
+checksum = "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+
+[candle-nn.clarify]
+license = "MIT OR Apache-2.0"
+[[candle-nn.clarify.git]]
+path = "LICENSE-MIT"
+license = "MIT"
+checksum = "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+[[candle-nn.clarify.git]]
+path = "LICENSE-APACHE"
+license = "Apache-2.0"
+checksum = "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+
+[libm.clarify]
+license = "MIT"
+[[libm.clarify.git]]
+path = "libm/LICENSE.txt"
+checksum = "3823dda7cf046602f4b4e77ec8e227863dc4736037cc85bb33d9f19febe16bb7"
+
+[pulp-wasm-simd-flag.clarify]
+license = "MIT"
+[[pulp-wasm-simd-flag.clarify.git]]
+path = "LICENSE"
+checksum = "d64f878c89bd5f1e5ada7e4aad57690b122727cf5229b7b87ea1980c188da1d9"
+
+[tree-sitter-json.clarify]
+license = "MIT"
+[[tree-sitter-json.clarify.git]]
+path = "LICENSE"
+checksum = "2e0110e07abef7c2548b26ec9d6969775617ca539a0dc8dbeeb14d6452c711d1"
+
+[tree-sitter-typescript.clarify]
+license = "MIT"
+[[tree-sitter-typescript.clarify.git]]
+path = "LICENSE"
+checksum = "49bf33cf78ef5897e4e161ce1517df7de1ae5042a65b6bcfd44401e0fc606559"
+
+[tree-sitter-toml-ng.clarify]
+license = "MIT"
+[[tree-sitter-toml-ng.clarify.git]]
+path = "LICENSE"
+checksum = "b727eee929bee836e8102cecf749a795b199f291b58c885bcd81cae727ac5a46"

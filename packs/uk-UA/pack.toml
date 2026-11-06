@@ -1,0 +1,16 @@
+# uk-UA: installed, not built in. Its dictionary is dict_uk's, under the GPL-3.0, so orthra does not
+# carry it: `install.toml` says where it is fetched from and what it must hash to.
+tag = "uk-UA"
+script = "Cyrl"
+# Compiled when it is installed: dict_uk's stems and suffixes expanded to the 3.6 million forms they
+# make, an FST of 3.9 MB where spellbook's tables are 37 MB of memory, and corrections within two
+# edits of a word (`orthra-dict`'s `compiled`).
+dictionary = { compiled = "uk_UA" }
+# Word forms by how often they are written, most often first: the order corrections are offered in.
+frequency = "uk_50k.txt"
+# The apostrophe is inside a word in Ukrainian (`м'ята`), written three ways; dict_uk's affixes
+# read all three as `'`. A hyphen joins `будь-який`.
+word-internal = ["'", "’", "ʼ", "-"]
+normalize = { "’" = "'", "ʼ" = "'" }
+# A comment line that starts with one of these and a colon names people, not prose.
+name-labels = ["автор", "автори"]

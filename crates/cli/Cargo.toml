@@ -1,0 +1,39 @@
+[package]
+name = "orthra-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+description = "The orthra binary: serve, check, explain."
+
+[[bin]]
+name = "orthra"
+path = "src/main.rs"
+
+[dependencies]
+lspkit-heap.workspace = true
+lspkit-perf.workspace = true
+lspkit-ratchet.workspace = true
+orthra-install.workspace = true
+orthra-engine.workspace = true
+orthra-lsp.workspace = true
+orthra-ml-http = { workspace = true, optional = true }
+orthra-ml-local = { workspace = true, optional = true }
+orthra-project.workspace = true
+orthra-text.workspace = true
+toml.workspace = true
+
+[features]
+# The context tier's model, in process (`docs/04-context.md`): candle, 2.8 MB of a 27 MB binary
+# (2026-11-06). And "Rewrite sentence (local model)" through an endpoint the user runs: ureq is in
+# the binary already for installing packs, and with no endpoint in the settings it sends nothing.
+default = ["ml-local", "ml-http"]
+ml-local = ["dep:orthra-ml-local"]
+ml-http = ["dep:orthra-ml-http"]
+
+[dev-dependencies]
+expect-test.workspace = true
+
+[lints]
+workspace = true

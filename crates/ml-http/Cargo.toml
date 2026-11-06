@@ -1,0 +1,19 @@
+[package]
+name = "orthra-ml-http"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+description = "The context tier through an OpenAI-compatible endpoint the user runs: a sentence rewritten when asked, sent to this machine only unless the user allows otherwise."
+
+[dependencies]
+orthra-context.workspace = true
+serde_json.workspace = true
+ureq.workspace = true
+
+[dev-dependencies]
+expect-test.workspace = true
+
+[lints]
+workspace = true

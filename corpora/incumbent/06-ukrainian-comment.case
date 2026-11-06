@@ -1,0 +1,13 @@
+hypothesis: H3
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: reports `Будьласка` (Будь ласка, Будь-ласка, Панібудьласка). Agrees, all three apostrophes accepted
+why: Ukrainian is checked by the Ukrainian pack, with all three apostrophes accepted; `Будьласка` is two words written as one
+
+//- /orthra.toml
+languages = ["en-US", "uk-UA"]
+
+//- /src/cache.rs  expect
+> /// Повертає м'ятний, п’ятий і зʼясований стан кешу.
+> /// Будьласка, не викликайте це з потоку UI.
+      ^^^^^^^^^ unknown-word
+> pub fn cache_state() -> State { State::Ready }

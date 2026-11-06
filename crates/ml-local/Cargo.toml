@@ -1,0 +1,23 @@
+[package]
+name = "orthra-ml-local"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+description = "The context tier's model in process: ELECTRA-small, Q8_0, on candle. The only crate that knows candle exists."
+
+[dependencies]
+candle-core.workspace = true
+candle-nn.workspace = true
+orthra-context.workspace = true
+orthra-text.workspace = true
+rayon.workspace = true
+serde_json.workspace = true
+unicode-normalization.workspace = true
+
+[dev-dependencies]
+expect-test.workspace = true
+
+[lints]
+workspace = true

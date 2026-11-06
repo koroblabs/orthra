@@ -1,0 +1,37 @@
+# Keyboard layouts: a column each, headed by the layout and its script, and a row per key with
+# the letter it types in each. A word typed with the wrong layout on is the same keys in another
+# column: `руддщ` is `hello`. Only the keys that type a letter in one of the layouts; `ґ`, whose
+# key differs from system to system, is left out.
+en/Latn	uk/Cyrl	ru/Cyrl
+q	й	й
+w	ц	ц
+e	у	у
+r	к	к
+t	е	е
+y	н	н
+u	г	г
+i	ш	ш
+o	щ	щ
+p	з	з
+[	х	х
+]	ї	ъ
+a	ф	ф
+s	і	ы
+d	в	в
+f	а	а
+g	п	п
+h	р	р
+j	о	о
+k	л	л
+l	д	д
+;	ж	ж
+'	є	э
+z	я	я
+x	ч	ч
+c	с	с
+v	м	м
+b	и	и
+n	т	т
+m	ь	ь
+,	б	б
+.	ю	ю

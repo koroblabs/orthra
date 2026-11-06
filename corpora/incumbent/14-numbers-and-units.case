@@ -1,0 +1,10 @@
+hypothesis: H1
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: silent. Agrees
+why: a number glued to a unit is a quantity, not a word
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /docs/perf.md  expect
+> Startup takes 100ms with a 4KiB buffer: 2x faster than v1.2.3, at 0xFF and 60fps.

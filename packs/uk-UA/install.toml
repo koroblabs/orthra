@@ -1,0 +1,22 @@
+# Where uk-UA's files come from, each source pinned by SHA-256, so the same orthra installs the same
+# bytes. `orthra pack install uk-UA` reads it, and so does a server or a check that finds uk-UA
+# enabled and not installed. The version is dict_uk's and then this pack's own revision of it.
+version = "6.8.6.2"
+
+# The dictionary: dict_uk's own release.
+[[source]]
+url = "https://github.com/brown-uk/dict_uk/releases/download/v6.8.6/hunspell-uk_UA_6.8.6.zip"
+sha256 = "043ae50d3a30beda0d4aa67562fdbee576e2f862eb6120357c1e5ae5ed3d5e9e"
+license = "GPL-3.0, https://github.com/brown-uk/dict_uk"
+# Each pack file, and the archive entry it is taken from.
+files = { "uk_UA.aff" = "uk_UA.aff", "uk_UA.dic" = "uk_UA.dic" }
+
+# How often each word is written, to put the likeliest correction first: 50 000 word forms from
+# OpenSubtitles 2018. On UA-GEC it put the right fix first 47.1 % of the time, against 41.7 % in
+# the dictionary's own order (2026-11-06).
+[[source]]
+url = "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/uk/uk_50k.txt"
+sha256 = "881686fe66a168b79f6a9ee2f6cbbf944cfb12bfb7040913ef535cb29bd86ec9"
+license = "CC-BY-SA-4.0, https://github.com/hermitdave/FrequencyWords (from OpenSubtitles 2018)"
+# The download is the file itself.
+file = "uk_50k.txt"

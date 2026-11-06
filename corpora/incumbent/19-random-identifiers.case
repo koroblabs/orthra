@@ -1,0 +1,13 @@
+hypothesis: reported
+source: Artem, relayed 2026-11-05: "every UUID lights up like a garland"; UUIDs themselves were quiet on codebook 0.3.42, random identifiers of other kinds were not
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: 24 findings, every one a fragment of an identifier: `GXR`, `NDEKTSV`, `RRFFQ`, `Nffr`, `Jhb`, `dozjg`, `feaa`, `AKIAIOSFODNN`, `ghp`, `jfhw`. Differs
+why: a nanoid, a ULID, an ObjectId, a Stripe id, a JWT, a digest, an access key and a token are never words
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /docs/ids.md  expect
+> An id V1StGXR8_Z5jdHi6B-myT, a ULID 01ARZ3NDEKTSV4RRFFQ69G5FAV, an ObjectId 507f1f77bcf86cd799439011.
+> Stripe gives cus_NffrFeUfNV2Hib and pi_3MtwBwLkdIwHu7ix28a3tqPa; a JWT eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U.
+> The pod web-7d4b9c8f6d-x2k9p runs image sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.
+> A key AKIAIOSFODNN7EXAMPLE and a token ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ01234, a short id k3jfhw8q.

@@ -1,0 +1,12 @@
+hypothesis: reported
+source: Artem, relayed 2026-11-05: "every UUID lights up like a garland"
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: silent. Agrees
+why: a UUID is never words, in any case, braces or prefix, and whether or not its hex happens to spell something
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /docs/requests.md  expect
+> Request 550E8400-E29B-41D4-A716-446655440000 failed; retry {f47ac10b-58cc-4372-a567-0e02b2c3d479},
+> urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8 or 6ba7b8109dad11d180b400c04fd430c8, and not
+> (deadbeef-cafe-babe-face-feedfacecafe), which is a UUID too.

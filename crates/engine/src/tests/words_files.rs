@@ -1,0 +1,66 @@
+//! A words file's words are words everywhere: in prose, in code, at a declaration, and when a
+//! pack lists one as a known typo. Somebody wrote each one down on purpose.
+
+use expect_test::expect;
+use orthra_testkit::annotate::Annotation;
+
+use super::subject::packs;
+use crate::Engine;
+
+#[test]
+fn a_words_file_word_is_a_word_everywhere() {
+    let text = "// Recieve the qzxv, then teh rest.\nfn recieve_qzxv(qzxvlater: u8) {}\n";
+    let mut engine = Engine::with_packs(packs());
+    engine.set_words(["recieve", "QZXV"]);
+    let annotations: Vec<Annotation> = engine
+        .check("rust", text)
+        .iter()
+        .map(|finding| Annotation::new(finding.range, finding.code.0))
+        .collect();
+    expect![[r#"
+        > // Recieve the qzxv, then teh rest.
+                                    ^^^ known-typo
+        > fn recieve_qzxv(qzxvlater: u8) {}
+    "#]]
+    .assert_eq(&Annotation::render(text, &annotations));
+}
+
+#[test]
+fn a_file_says_what_it_ignores() {
+    let text = "Teh recieved qzxv and qzxva; the directive is no finding.\n<!-- orthra: ignore qzxv, Recieved -->\n";
+    let mut engine = Engine::with_packs(packs());
+    let annotations: Vec<Annotation> = engine
+        .check("markdown", text)
+        .iter()
+        .map(|finding| Annotation::new(finding.range, finding.code.0))
+        .collect();
+    expect![[r#"
+        > Teh recieved qzxv and qzxva; the directive is no finding.
+          ^^^ known-typo
+                                ^^^^^ unknown-word
+        > <!-- orthra: ignore qzxv, Recieved -->
+    "#]]
+    .assert_eq(&Annotation::render(text, &annotations));
+}
+
+/// A project that declares a known typo, as a test's `fn fix_recieve` does, has it reported where
+/// it is declared and everywhere else; an unknown word it declares is a word everywhere else.
+#[test]
+fn a_declared_known_typo_is_never_accepted() {
+    let mut engine = Engine::with_packs(packs());
+    engine.learn("rust", "fn fix_recieve(qzxvfixture: u8) {}\n");
+    let text = "// `RECIEVE`, recieve and qzxvfixture.\nfn fix_recieve() {}\n";
+    let annotations: Vec<Annotation> = engine
+        .check("rust", text)
+        .iter()
+        .map(|finding| Annotation::new(finding.range, finding.code.0))
+        .collect();
+    expect![[r#"
+        > // `RECIEVE`, recieve and qzxvfixture.
+              ^^^^^^^ known-typo
+                        ^^^^^^^ known-typo
+        > fn fix_recieve() {}
+                 ^^^^^^^ known-typo
+    "#]]
+    .assert_eq(&Annotation::render(text, &annotations));
+}

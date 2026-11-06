@@ -1,0 +1,14 @@
+mod a_change_is_applied_where_the_client_says;
+mod a_changed_settings_file_is_a_new_pass;
+mod a_client_that_can_pull_is_pushed_to;
+mod a_finding_offers_what_can_be_done;
+mod a_keystroke_is_read_as_the_whole_text_would_be;
+mod a_language_not_installed_is_said;
+mod a_project_says_what_it_checks;
+mod a_pushed_client_hears_once_the_project_is_learned;
+mod a_sentence_is_rewritten_when_asked;
+mod adding_a_word_checks_the_project_again;
+mod every_problem_in_the_project_is_published;
+mod positions_are_in_the_encoding_negotiated;
+mod the_context_tier_reorders_what_a_word_offers;
+mod the_settings_turn_the_context_tier_on;

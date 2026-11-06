@@ -1,0 +1,19 @@
+[package]
+name = "orthra-harness"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+description = "The invariant dimensions every fixture runs through."
+
+[dependencies]
+lspkit-fuzz.workspace = true
+orthra-testkit.workspace = true
+orthra-text.workspace = true
+
+[dev-dependencies]
+expect-test.workspace = true
+
+[lints]
+workspace = true

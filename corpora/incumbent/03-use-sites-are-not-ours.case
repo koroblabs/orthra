@@ -1,0 +1,15 @@
+hypothesis: H1
+source: probe written 2026-11-05 for the hypotheses in corpora/incumbent/README.md
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: silent. Agrees
+why: only a declaration is the author's to fix; a use of somebody else's API is not
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /src/load.rs  expect
+> use serde_json::from_str;
+>
+> async fn load(raw: &str) -> Config {
+>     let parsed: Config = from_str(raw).unwrap_or_default();
+>     tokio::task::spawn_blocking(move || parsed.reindex()).await.unwrap()
+> }

@@ -1,0 +1,31 @@
+# The context tier's default model: ELECTRA-small's generator, from Google, 13.5 million
+# parameters. `orthra model install small` installs it, and so does a server whose settings turn
+# the context tier on. Its f32 weights are fetched, checked and quantized to Q8_0 here, into one
+# file of 15 MB. On the GitHub Typo Corpus it put the right correction first 71.4 % of the time,
+# against 68.6 % for the lexical order (`docs/04-context.md` §4).
+#
+# The version is the source's revision and then orthra's own revision of the model file: a new
+# quantization, prior or file format is a new version, installed beside the old one.
+version = "electra-small-generator.51a5c11.1"
+# How much the lexical order counts beside the model: `prior · −ln(position + 1)`, tuned on half
+# of the typo sample and measured on the other half.
+prior = 0.25
+
+# Hugging Face's conversion of the weights to safetensors (`refs/pr/3`), pinned by its commit.
+[[source]]
+url = "https://huggingface.co/google/electra-small-generator/resolve/51a5c116d83a1cd5b3503636281e432f0ec0c78a/model.safetensors"
+sha256 = "c18d39e9f75cd9be4528ec96b187e72da47321845ea96458a99831c556cfd9f4"
+license = "Apache-2.0, https://huggingface.co/google/electra-small-generator"
+file = "model.safetensors"
+
+[[source]]
+url = "https://huggingface.co/google/electra-small-generator/resolve/51a5c116d83a1cd5b3503636281e432f0ec0c78a/config.json"
+sha256 = "7c52c07d59bf9a757f75959b58389ebbb833ee46f74cbfc36fccb72563833f33"
+license = "Apache-2.0, https://huggingface.co/google/electra-small-generator"
+file = "config.json"
+
+[[source]]
+url = "https://huggingface.co/google/electra-small-generator/resolve/51a5c116d83a1cd5b3503636281e432f0ec0c78a/vocab.txt"
+sha256 = "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+license = "Apache-2.0, https://huggingface.co/google/electra-small-generator"
+file = "vocab.txt"

@@ -1,0 +1,316 @@
+//! What a project and its user say about checking it: which languages, which words are words, and
+//! which files are not prose.
+//!
+//! The layers (`docs/01-architecture.md` §9), most general first:
+//!
+//! - built in: en-US;
+//! - the user's: `~/.config/orthra/config.toml` and `words.txt`;
+//! - the project's: `orthra.toml` and `.orthra/words.txt`;
+//! - the editor's, or the command line's: the languages it asks for.
+//!
+//! Languages and words are unions across the layers. A file that cannot be read as it should is a
+//! problem said out loud, never a layer quietly left out.
+
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
+
+use lspkit_walk::{Override, OverrideBuilder};
+use orthra_engine::Engine;
+
+#[cfg(test)]
+mod tests;
+
+/// The project's settings file, at its root.
+pub const PROJECT_FILE: &str = "orthra.toml";
+/// The project's words, one per line, sorted, so that two branches adding a word merge.
+pub const PROJECT_WORDS: &str = ".orthra/words.txt";
+
+#[derive(Debug, Clone)]
+pub struct Config {
+    root: PathBuf,
+    languages: Vec<String>,
+    /// Where installed packs are looked for: [`Config::packs_dir`], unless set otherwise.
+    packs: Option<PathBuf>,
+    words: Vec<String>,
+    ignore: Override,
+    /// How strongly a finding is shown: `error`, `warning`, `information` or `hint`. The most
+    /// specific layer that says wins.
+    severity: Option<String>,
+    /// Whether a language whose pack is installed rather than built in is fetched and installed
+    /// when it is enabled and missing: `auto-install = false` keeps a machine off the network.
+    auto_install: bool,
+    problems: Vec<String>,
+}
+
+/// The severities a finding can be shown with.
+pub const SEVERITIES: &[&str] = &["error", "warning", "information", "hint"];
+
+impl Config {
+    /// Built in only: en-US, no words, nothing ignored.
+    pub fn builtin(root: &Path) -> Config {
+        Config {
+            root: root.to_path_buf(),
+            languages: vec!["en-US".to_owned()],
+            packs: Config::packs_dir(),
+            words: Vec::new(),
+            ignore: Override::empty(),
+            severity: None,
+            auto_install: true,
+            problems: Vec::new(),
+        }
+    }
+
+    /// Every layer for the project at `root`: built in, the user's in `user` when one is given,
+    /// and the project's.
+    pub fn load(root: &Path, user: Option<&Path>) -> Config {
+        let mut config = Config::builtin(root);
+        let mut patterns = Vec::new();
+        if let Some(user) = user {
+            config.read_settings(&user.join("config.toml"), &mut patterns);
+            config.read_words(&user.join("words.txt"));
+        }
+        config.read_settings(&root.join(PROJECT_FILE), &mut patterns);
+        config.read_words(&root.join(PROJECT_WORDS));
+        let mut ignore = OverrideBuilder::new(root);
+        for pattern in &patterns {
+            // An override is a whitelist; `!` makes it an ignore.
+            if let Err(err) = ignore.add(&format!("!{pattern}")) {
+                config.problems.push(format!("ignore = {pattern:?}: {err}"));
+            }
+        }
+        match ignore.build() {
+            Ok(ignore) => config.ignore = ignore,
+            Err(err) => config.problems.push(format!("ignore: {err}")),
+        }
+        config
+    }
+
+    /// The project's words file: where "add to the project's words" writes.
+    pub fn project_words(&self) -> PathBuf {
+        self.root.join(PROJECT_WORDS)
+    }
+
+    /// The user's words file in `user`: where "add to your words" writes.
+    pub fn user_words(user: &Path) -> PathBuf {
+        user.join("words.txt")
+    }
+
+    /// The files a server watches, because a change to any of them changes the findings.
+    pub fn watched(&self, user: Option<&Path>) -> Vec<PathBuf> {
+        let mut files = vec![self.root.join(PROJECT_FILE), self.project_words()];
+        if let Some(user) = user {
+            files.push(user.join("config.toml"));
+            files.push(Config::user_words(user));
+        }
+        files
+    }
+
+    /// The user's directory: `$XDG_CONFIG_HOME/orthra`, or `~/.config/orthra`.
+    pub fn user_dir() -> Option<PathBuf> {
+        let base = std::env::var_os("XDG_CONFIG_HOME")
+            .map(PathBuf::from)
+            .filter(|dir| dir.is_absolute())
+            .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))?;
+        Some(base.join("orthra"))
+    }
+
+    /// Where installed packs live: `$XDG_DATA_HOME/orthra/packs`, or `~/.local/share/orthra/packs`.
+    pub fn packs_dir() -> Option<PathBuf> {
+        let base = std::env::var_os("XDG_DATA_HOME")
+            .map(PathBuf::from)
+            .filter(|dir| dir.is_absolute())
+            .or_else(|| {
+                std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".local/share"))
+            })?;
+        Some(base.join("orthra").join("packs"))
+    }
+
+    /// Where installed models live: `$XDG_DATA_HOME/orthra/models`, beside the packs.
+    pub fn models_dir() -> Option<PathBuf> {
+        Some(Config::packs_dir()?.parent()?.join("models"))
+    }
+
+    /// Whether a missing pack is fetched and installed: `auto-install`, true unless a settings file
+    /// says otherwise.
+    pub fn auto_install(&self) -> bool {
+        self.auto_install
+    }
+
+    /// Looks for installed packs in `packs` instead: a test's own directory, never the person's.
+    pub fn set_packs(&mut self, packs: Option<PathBuf>) {
+        self.packs = packs;
+    }
+
+    /// Where installed packs are looked for.
+    pub fn packs(&self) -> Option<&Path> {
+        self.packs.as_deref()
+    }
+
+    pub fn root(&self) -> &Path {
+        &self.root
+    }
+
+    /// The languages to check with, built in first, each once.
+    pub fn languages(&self) -> &[String] {
+        &self.languages
+    }
+
+    /// Adds languages a later layer asks for: the editor's, or `--lang`.
+    pub fn add_languages(&mut self, tags: impl IntoIterator<Item = String>) {
+        for tag in tags {
+            if !self.languages.contains(&tag) {
+                self.languages.push(tag);
+            }
+        }
+    }
+
+    pub fn words(&self) -> &[String] {
+        &self.words
+    }
+
+    /// How strongly a finding is shown, `warning` when no layer says: Zed lists a warning among
+    /// the project's problems, and shows an information only where it is written.
+    pub fn severity(&self) -> &str {
+        self.severity.as_deref().unwrap_or("warning")
+    }
+
+    /// The severity a later layer asks for: the editor's.
+    pub fn set_severity(&mut self, severity: &str) {
+        if SEVERITIES.contains(&severity) {
+            self.severity = Some(severity.to_owned());
+        } else {
+            self.problems.push(format!(
+                "severity {severity:?} is not one of {SEVERITIES:?}"
+            ));
+        }
+    }
+
+    /// What went wrong reading the layers, one sentence each, naming the file.
+    pub fn problems(&self) -> &[String] {
+        &self.problems
+    }
+
+    /// Whether `path` is one of the files the project says are not prose: named itself, or inside
+    /// a directory that is. The walk prunes such a directory; an editor opens the file anyway.
+    pub fn is_ignored(&self, path: &Path) -> bool {
+        if self.ignore.matched(path, path.is_dir()).is_ignore() {
+            return true;
+        }
+        path.ancestors()
+            .skip(1)
+            .take_while(|dir| dir.starts_with(&self.root) && *dir != self.root)
+            .any(|dir| self.ignore.matched(dir, true).is_ignore())
+    }
+
+    /// The matcher [`Self::is_ignored`] uses, for a walk to prune with.
+    pub(crate) fn ignore(&self) -> &Override {
+        &self.ignore
+    }
+
+    /// An engine for these languages, knowing these words.
+    pub fn engine(&self) -> Result<Engine, String> {
+        let tags: Vec<&str> = self.languages.iter().map(String::as_str).collect();
+        let mut engine =
+            Engine::with_installed(&tags, self.packs.as_deref()).map_err(|err| err.0)?;
+        engine.set_words(self.words.iter().map(String::as_str));
+        Ok(engine)
+    }
+
+    /// `languages = [...]` and `ignore = [...]` from a settings file, if there is one.
+    fn read_settings(&mut self, file: &Path, patterns: &mut Vec<String>) {
+        let Ok(text) = fs::read_to_string(file) else {
+            return;
+        };
+        let shown = file.display();
+        let table: toml::Table = match text.parse() {
+            Ok(table) => table,
+            Err(err) => {
+                self.problems.push(format!("{shown}: {err}"));
+                return;
+            }
+        };
+        for (key, value) in &table {
+            if key == "auto-install" {
+                match value.as_bool() {
+                    Some(auto) => self.auto_install = auto,
+                    None => self
+                        .problems
+                        .push(format!("{shown}: auto-install is true or false")),
+                }
+                continue;
+            }
+            if key == "severity" {
+                match value.as_str() {
+                    Some(severity) if SEVERITIES.contains(&severity) => {
+                        self.severity = Some(severity.to_owned());
+                    }
+                    _ => self
+                        .problems
+                        .push(format!("{shown}: severity is one of {SEVERITIES:?}")),
+                }
+                continue;
+            }
+            let Some(list) = value.as_array().and_then(|list| {
+                list.iter()
+                    .map(|item| item.as_str().map(str::to_owned))
+                    .collect::<Option<Vec<String>>>()
+            }) else {
+                self.problems
+                    .push(format!("{shown}: {key} is not a list of strings"));
+                continue;
+            };
+            match key.as_str() {
+                "languages" => self.add_languages(list),
+                "ignore" => patterns.extend(list),
+                _ => self
+                    .problems
+                    .push(format!("{shown}: {key} is not a setting")),
+            }
+        }
+    }
+
+    /// A words file's words: one per line, `#` starting a comment.
+    fn read_words(&mut self, file: &Path) {
+        let Ok(text) = fs::read_to_string(file) else {
+            return;
+        };
+        self.words.extend(
+            text.lines()
+                .map(|line| line.split('#').next().unwrap_or_default().trim())
+                .filter(|word| !word.is_empty())
+                .map(str::to_owned),
+        );
+    }
+}
+
+/// Adds `word` to the words file `file`, which is created if it is not there: one word per line,
+/// sorted ignoring case, each once, so that two branches that each add a word merge without a
+/// conflict. Comment lines stay at the top. A word already there, in any case, is left as it is.
+pub fn add_word(file: &Path, word: &str) -> std::io::Result<()> {
+    let text = fs::read_to_string(file).unwrap_or_default();
+    let (mut comments, mut words) = (Vec::new(), Vec::new());
+    for line in text.lines() {
+        if line.trim_start().starts_with('#') {
+            comments.push(line.to_owned());
+        } else if !line.trim().is_empty() {
+            words.push(line.trim().to_owned());
+        }
+    }
+    let lower = word.to_lowercase();
+    if words.iter().any(|known| known.to_lowercase() == lower) {
+        return Ok(());
+    }
+    words.push(word.to_owned());
+    words.sort_by_key(|word| word.to_lowercase());
+    if let Some(dir) = file.parent() {
+        fs::create_dir_all(dir)?;
+    }
+    let mut out = String::new();
+    for line in comments.iter().chain(&words) {
+        out.push_str(line);
+        out.push('\n');
+    }
+    fs::write(file, out)
+}

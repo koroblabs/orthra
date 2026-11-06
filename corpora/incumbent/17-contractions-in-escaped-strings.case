@@ -1,0 +1,11 @@
+hypothesis: reported
+source: Artem, relayed 2026-11-05; and the zero corpus, where composer's strings gave `didn` and `aren`
+incumbent: codebook-lsp 0.3.42 (locked), 2026-11-05: reports `didn` and `aren`. Agrees with orthra before the fix, and both are wrong
+why: an escaped apostrophe inside a single-quoted string is still an apostrophe: `didn\'t` is `didn't`
+
+//- /orthra.toml
+languages = ["en-US"]
+
+//- /src/Notice.php  expect
+> <?php
+> echo 'It didn\'t work, and we aren\'t done: you\'ll see.';
