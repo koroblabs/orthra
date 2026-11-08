@@ -3,7 +3,7 @@
 
 use crate::{
     Conventions,
-    tree_sitter_host::{DocTags, Grammar, TreeSitterHost},
+    tree_sitter_host::{DocTags, Grammar, LanguageSource, TreeSitterHost},
 };
 
 #[cfg(test)]
@@ -20,7 +20,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
         line_comment: Some("//"),
         block_comment: None,
     },
-    language: tree_sitter_javascript::LANGUAGE,
+    language: LanguageSource::Constant(tree_sitter_javascript::LANGUAGE),
     query: include_str!("spell.scm"),
     vocabulary: include_str!("vocabulary.txt"),
     // Jest, Vitest and Mocha name their tests as TypeScript's do.

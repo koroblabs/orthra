@@ -2,7 +2,7 @@
 
 use crate::{
     Conventions,
-    tree_sitter_host::{DocTags, Grammar, TreeSitterHost},
+    tree_sitter_host::{DocTags, Grammar, LanguageSource, TreeSitterHost},
 };
 
 #[cfg(test)]
@@ -20,7 +20,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
         line_comment: Some("#"),
         block_comment: None,
     },
-    language: tree_sitter_python::LANGUAGE,
+    language: LanguageSource::Constant(tree_sitter_python::LANGUAGE),
     query: include_str!("spell.scm"),
     vocabulary: include_str!("vocabulary.txt"),
     test_files: &["test_*.py", "*_test.py", "conftest.py"],

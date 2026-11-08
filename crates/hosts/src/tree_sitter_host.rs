@@ -45,7 +45,7 @@ pub(crate) struct Grammar {
     pub(crate) file_names: &'static [&'static str],
     pub(crate) extensions: &'static [&'static str],
     pub(crate) conventions: Conventions,
-    pub(crate) language: LanguageFn,
+    pub(crate) language: LanguageSource,
     /// The host's `spell.scm`.
     pub(crate) query: &'static str,
     /// The host's `vocabulary.txt`: see [`Host::vocabulary`].
@@ -59,6 +59,24 @@ pub(crate) struct Grammar {
     /// Whether a string of one token is a value rather than text ([`SpanKind::Value`]). True for
     /// a data format, whose strings are names, versions and paths, and whose text has spaces.
     pub(crate) one_token_strings_are_values: bool,
+}
+
+/// Where a grammar's language comes from. Grammars publish a `LANGUAGE` constant now; the ones
+/// last released against tree-sitter 0.21 or 0.22 publish a `language()` function instead (SCSS's,
+/// LESS's), which builds the same language from the same C symbol. Both are read when the host loads.
+#[derive(Clone, Copy)]
+pub(crate) enum LanguageSource {
+    Constant(LanguageFn),
+    Function(fn() -> Language),
+}
+
+impl LanguageSource {
+    fn language(self) -> Language {
+        match self {
+            LanguageSource::Constant(constant) => Language::new(constant),
+            LanguageSource::Function(function) => function(),
+        }
+    }
 }
 
 /// A host run from its [`Grammar`]. Each one is a `static`, so its grammar and query load once per
@@ -217,7 +235,7 @@ struct Loaded {
 
 impl Loaded {
     fn new(grammar: &Grammar) -> Result<Loaded, String> {
-        let language = Language::new(grammar.language);
+        let language = grammar.language.language();
         // A grammar built for another ABI fails here, when the language is set, and not at compile
         // time. Setting it once now makes that this host's load error rather than a silent parse.
         Parser::new()

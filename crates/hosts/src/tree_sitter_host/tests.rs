@@ -1,7 +1,7 @@
 use expect_test::{Expect, expect};
 use orthra_testkit::annotate::Annotation;
 
-use super::{DocTags, Grammar, TreeSitterHost};
+use super::{DocTags, Grammar, LanguageSource, TreeSitterHost};
 use crate::{Conventions, Host, Hosts};
 
 /// A host over Rust's grammar, with a query of the test's own.
@@ -16,7 +16,7 @@ const fn rust_with(query: &'static str) -> TreeSitterHost {
             line_comment: Some("//"),
             block_comment: None,
         },
-        language: tree_sitter_rust::LANGUAGE,
+        language: LanguageSource::Constant(tree_sitter_rust::LANGUAGE),
         query,
         vocabulary: "",
         test_files: &[],
@@ -139,6 +139,8 @@ fn every_builtin_host_loads() {
         "json",
         "jsonc",
         "lua",
+        "scss",
+        "less",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }

@@ -17,6 +17,7 @@ mod go;
 mod html;
 mod javascript;
 mod json;
+mod less;
 mod lua;
 pub mod markdown;
 pub mod parsed;
@@ -24,6 +25,7 @@ mod php;
 pub mod plain_text;
 mod python;
 mod rust;
+mod scss;
 mod shell;
 mod sql;
 pub mod test_files;
@@ -140,6 +142,8 @@ impl Hosts {
                 Box::new(&tsx::HOST),
                 Box::new(&javascript::HOST),
                 Box::new(&lua::HOST),
+                Box::new(&scss::HOST),
+                Box::new(&less::HOST),
             ],
         }
     }

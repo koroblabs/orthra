@@ -251,6 +251,34 @@ const WRAPPINGS: &[Wrapping] = &[
         line: "",
         close: "]]\n",
     },
+    Wrapping {
+        language: "scss",
+        name: "/* */",
+        open: "/*\n",
+        line: " * ",
+        close: " */\n",
+    },
+    Wrapping {
+        language: "scss",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: ".a { color: red; }\n",
+    },
+    Wrapping {
+        language: "less",
+        name: "/* */",
+        open: "/*\n",
+        line: " * ",
+        close: " */\n",
+    },
+    Wrapping {
+        language: "less",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: ".a { color: red; }\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.

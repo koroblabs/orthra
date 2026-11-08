@@ -2,7 +2,7 @@
 
 use crate::{
     Conventions,
-    tree_sitter_host::{DocTags, Grammar, TreeSitterHost},
+    tree_sitter_host::{DocTags, Grammar, LanguageSource, TreeSitterHost},
 };
 
 #[cfg(test)]
@@ -21,7 +21,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
         block_comment: None,
     },
     // The grammar that reads a whole file: the HTML around `<?php` as well as the PHP in it.
-    language: tree_sitter_php::LANGUAGE_PHP,
+    language: LanguageSource::Constant(tree_sitter_php::LANGUAGE_PHP),
     query: include_str!("spell.scm"),
     vocabulary: include_str!("vocabulary.txt"),
     // PHPUnit's convention; Pest and Codeception keep theirs under `tests/`.

@@ -588,3 +588,93 @@ fn lua_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn scss_through_every_dimension() {
+    check(
+        r#"
+        //- /src/styles.scss
+        // Seperates teh header.
+        $recieve-color: #336;
+
+        @mixin occured-mixin($recieve-arg) {
+          color: $recieve-color;
+        }
+
+        .card::before {
+          @include occured-mixin($recieve-color);
+          widht: 1px;
+          content: "Hello\a occured";
+          width: calc(100% - #{$recieve-color});
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Seperates teh header.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > $recieve-color: #336;
+               ^^^^^^^ known-typo -> receive
+            >
+            > @mixin occured-mixin($recieve-arg) {
+                     ^^^^^^^ known-typo -> occurred
+                                    ^^^^^^^ known-typo -> receive
+            >   color: $recieve-color;
+            > }
+            >
+            > .card::before {
+            >   @include occured-mixin($recieve-color);
+            >   widht: 1px;
+                ^^^^^ known-typo -> width
+            >   content: "Hello\a occured";
+                                  ^^^^^^^ known-typo -> occurred
+            >   width: calc(100% - #{$recieve-color});
+            > }
+        "#]],
+    );
+}
+
+#[test]
+fn less_through_every_dimension() {
+    check(
+        r#"
+        //- /src/styles.less
+        // Seperates teh header.
+        @recieve-color: #336;
+
+        .occured-mixin(@recieve-arg) {
+          color: @recieve-color;
+        }
+
+        .card::before {
+          .occured-mixin(@recieve-color);
+          widht: 1px;
+          content: "Hello\a occured";
+          width: ~"calc(100% - @{recieve-color})";
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Seperates teh header.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > @recieve-color: #336;
+               ^^^^^^^ known-typo -> receive
+            >
+            > .occured-mixin(@recieve-arg) {
+               ^^^^^^^ known-typo -> occurred
+                              ^^^^^^^ known-typo -> receive
+            >   color: @recieve-color;
+            > }
+            >
+            > .card::before {
+            >   .occured-mixin(@recieve-color);
+            >   widht: 1px;
+                ^^^^^ known-typo -> width
+            >   content: "Hello\a occured";
+                                  ^^^^^^^ known-typo -> occurred
+            >   width: ~"calc(100% - @{recieve-color})";
+            > }
+        "#]],
+    );
+}

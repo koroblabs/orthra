@@ -2,7 +2,7 @@
 
 use crate::{
     Conventions,
-    tree_sitter_host::{DocTags, Grammar, TreeSitterHost},
+    tree_sitter_host::{DocTags, Grammar, LanguageSource, TreeSitterHost},
 };
 
 #[cfg(test)]
@@ -19,7 +19,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
         line_comment: Some("//"),
         block_comment: None,
     },
-    language: tree_sitter_typescript::LANGUAGE_TSX,
+    language: LanguageSource::Constant(tree_sitter_typescript::LANGUAGE_TSX),
     // TypeScript's query, then what JSX adds to it.
     query: concat!(
         include_str!("../typescript/spell.scm"),
