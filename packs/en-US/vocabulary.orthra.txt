@@ -74,6 +74,7 @@ interners
 invokable
 jsonl
 kakoune
+kdoc
 laravel
 leptos
 lexicographically
@@ -109,6 +110,8 @@ nofail
 noqa
 nullability
 nuxt
+ocamldoc
+odoc
 ollama
 ovmf
 parallelizes
@@ -143,6 +146,8 @@ reranks
 resolvers
 rewriter
 rewriters
+roxygen
+scaladoc
 screenful
 severities
 sigil

@@ -5,9 +5,12 @@ names the tag's version.
 
 ## Unreleased
 
-- checks fourteen more languages, each in its comments, its strings and the names a file declares:
-  JavaScript and JSX, shell scripts (bash, sh, zsh, ksh), HTML, CSS, SCSS, LESS, SQL, Lua, Java,
-  Kotlin, Swift, C, C++ and Ruby; a property name in a stylesheet is held to known typos (`widht`);
+- checks 45 more languages, each in its comments, its strings and the names a file declares:
+  JavaScript and JSX, Scala, Groovy, Swift, Objective-C, C, C++, C#, F#, Dart, Zig, Kotlin, Java,
+  Ruby, Lua, Elixir, Erlang, Haskell, OCaml, Elm, R, Julia, PowerShell, shell scripts, SQL, HTML,
+  Vue and Svelte components, CSS, SCSS, LESS, XML, reStructuredText, Protocol Buffers, GraphQL, Nix,
+  HCL and Terraform, INI, Java properties, Makefiles, CMake and Dockerfiles; a property name in a
+  stylesheet is held to known typos (`widht`);
 - leaves a template's code out of an HTML page (`{{ }}`, `{% %}`, `{# #}`, `<% %>`): Django's admin
   templates went from 268 findings to none;
 - rewrites the selection, not only the sentence at the cursor, and rephrases it, with a model you
@@ -21,13 +24,18 @@ names the tag's version.
 - applies every exact fix in a file at once, a known typo's only correction or a word in one script,
   from the menu or when the editor saves: `source.fixAll.orthra`;
 - reads a doc comment's markup as markup, whatever the language: `<pre>`, `<code>`, `{@code}`,
-  `{@link}`, and a code block indented in Markdown's way;
+  `{@link}`, odoc's `{!refs}`, Scaladoc's `{{{ }}}`, doctests (`>>>`, `iex>`, `scala>`), Haddock's
+  `>` lines, and a code block indented in Markdown's way, in a docstring or heredoc too;
+- reads a handle or a name as a name: `TODO(nweiz)`, code review's `CR rgrinberg:`, and what follows
+  `(c)`, `©`, `Copyright` anywhere in a line, `Created by` and `Written by:`;
+- leaves a name qualified by its module unchecked, `os.path.join`, `Vec::new`: it refers to code;
 - English is either spelling until a setting names one: en-US and en-GB are built in, and
   `languages = ["en-US"]` makes a project American only;
 - test data is not checked: `fixtures/`, `*-fixtures/`, `__fixtures__/` and `testdata/` in every
   language;
-- a translation into a language no enabled pack speaks has its strings left unchecked:
-  `locales/de.json`, `config/locales/devise.de.yml`, `_locales/zh_CN/messages.json`;
+- a translation into a language no enabled pack speaks has its text left unchecked:
+  `locales/de.json`, `config/locales/devise.de.yml`, `_locales/zh_CN/messages.json`, Android's
+  `res/values-de/`, `de.lproj/`, `Strings.de.resx` and `messages_de.properties`;
 - more of software English is a word: 86 000 uncommon words from SCOWL size 80, 5 000 names of
   commands from tldr-pages, `un-`, `re-`, `sub-` and six more prefixes on a known word, and plurals
   of the technical vocabulary (`datagrams`). On the projects beside orthra, 13 827 findings became 1

@@ -40,10 +40,16 @@ Things that are never words are never checked:
 - URLs, paths and emails;
 - hashes, UUIDs and versions;
 - CLI flags and language tags (`uk-UA`);
-- inline code;
+- inline code, and names qualified by their module (`os.path.join`, `Vec::new`);
+- a doc comment's examples: fenced and indented blocks, doctests (`>>>`, `iex>`), `<pre>`,
+  `{@code}`;
 - Markdown link targets and front matter;
+- people's handles and names in a comment's conventions: `TODO(nweiz)`, `Copyright (c) ...`,
+  `Author: ...`;
 - test data: `fixtures/`, `*-fixtures/`, `__fixtures__/` and `testdata/`;
-- the strings of a translation into a language you have not enabled (`locales/de.json`).
+- generated files: `*.min.js`, `*.pb.go`, `*.g.dart`, `*.Designer.cs`, lock files;
+- the text of a translation into a language you have not enabled: `locales/de.json`, Android's
+  `res/values-de/`, `de.lproj/`, `Strings.de.resx`, `messages_de.properties`.
 
 **Languages:**
 
@@ -58,9 +64,17 @@ Things that are never words are never checked:
 - Words are routed by script, word by word, so Ukrainian comments next to English names need no
   setting.
 
-**Formats:** plain text, Markdown, Git commit messages, Rust, TypeScript and TSX, JavaScript and
-JSX, Python, Go, PHP, Java, Kotlin, Swift, C, C++, Ruby, Lua, shell scripts, SQL, HTML (with the
-code of its templates left out), CSS, SCSS, LESS, TOML, YAML and JSON.
+**Formats:**
+
+- **Prose:** plain text, Markdown, reStructuredText and Git commit messages.
+- **Code:** Rust, TypeScript and TSX, JavaScript and JSX, Python, Go, PHP, Java, Kotlin, Scala,
+  Groovy, Swift, Objective-C, C, C++, C#, F#, Dart, Zig, Ruby, Lua, Elixir, Erlang, Haskell, OCaml,
+  Elm, R, Julia, PowerShell, shell scripts and SQL.
+- **The web:** HTML (with the code of its templates left out), Vue and Svelte components, CSS, SCSS
+  and LESS.
+- **Data and configuration:** TOML, YAML, JSON, XML (Android resources, MSBuild, SVG, plists),
+  Protocol Buffers, GraphQL, Nix, HCL and Terraform, INI and Java properties.
+- **Builds:** Makefiles, CMake and Dockerfiles.
 
 ## Install
 

@@ -17,12 +17,14 @@ Phases 0 to 3 are done, and 0.1.0 is the first release: `orthra serve` runs in Z
 `orthra-zed`, which downloads the release binary for the platform. Phases 4 and 5 are done in part:
 uk-UA is installed on first use and compiled to an FST, and the context tier, opt-in, reorders an
 asked word's corrections with a model in the process and rewrites a sentence through an endpoint on
-the machine. orthra checks words in plain text, Markdown, commit messages, Rust, TypeScript,
-JavaScript, Python, Go, PHP, Java, Kotlin, Swift, C, C++, Ruby, Lua, shell scripts, SQL, HTML, CSS,
-SCSS, LESS, TOML, YAML and JSON, in the editor and from the command line (`orthra check`, `explain`,
-`perf`). Every number in §3 and in `docs/02-testing.md` level 9 is measured, with its date. On the
-zero corpus orthra is 16 to 23 times quieter than codebook on the same files, and `just zero`
-ratchets its counts so they only go down. What is still a target says so.
+the machine. orthra checks words in 55 hosts: prose (plain text, Markdown, reStructuredText, commit
+messages), thirty programming languages, the web's (HTML, Vue, Svelte, CSS, SCSS, LESS), data and
+configuration (TOML, YAML, JSON, XML, Protocol Buffers, GraphQL, Nix, HCL, INI, properties) and
+builds (Make, CMake, Dockerfile), listed in the README, in the editor and from the command line
+(`orthra check`, `explain`, `perf`). Every number in §3 and in `docs/02-testing.md` level 9 is
+measured, with its date. On the zero corpus orthra is 16 to 23 times quieter than codebook on the
+same files, and `just zero` ratchets its counts so they only go down. What is still a target says
+so.
 
 orthra exists because the incumbent for Zed, codebook, is reported by the people who use it as not
 good enough. "Not good enough" is a feeling. Phase 0 turns it into a list of failing fixtures, and
@@ -315,6 +317,20 @@ whatever the query. Ruby's query loads in 63 ms and Swift's in about 45, against
 after merging patterns that tree-sitter's query analysis made expensive (a pattern rooted at Swift's
 `function_declaration` alone cost 200 ms).
 
+**The hosts added on 2026-11-09,** on the same VM with agents building beside it, so their ratios to
+Rust's run of the moment stand and their absolutes do not. Most cost about what Rust does, or up to
+three times it cold: C#, Scala, Groovy, Dart, Zig, Objective-C, OCaml, Elm, Elixir, Erlang, R, Nix,
+HCL, INI, XML, Protocol Buffers, GraphQL, Make. Over a budget, and measured again in the perf stage:
+
+- **A keystroke:** tree-sitter-fsharp and tree-sitter-haskell parse slowly, 19 to 27 ms a keystroke
+  p95 against 2, 60 ms at worst in containers' 5 000-line `Data/Sequence/Internal.hs`. CMake's
+  `#[=[ ]=]` docs are one node each, 17 ms p95. PowerShell's parse puts it at 5 ms.
+- **A query's load:** Julia's at 92 to 105 ms after it was cut from 404, Elixir's at 78 (a pattern
+  under its `arguments` node costs about 30 ms of tree-sitter's analysis), Dart's grammar at 25 to
+  97 and C#'s at 57 to 64, against 50.
+- **reStructuredText parses whole on every keystroke** (`TreeSitterHost::parsed_whole`, §8.1): about
+  10 ms for an 836-line page.
+
 **Memory rule:** RSS is dominated by _the dictionaries in use plus the open documents_. If RSS
 scales with workspace size, that is the bug. The project lexicon stores hashed words, not text, for
 the same reason as phrost's `WordSet`.
@@ -478,6 +494,15 @@ by a fixture before it is believed. Each becomes a fixture in Phase 1 or 2.
     manifest and not the lockfile;
   - a host's grammar and query load on the first document of that language. A failure is that host's
     error, reported once, and never a panic that stops the other hosts.
+- **A grammar's external scanner can keep state in a `static`.** Observed 2026-11-09:
+  tree-sitter-properties 0.3.0 keeps `reached_eof` process-wide, so two threads' parses corrupt each
+  other. Every file was fine alone; `orthra check` over 238 of them hung five times in six, and one
+  run reached 46 GB. A host's test of one file cannot see it: run `orthra check` over a directory of
+  the language, several times, before trusting a grammar. Java properties is read by hand for this.
+- **A grammar's incremental parse can differ from its fresh parse.** Observed 2026-11-09:
+  tree-sitter-rst parsed 9 to 18 % of single edits differently from the edited text parsed alone,
+  which `incremental == from-scratch` caught on half its runs. Such a host parses every version
+  whole (`TreeSitterHost::parsed_whole`); never mark the dimension `#[ignore]` to ship one.
 - **Markdown.** Only prose is checked: not code spans, fenced blocks, link destinations, autolinks,
   raw HTML or front matter.
 - **Things that are never words:** URLs, emails, paths, UUIDs, commit hashes (`a3f9c2e`), hex
