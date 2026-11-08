@@ -83,13 +83,29 @@ impl LanguageSource {
 /// process however many engines share it.
 pub(crate) struct TreeSitterHost {
     grammar: Grammar,
+    /// Delimiters of what a span's text holds that is not the host's language: a template's
+    /// `{{ … }}` and `{% … %}` in a page. See [`TreeSitterHost::cutting`].
+    cut: &'static [(&'static str, &'static str)],
     loaded: OnceLock<Result<Loaded, String>>,
 }
 
 impl TreeSitterHost {
     pub(crate) const fn new(grammar: Grammar) -> TreeSitterHost {
+        TreeSitterHost::cutting(grammar, &[])
+    }
+
+    /// A host that cuts each region between a pair of `delimiters` out of its prose, strings and
+    /// comments. A query cannot cut inside a node, and a template language lives inside the text
+    /// nodes of the markup it is written in: `{% endblock %}` read as a word was most of what
+    /// Django's and Flask's templates reported (2026-11-08). An opening delimiter with no closing
+    /// one in the span cuts the rest of it.
+    pub(crate) const fn cutting(
+        grammar: Grammar,
+        delimiters: &'static [(&'static str, &'static str)],
+    ) -> TreeSitterHost {
         TreeSitterHost {
             grammar,
+            cut: delimiters,
             loaded: OnceLock::new(),
         }
     }
@@ -99,6 +115,59 @@ impl TreeSitterHost {
             .get_or_init(|| Loaded::new(&self.grammar))
             .as_ref()
             .map_err(String::as_str)
+    }
+}
+
+impl TreeSitterHost {
+    /// Cuts the regions between [`TreeSitterHost::cut`]'s delimiters out of the prose, string and
+    /// comment spans from `from` on, keeping each piece around them that is not only whitespace.
+    fn cut_out(&self, text: &str, from: usize, out: &mut Vec<Span>) {
+        if self.cut.is_empty() {
+            return;
+        }
+        let swept = out.split_off(from);
+        for span in swept {
+            if !matches!(
+                span.kind,
+                SpanKind::Prose | SpanKind::String | SpanKind::Comment
+            ) {
+                out.push(span);
+                continue;
+            }
+            let (start, end) = (
+                usize::from(span.range.start()),
+                usize::from(span.range.end()),
+            );
+            let mut at = start;
+            let mut piece = start;
+            while at < end {
+                let rest = &text[at..end];
+                let Some((offset, close)) = self
+                    .cut
+                    .iter()
+                    .filter_map(|(open, close)| rest.find(open).map(|i| (i, (open.len(), *close))))
+                    .min_by_key(|(i, _)| *i)
+                else {
+                    break;
+                };
+                let open_at = at + offset;
+                let (open_len, close) = close;
+                let resume = text[open_at + open_len..end]
+                    .find(close)
+                    .map_or(end, |i| open_at + open_len + i + close.len());
+                Self::keep(text, piece..open_at, span.kind, out);
+                piece = resume;
+                at = resume;
+            }
+            Self::keep(text, piece..end, span.kind, out);
+        }
+    }
+
+    /// `range` as a span of `kind`, without the whitespace at its ends, unless nothing is left.
+    fn keep(text: &str, range: std::ops::Range<usize>, kind: SpanKind, out: &mut Vec<Span>) {
+        if let Some(range) = Loaded::trimmed(text, range) {
+            out.push(Span { range, kind });
+        }
     }
 }
 
@@ -143,7 +212,9 @@ impl Host for &'static TreeSitterHost {
                 &mut QueryCursor::new(),
                 &mut found,
             );
+            let from = out.len();
             loaded.sweep(text, found, out);
+            self.cut_out(text, from, out);
         }
     }
 
@@ -160,7 +231,9 @@ impl Host for &'static TreeSitterHost {
         };
         let (found, captured) =
             loaded.capture_reusing(text, &tree, old.as_ref().map(|kept| &kept.captured));
+        let from = out.len();
         loaded.sweep(text, found, out);
+        self.cut_out(text, from, out);
         parsed.kept = Some(Kept {
             host: self.grammar.id,
             tree,

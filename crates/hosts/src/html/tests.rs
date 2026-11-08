@@ -83,3 +83,31 @@ fn an_entity_is_cut_out_of_the_text() {
         "#]],
     );
 }
+
+#[test]
+fn a_templates_code_is_cut_out_of_the_page() {
+    check(
+        "/templates/greet.html",
+        r#"{% extends "base.html" %}
+{% block content %}
+<p title="{{ page.title }}">Hello {{ user.name }}, welcome{# a note #} back.</p>
+<p>{% if items %}{{ items|length }} items{% endif %}</p>
+<p>An unclosed {{ tag</p>
+{% endblock %}
+"#,
+        expect![[r#"
+            html
+            > {% extends "base.html" %}
+            > {% block content %}
+            > <p title="{{ page.title }}">Hello {{ user.name }}, welcome{# a note #} back.</p>
+                                          ^^^^^ prose
+                                                               ^^^^^^^^^ prose
+                                                                                     ^^^^^ prose
+            > <p>{% if items %}{{ items|length }} items{% endif %}</p>
+                                                  ^^^^^ prose
+            > <p>An unclosed {{ tag</p>
+                 ^^^^^^^^^^^ prose
+            > {% endblock %}
+        "#]],
+    );
+}

@@ -254,9 +254,13 @@ fn html_through_every_dimension() {
         <!-- Seperates teh header. -->
         <h1 id="recieve" title="Hello occured">Welcome&nbsp;Seperates</h1>
         <a href="#recieve">teh link</a>
+        <p>{% if recieve %}{{ recieve.occured }} occured{% endif %}</p>
         <script>var recieve = 1;</script>
         "##,
-        &[("teh link", "the link")],
+        &[
+            ("teh link", "the link"),
+            ("{{ recieve.occured }}", "{{ seperates }}"),
+        ],
         expect![[r##"
             > <!-- Seperates teh header. -->
                    ^^^^^^^^^ known-typo -> Separates
@@ -266,6 +270,8 @@ fn html_through_every_dimension() {
                                                                   ^^^^^^^^^ known-typo -> Separates
             > <a href="#recieve">teh link</a>
                                  ^^^ known-typo -> the
+            > <p>{% if recieve %}{{ recieve.occured }} occured{% endif %}</p>
+                                                       ^^^^^^^ known-typo -> occurred
             > <script>var recieve = 1;</script>
         "##]],
     );
