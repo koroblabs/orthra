@@ -17,6 +17,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // out, as Rust's does: segmentation has to know `"\n"` is an escape.
     conventions: Conventions {
         backslash_escapes: true,
+        doubled_escapes: false,
         line_comment: Some("#"),
         block_comment: None,
     },

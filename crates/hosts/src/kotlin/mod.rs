@@ -18,6 +18,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // none. `$name` and `${...}` are nodes of their own, so no word is glued to them.
     conventions: Conventions {
         backslash_escapes: false,
+        doubled_escapes: false,
         line_comment: Some("//"),
         block_comment: Some(("/*", "*/")),
     },

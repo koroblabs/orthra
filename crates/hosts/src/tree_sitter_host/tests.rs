@@ -13,6 +13,7 @@ const fn rust_with(query: &'static str) -> TreeSitterHost {
         extensions: &[],
         conventions: Conventions {
             backslash_escapes: false,
+            doubled_escapes: false,
             line_comment: Some("//"),
             block_comment: None,
         },

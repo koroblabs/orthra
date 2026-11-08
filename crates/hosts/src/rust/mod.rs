@@ -17,6 +17,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // `r"C:\Users"` is not `\U` followed by `sers`.
     conventions: Conventions {
         backslash_escapes: false,
+        doubled_escapes: false,
         line_comment: Some("//"),
         block_comment: None,
     },

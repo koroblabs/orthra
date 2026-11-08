@@ -18,6 +18,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // segmenter never sees a backslash.
     conventions: Conventions {
         backslash_escapes: false,
+        doubled_escapes: false,
         line_comment: Some("//"),
         block_comment: Some(("/*", "*/")),
     },

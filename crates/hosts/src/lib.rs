@@ -69,6 +69,10 @@ pub enum SpanKind {
 pub struct Conventions {
     /// Whether `\n`, `\t` and `\u{e9}` are escapes rather than letters.
     pub backslash_escapes: bool,
+    /// Whether a doubled backslash before a letter is an escape too: a shell script writes
+    /// `"\\nexport"` for printf and `echo -e`, which read it as a newline and `export`. Elsewhere
+    /// `"C:\\network"` is a path, and the `n` is the word's.
+    pub doubled_escapes: bool,
     /// What starts a comment that runs to the end of the line: `//`, `#`. `None` for prose, and for
     /// a format that has none (JSON).
     pub line_comment: Option<&'static str>,

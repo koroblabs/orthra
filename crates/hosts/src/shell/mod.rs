@@ -33,6 +33,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // string keeps its backslash in the content, so segmentation has to know `\n` is not a letter.
     conventions: Conventions {
         backslash_escapes: true,
+        doubled_escapes: true,
         line_comment: Some("#"),
         block_comment: None,
     },

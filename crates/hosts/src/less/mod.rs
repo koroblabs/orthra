@@ -18,6 +18,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // would cut the first letter off the word after it.
     conventions: Conventions {
         backslash_escapes: false,
+        doubled_escapes: false,
         line_comment: Some("//"),
         block_comment: Some(("/*", "*/")),
     },

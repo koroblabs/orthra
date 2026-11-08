@@ -16,6 +16,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // The query cuts escape sequences out of interpreted strings, and raw strings have none.
     conventions: Conventions {
         backslash_escapes: false,
+        doubled_escapes: false,
         line_comment: Some("//"),
         block_comment: None,
     },

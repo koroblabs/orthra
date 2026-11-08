@@ -27,6 +27,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // query cuts them out and a backslash is never left inside a piece.
     conventions: Conventions {
         backslash_escapes: false,
+        doubled_escapes: false,
         line_comment: Some("#"),
         block_comment: None,
     },

@@ -17,6 +17,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // name's (`.sm\:flex`) out of its pieces, so the segmenter never sees a backslash.
     conventions: Conventions {
         backslash_escapes: false,
+        doubled_escapes: false,
         line_comment: None,
         block_comment: Some(("/*", "*/")),
     },

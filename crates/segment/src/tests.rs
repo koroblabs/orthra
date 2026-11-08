@@ -10,6 +10,7 @@ fn check(text: &str, backslash_escapes: bool, expect: Expect) {
     let rules = Rules {
         word_internal: &[('\'', Script::Latin), ('’', Script::Latin)],
         backslash_escapes,
+        doubled_escapes: false,
     };
     let mut out = Vec::new();
     words(
@@ -329,6 +330,7 @@ fn a_character_joins_words_only_in_the_script_whose_pack_says_so() {
             ('\'', Script::Cyrillic),
         ],
         backslash_escapes: false,
+        doubled_escapes: false,
     };
     let text = "будь-який м'ята, codebook-lsp don't.\n";
     let mut out = Vec::new();
@@ -340,4 +342,33 @@ fn a_character_joins_words_only_in_the_script_whose_pack_says_so() {
     );
     let shown: Vec<&str> = out.iter().map(|word| &text[word.range]).collect();
     expect!["будь-який | м'ята | codebook | lsp | don't"].assert_eq(&shown.join(" | "));
+}
+
+#[test]
+fn a_doubled_escape_is_an_escape_where_strings_are_read_twice() {
+    // A shell script's `printf "\\nexport ..."`: the shell makes `\\` a backslash, and printf makes
+    // `\n` a newline. A host that reads its strings once keeps the `n` as the word's.
+    let text = r"printf \\nexport the path";
+    let shown = |doubled_escapes: bool| {
+        let rules = Rules {
+            word_internal: &[],
+            backslash_escapes: true,
+            doubled_escapes,
+        };
+        let mut out = Vec::new();
+        words(
+            text,
+            [TextRange::up_to(TextSize::of(text))],
+            &rules,
+            &mut out,
+        );
+        out.iter()
+            .map(|word| &text[word.range])
+            .collect::<Vec<_>>()
+            .join(" | ")
+    };
+    expect![[r#"
+        printf | export | the | path
+        printf | nexport | the | path"#]]
+    .assert_eq(&format!("{}\n{}", shown(true), shown(false)));
 }

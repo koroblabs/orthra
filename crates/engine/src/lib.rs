@@ -375,6 +375,7 @@ impl Engine {
         let rules = Rules {
             word_internal: &self.word_internal,
             backslash_escapes: host.conventions().backslash_escapes,
+            doubled_escapes: host.conventions().doubled_escapes,
         };
         if let Some(parsed) = parsed {
             host.spans_reusing(text, &mut parsed.host, &mut spans);

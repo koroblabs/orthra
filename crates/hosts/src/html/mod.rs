@@ -22,6 +22,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::cutting(
         // so no letter glues onto a word. HTML has no backslash escapes.
         conventions: Conventions {
             backslash_escapes: false,
+            doubled_escapes: false,
             line_comment: None,
             block_comment: Some(("<!--", "-->")),
         },

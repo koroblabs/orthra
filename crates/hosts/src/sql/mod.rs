@@ -17,6 +17,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // is a letter, and one followed by letters is rare there.
     conventions: Conventions {
         backslash_escapes: true,
+        doubled_escapes: false,
         line_comment: Some("--"),
         block_comment: None,
     },

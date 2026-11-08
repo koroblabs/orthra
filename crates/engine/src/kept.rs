@@ -18,9 +18,9 @@ use orthra_hosts::{Span, SpanKind};
 use orthra_segment::{Rules, Word};
 use orthra_text::{TextRange, TextSize, script::Script};
 
-/// The rules a document's words were segmented under: its host, whether backslashes escape, and
-/// each word-internal character with its script.
-type SegmentedBy = (&'static str, bool, Vec<(char, Script)>);
+/// The rules a document's words were segmented under: its host, whether backslashes escape and
+/// whether doubled ones do, and each word-internal character with its script.
+type SegmentedBy = (&'static str, bool, bool, Vec<(char, Script)>);
 
 /// What a check of a document kept for the next one. Empty until the first check.
 #[derive(Debug, Default)]
@@ -99,7 +99,12 @@ impl KeptWords {
         host: &'static str,
         rules: &Rules<'_>,
     ) -> (Vec<Word>, Vec<SpanKind>) {
-        let segmented_by = (host, rules.backslash_escapes, rules.word_internal.to_vec());
+        let segmented_by = (
+            host,
+            rules.backslash_escapes,
+            rules.doubled_escapes,
+            rules.word_internal.to_vec(),
+        );
         if self.rules.as_ref() != Some(&segmented_by) {
             self.spans.clear();
             self.rules = Some(segmented_by);

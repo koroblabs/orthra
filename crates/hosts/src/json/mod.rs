@@ -17,6 +17,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // JSONC's, and a `//` line is what the `shift` dimension prepends.
     conventions: Conventions {
         backslash_escapes: true,
+        doubled_escapes: false,
         line_comment: Some("//"),
         block_comment: None,
     },

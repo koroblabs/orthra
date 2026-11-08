@@ -72,6 +72,9 @@ pub struct Rules<'a> {
     pub word_internal: &'a [(char, Script)],
     /// Whether `\n`, `\t` and `\u{e9}` are escapes in this span.
     pub backslash_escapes: bool,
+    /// Whether `\\n` is an escape as well as `\n`: the host's strings are read twice, by the shell
+    /// and then by printf.
+    pub doubled_escapes: bool,
 }
 
 impl Rules<'_> {
@@ -276,8 +279,14 @@ impl Splitter<'_, '_, '_, '_> {
         while i < chars.len() {
             let (start, c) = chars[i];
             if c == '\\' && self.rules.backslash_escapes {
-                // The escape's letter is part of the escape: skip it with the backslash.
-                i += 2;
+                // The escape's letter is part of the escape: skip it with the backslash, and with
+                // the doubled backslash before it where the host's strings are read twice.
+                let doubled = self.rules.doubled_escapes
+                    && chars.get(i + 1).is_some_and(|(_, next)| *next == '\\')
+                    && chars
+                        .get(i + 2)
+                        .is_some_and(|(_, letter)| letter.is_alphabetic());
+                i += if doubled { 3 } else { 2 };
                 continue;
             }
             if !c.is_alphanumeric() {

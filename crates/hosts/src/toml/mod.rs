@@ -17,6 +17,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // often a Windows path, which is not words either way.
     conventions: Conventions {
         backslash_escapes: true,
+        doubled_escapes: false,
         line_comment: Some("#"),
         block_comment: None,
     },
