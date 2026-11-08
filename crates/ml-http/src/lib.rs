@@ -11,7 +11,7 @@
 
 use std::{sync::Arc, time::Duration};
 
-use orthra_context::{Connector, Endpoint, Rewriter, ScoreError};
+use orthra_context::{ApiKey, Connector, Endpoint, Prompts, Rewrite, Rewriter, ScoreError};
 use serde_json::{Value, json};
 
 mod answer;
@@ -29,12 +29,19 @@ const TIMEOUT: Duration = Duration::from_secs(20);
 /// that thinks out loud before it answers, not a target.
 const RESPONSE_LIMIT: u64 = 256 * 1024;
 
-/// What the model is told, before the sentence. `{language}` is where the language is named.
-const PROMPT: &str = "You correct the spelling and grammar of text. The user's message is one \
+/// What the model is told before text to correct, unless the settings give their own.
+/// `{language}` is where the language is named.
+const CORRECT: &str = "You correct the spelling and grammar of text. The user's message is one \
     sentence of a document, or part of one{language}. Keep its meaning, keep its wording wherever \
     it is correct, and keep its markup and line breaks exactly as they are: Markdown, backticks, \
     links, code. Do not complete it, explain it or add to it. Reply with the corrected text only, \
     without quotes.";
+
+/// What the model is told before text to rephrase, unless the settings give their own.
+const REPHRASE: &str = "You rephrase text so that it reads naturally. The user's message is part of \
+    a document{language}. Keep its meaning and its language, and keep its markup and line breaks \
+    exactly as they are: Markdown, backticks, links, code. Correct its spelling and grammar too. Do \
+    not complete it, explain it or add to it. Reply with the rephrased text only, without quotes.";
 
 /// Connects to an endpoint by HTTP: what the binary hands the server.
 #[derive(Debug, Clone, Copy)]
@@ -70,6 +77,8 @@ struct HttpRewriter {
     url: String,
     model: String,
     allow_remote: bool,
+    api_key: Option<ApiKey>,
+    prompts: Prompts,
     agent: ureq::Agent,
 }
 
@@ -104,22 +113,28 @@ impl HttpRewriter {
             url,
             model: endpoint.model.clone(),
             allow_remote: endpoint.allow_remote,
+            api_key: endpoint.api_key.clone(),
+            prompts: endpoint.prompts.clone(),
             agent,
         })
     }
 
-    /// The request: the prompt, the sentence, and no randomness.
-    fn body(&self, sentence: &str, lang: &str) -> Value {
+    /// The request: the prompt for `how`, the settings' or orthra's, the text, and no randomness.
+    fn body(&self, text: &str, lang: &str, how: Rewrite) -> Value {
         let language = if lang == "und" {
             String::new()
         } else {
             format!(", written in {lang}")
         };
+        let prompt = self.prompts.of(how).unwrap_or(match how {
+            Rewrite::Correct => CORRECT,
+            Rewrite::Rephrase => REPHRASE,
+        });
         json!({
             "model": self.model,
             "messages": [
-                { "role": "system", "content": PROMPT.replace("{language}", &language) },
-                { "role": "user", "content": sentence },
+                { "role": "system", "content": prompt.replace("{language}", &language) },
+                { "role": "user", "content": text },
             ],
             "temperature": 0,
             "stream": false,
@@ -128,15 +143,19 @@ impl HttpRewriter {
 }
 
 impl Rewriter for HttpRewriter {
-    fn rewrite(&self, sentence: &str, lang: &str) -> Result<String, ScoreError> {
+    fn rewrite(&self, text: &str, lang: &str, how: Rewrite) -> Result<String, ScoreError> {
         // Here, before the request, and not only when connected: this is where text leaves.
         let uri = guard::checked(&self.url, self.allow_remote)?;
         let failed = |why: String| ScoreError(format!("{}: {why}", self.url));
-        let mut response = self
+        let mut request = self
             .agent
             .post(uri)
-            .header("content-type", "application/json")
-            .send(self.body(sentence, lang).to_string())
+            .header("content-type", "application/json");
+        if let Some(ApiKey(key)) = &self.api_key {
+            request = request.header("authorization", format!("Bearer {key}"));
+        }
+        let mut response = request
+            .send(self.body(text, lang, how).to_string())
             .map_err(|err| failed(err.to_string()))?;
         let status = response.status();
         let body = response
@@ -148,7 +167,7 @@ impl Rewriter for HttpRewriter {
         if !status.is_success() {
             return Err(failed(format!("answered {status}{}", said(&body))));
         }
-        answer::read(sentence, &body).map_err(|err| failed(err.0))
+        answer::read(text, &body).map_err(|err| failed(err.0))
     }
 }
 

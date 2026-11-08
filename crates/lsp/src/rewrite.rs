@@ -1,6 +1,7 @@
 //! "Rewrite sentence (local model)": a code action that hands the sentence at the cursor to a model
 //! the user runs, and writes what it answers over it (`docs/04-context.md` §2 C). With text
-//! selected, it is "Rewrite selection", and hands over what is selected.
+//! selected, it is "Rewrite selection", which hands over what is selected, beside "Rephrase
+//! selection", which asks for the same meaning said more naturally.
 //!
 //! It is offered only when somebody asks for the actions, and only with the cursor, or the start of
 //! the selection, in text meant to be read. The action carries no edit: only the document, its
@@ -15,7 +16,7 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 use lspkit_runtime::protocol::ls_types::{
     CodeAction, CodeActionKind, CodeActionOrCommand, Position, Range, TextEdit, Uri, WorkspaceEdit,
 };
-use orthra_engine::context::{Connector, Endpoint, Rewriter};
+use orthra_engine::context::{Connector, Endpoint, Rewrite, Rewriter};
 use orthra_text::line_index::LineIndex;
 use serde_json::{Value, json};
 
@@ -48,9 +49,13 @@ impl Rewriting {
         Rewriting { rewriter, model }
     }
 
-    /// "Rewrite sentence (local model)", or "Rewrite selection (...)".
-    fn title(&self, what: &str) -> String {
-        format!("Rewrite {what} ({})", self.model)
+    /// "Rewrite sentence (local model)", "Rewrite selection (...)", "Rephrase selection (...)".
+    fn title(&self, how: Rewrite, what: &str) -> String {
+        let verb = match how {
+            Rewrite::Correct => "Rewrite",
+            Rewrite::Rephrase => "Rephrase",
+        };
+        format!("{verb} {what} ({})", self.model)
     }
 }
 
@@ -81,10 +86,15 @@ pub(crate) fn wanted(only: Option<&[CodeActionKind]>) -> bool {
     })
 }
 
-/// The action for what is selected in the open document `uri`, or for the sentence at the cursor
-/// when nothing is, when a rewriter is connected and the selection starts, or the cursor is, in
-/// text meant to be read.
-pub(crate) fn offer(state: &mut State, uri: &Uri, selected: Range) -> Option<CodeActionOrCommand> {
+/// The actions for what is selected in the open document `uri`, rewritten or rephrased, or the one
+/// for the sentence at the cursor when nothing is: when a rewriter is connected and the selection
+/// starts, or the cursor is, in text meant to be read. Rephrasing a sentence nobody selected would
+/// be one more entry in every menu.
+pub(crate) fn offer(state: &mut State, uri: &Uri, selected: Range) -> Vec<CodeActionOrCommand> {
+    offered(state, uri, selected).unwrap_or_default()
+}
+
+fn offered(state: &mut State, uri: &Uri, selected: Range) -> Option<Vec<CodeActionOrCommand>> {
     let State {
         engine,
         documents,
@@ -100,25 +110,40 @@ pub(crate) fn offer(state: &mut State, uri: &Uri, selected: Range) -> Option<Cod
     let at = lspkit_text::lsp::offset(&index, text, selected.start, *encoding)?;
     let end = lspkit_text::lsp::offset(&index, text, selected.end, *encoding)?;
     let sentence = engine.sentence_at(&document.path, &document.language, text, at, parsed)?;
-    let (what, range) = if end > at && !text[usize::from(at)..usize::from(end)].trim().is_empty() {
-        ("selection", selected)
-    } else {
-        (
-            "sentence",
-            lspkit_text::lsp::range(&index, text, sentence, *encoding)?,
-        )
-    };
-    let asked = Asked {
-        uri: uri.clone(),
-        version: document.version,
-        range,
-    };
-    Some(CodeActionOrCommand::CodeAction(CodeAction {
-        title: rewriting.title(what),
-        kind: Some(KIND),
-        data: Some(asked.data()),
-        ..CodeAction::default()
-    }))
+    let (what, range, kinds): (_, _, &[Rewrite]) =
+        if end > at && !text[usize::from(at)..usize::from(end)].trim().is_empty() {
+            (
+                "selection",
+                selected,
+                &[Rewrite::Correct, Rewrite::Rephrase],
+            )
+        } else {
+            (
+                "sentence",
+                lspkit_text::lsp::range(&index, text, sentence, *encoding)?,
+                &[Rewrite::Correct],
+            )
+        };
+    let version = document.version;
+    Some(
+        kinds
+            .iter()
+            .map(|&how| {
+                let asked = Asked {
+                    uri: uri.clone(),
+                    version,
+                    range,
+                    how,
+                };
+                CodeActionOrCommand::CodeAction(CodeAction {
+                    title: rewriting.title(how, what),
+                    kind: Some(KIND),
+                    data: Some(asked.data()),
+                    ..CodeAction::default()
+                })
+            })
+            .collect(),
+    )
 }
 
 /// What a rewrite action carries to `codeAction/resolve`: the document, the version it was
@@ -128,11 +153,17 @@ pub(crate) struct Asked {
     uri: Uri,
     version: i32,
     range: Range,
+    how: Rewrite,
 }
 
 impl Asked {
     fn data(&self) -> Value {
-        json!({ "rewrite": { "uri": self.uri, "version": self.version, "range": self.range } })
+        json!({ "rewrite": {
+            "uri": self.uri,
+            "version": self.version,
+            "range": self.range,
+            "how": self.how.name(),
+        } })
     }
 
     /// The rewrite `action` asks for, if it is a rewrite: every other action has its edit already.
@@ -142,6 +173,7 @@ impl Asked {
             uri: serde_json::from_value(asked.get("uri")?.clone()).ok()?,
             version: i32::try_from(asked.get("version")?.as_i64()?).ok()?,
             range: serde_json::from_value(asked.get("range")?.clone()).ok()?,
+            how: Rewrite::named(asked.get("how")?.as_str()?)?,
         })
     }
 
@@ -167,6 +199,7 @@ impl Asked {
         Some(Job {
             sentence,
             lang,
+            how: self.how,
             rewriter,
         })
     }
@@ -196,6 +229,7 @@ impl Asked {
 pub(crate) struct Job {
     sentence: String,
     lang: String,
+    how: Rewrite,
     rewriter: Arc<dyn Rewriter>,
 }
 
@@ -206,10 +240,11 @@ impl Job {
         let Job {
             sentence,
             lang,
+            how,
             rewriter,
         } = self;
         let asked = sentence.clone();
-        let rewritten = tokio::task::spawn_blocking(move || rewriter.rewrite(&asked, &lang));
+        let rewritten = tokio::task::spawn_blocking(move || rewriter.rewrite(&asked, &lang, how));
         match tokio::time::timeout(BUDGET, rewritten).await {
             Ok(Ok(Ok(rewrite))) => Ok((rewrite != sentence).then_some(rewrite)),
             Ok(Ok(Err(err))) => Err(err.0),

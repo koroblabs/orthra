@@ -2,8 +2,8 @@
 //! installed and loaded in the background, after which code actions the user asks for reorder an
 //! unknown word's corrections through it (`actions::Plan::rerank`).
 //!
-//! Turned on by the editor's initialization options, `"context": {"enabled": true, "model":
-//! "small"}`: whether to spend a machine's memory on a model is that machine's question. A model
+//! Turned on by the editor's initialization options, `"context": {"rank": true}` or `{"rank":
+//! {"model": "small"}}`: whether to spend a machine's memory on a model is that machine's question. A model
 //! not installed is installed then, as a language's pack is, unless `auto-install` is off: turning
 //! the tier on is the consent to fetch it (`docs/04-context.md` rule 7). Nothing waits for any of
 //! this, and a model that fails is said once and the tier stays off.
@@ -12,8 +12,8 @@
 //! with it, and the memory given back; the next code action asked for loads it again in the
 //! background, and is answered in the lexical order meanwhile.
 //!
-//! `"context": {"http": {...}}` names an endpoint the user runs, for the "Rewrite sentence" action
-//! (`rewrite`): read here with the rest of the tier's settings.
+//! `"context": {"rewrite": {...}}` names an endpoint the user runs, for the "Rewrite" and
+//! "Rephrase" actions (`rewrite`): read here with the rest of the tier's settings.
 
 use std::{
     path::{Path, PathBuf},
@@ -28,7 +28,7 @@ use lspkit_runtime::{
     panics,
     protocol::{Client, ls_types::MessageType},
 };
-use orthra_engine::context::{Endpoint, Runtime, Scorer};
+use orthra_engine::context::{ApiKey, Endpoint, Prompts, Rewrite, Runtime, Scorer};
 use orthra_project::Config;
 use serde_json::Value;
 use tokio::{
@@ -51,56 +51,82 @@ pub(crate) struct Wanted {
     pub(crate) idle_unload: Duration,
 }
 
-/// What the initialization options say: `{"context": {"enabled": true, "model": "small",
-/// "idleUnload": 600}}`. `None` unless enabled.
+/// What the initialization options say about the built-in model: `{"context": {"rank": true}}`, or
+/// `{"rank": {"model": "small", "idleUnload": 600}}`. `None` unless they turn it on.
 pub(crate) fn wanted(options: Option<&Value>) -> Option<Wanted> {
-    let context = options?.get("context")?;
-    (context.get("enabled").and_then(Value::as_bool) == Some(true)).then(|| Wanted {
-        model: context
+    let rank = options?.get("context")?.get("rank")?;
+    let rank = match rank {
+        Value::Bool(true) => &Value::Null,
+        Value::Object(_) => rank,
+        _ => return None,
+    };
+    Some(Wanted {
+        model: rank
             .get("model")
             .and_then(Value::as_str)
             .unwrap_or(DEFAULT_MODEL)
             .to_owned(),
-        idle_unload: context
+        idle_unload: rank
             .get("idleUnload")
             .and_then(Value::as_u64)
             .map_or(DEFAULT_IDLE, Duration::from_secs),
     })
 }
 
-/// Where Ollama serves its OpenAI-compatible API: the endpoint `http` asks when it names none.
+/// Where Ollama serves its OpenAI-compatible API: the endpoint `rewrite` asks when it names none.
 const DEFAULT_ENDPOINT: &str = "http://127.0.0.1:11434/v1";
 
-/// The endpoint "Rewrite sentence (local model)" asks, from `{"context": {"http": {"endpoint":
-/// "http://127.0.0.1:11434/v1", "model": "qwen3:4b", "allowRemote": false}}}`. `None` without
-/// `http`, and with `"enabled": false`, which turns the whole tier off; why not, for an `http` that
-/// names no model. Independent of `enabled: true`, which is the re-ranking model's.
+/// The endpoint the rewrite actions ask, from `{"context": {"rewrite": {"model": "qwen3:4b",
+/// "endpoint": "http://127.0.0.1:11434/v1", "allowRemote": false, "apiKey": "...", "prompts":
+/// {"rewrite": "...", "rephrase": "..."}}}}`. `None` without `rewrite`; why not, for one that names
+/// no model. Independent of `rank`, the built-in model's: either, both or neither may be on.
 pub(crate) fn rewrite_endpoint(options: Option<&Value>) -> Result<Option<Endpoint>, String> {
-    let Some(context) = options.and_then(|options| options.get("context")) else {
+    let Some(rewrite) = options
+        .and_then(|options| options.get("context"))
+        .and_then(|context| context.get("rewrite"))
+        .filter(|rewrite| rewrite.is_object())
+    else {
         return Ok(None);
     };
-    let Some(http) = context.get("http").filter(|http| !http.is_null()) else {
-        return Ok(None);
-    };
-    if context.get("enabled").and_then(Value::as_bool) == Some(false) {
-        return Ok(None);
-    }
-    let model = http
-        .get("model")
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|model| !model.is_empty())
-        .ok_or("`context.http` names no `model` for its endpoint to run")?;
-    Ok(Some(Endpoint {
-        url: http
-            .get("endpoint")
+    let text = |value: Option<&Value>| {
+        value
             .and_then(Value::as_str)
-            .unwrap_or(DEFAULT_ENDPOINT)
-            .to_owned(),
-        model: model.to_owned(),
+            .map(str::trim)
+            .filter(|text| !text.is_empty())
+            .map(str::to_owned)
+    };
+    let model = text(rewrite.get("model")).ok_or("`context.rewrite` names no `model` to run")?;
+    let prompts = rewrite.get("prompts");
+    Ok(Some(Endpoint {
+        url: text(rewrite.get("endpoint")).unwrap_or_else(|| DEFAULT_ENDPOINT.to_owned()),
+        model,
         // `true` itself and nothing less: text leaves the machine only when the user writes it.
-        allow_remote: http.get("allowRemote").and_then(Value::as_bool) == Some(true),
+        allow_remote: rewrite.get("allowRemote").and_then(Value::as_bool) == Some(true),
+        api_key: text(rewrite.get("apiKey")).map(ApiKey),
+        prompts: Prompts {
+            correct: text(prompts.and_then(|prompts| prompts.get(Rewrite::Correct.name()))),
+            rephrase: text(prompts.and_then(|prompts| prompts.get(Rewrite::Rephrase.name()))),
+        },
     }))
+}
+
+/// What to say when the settings still use 0.1.0's keys, which no longer do anything: a setting
+/// quietly ignored would leave somebody wondering why their model never answers.
+pub(crate) fn outdated(options: Option<&Value>) -> Option<String> {
+    let context = options?.get("context")?;
+    let old: Vec<&str> = ["enabled", "model", "idleUnload", "http"]
+        .into_iter()
+        .filter(|key| context.get(key).is_some())
+        .collect();
+    (!old.is_empty()).then(|| {
+        let keys: Vec<String> = old.iter().map(|key| format!("`context.{key}`")).collect();
+        let verb = if keys.len() == 1 { "is" } else { "are" };
+        format!(
+            "orthra: {} {verb} no longer read: the built-in model is `context.rank`, and a model \
+             you run is `context.rewrite` (see orthra's README)",
+            keys.join(" and ")
+        )
+    })
 }
 
 /// Installs and loads models: a runtime and the sources a model's definition pins, or a test's.

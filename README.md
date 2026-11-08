@@ -101,7 +101,7 @@ Everything is optional.
   "lsp": { "orthra": { "initialization_options": {
     "languages": ["uk-UA"],                      // added to the project's
     "severity": "hint",
-    "context": { "enabled": true }               // the optional model, below
+    "context": { "rank": true }                  // the optional model, below
   } } }
   ```
 
@@ -111,7 +111,7 @@ orthra can reorder a word's corrections by the sentence it is in: "Please reciev
 offers `letter` first, where the dictionary order puts `leer` first.
 
 - **The model.** It is ELECTRA-small, quantized to 15 MB, and runs in process on the CPU.
-- **Off by default.** With `"context": {"enabled": true}` the server downloads it once from a pinned
+- **Off by default.** With `"context": {"rank": true}` the server downloads it once from a pinned
   revision, checks its SHA-256, and loads it. `orthra model install small` does the same by hand.
 - **Only when you ask.** It runs when you open the code-action menu, never as you type. It takes
   about 13 ms, and the dictionary's order stands if it is slower or fails.
@@ -123,22 +123,34 @@ offers `letter` first, where the dictionary order puts `leer` first.
 ## Rewriting with a model you run
 
 With a model served on your machine through an OpenAI-compatible endpoint (Ollama, llama.cpp's
-server, LM Studio), the code-action menu offers **Rewrite sentence**, or **Rewrite selection** with
-text selected. The model's answer replaces the text once you choose it. It is never a diagnostic and
-never runs on its own, and the findings stay the dictionary's.
+server, LM Studio), the code-action menu offers **Rewrite sentence**: its spelling and grammar
+corrected, the wording kept where it is right. With text selected it offers **Rewrite selection**
+and **Rephrase selection**, the same meaning said more naturally. The model's answer replaces the
+text once you choose it. It is never a diagnostic and never runs on its own, and the findings stay
+the dictionary's.
 
 ```jsonc
 "lsp": { "orthra": { "initialization_options": {
-  "context": { "http": {
+  "context": { "rewrite": {
     "model": "qwen2.5:3b",                       // any model the endpoint serves
-    "endpoint": "http://127.0.0.1:11434/v1"      // the default: Ollama
+    "endpoint": "http://127.0.0.1:11434/v1",     // the default: Ollama
+    "apiKey": "...",                             // only for a server that asks for one
+    "prompts": {                                 // only to replace orthra's own
+      "rephrase": "Rephrase this more formally{language}. Reply with the text only."
+    }
   } }
 } } }
 ```
 
-orthra refuses an endpoint that is not on this machine unless the settings say
-`"allowRemote": true`, and the menu then names the endpoint instead of saying "local model". The
-built-in model above cannot do this: it ranks a word's corrections and writes nothing.
+`{language}` in a prompt becomes `, written in en-US`, or nothing for a language no pack speaks. A
+rewrite that answers more lines than the text has is refused. orthra refuses an endpoint that is not
+on this machine unless the settings say `"allowRemote": true`, and the menu then names the endpoint
+instead of saying "local model".
+
+The two models are independent: `rank` is the built-in one, which orders a word's corrections in 13
+ms and cannot write; `rewrite` is the one you run, which writes and takes seconds. Either, both or
+neither may be on. 0.1.0's `context.enabled` and `context.http` are no longer read, and the server
+says so.
 
 ## Command line
 

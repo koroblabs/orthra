@@ -141,17 +141,44 @@ impl Scorer for FakeScorer {
     }
 }
 
-/// A model that rewrites one sentence: its spelling and grammar corrected, and the rest kept. The
-/// one generative use of a model in orthra, and the one place the context tier may take seconds,
-/// because somebody chose the action and is waiting for it (`docs/04-context.md` §2 C, rule 3).
-pub trait Rewriter: Send + Sync + fmt::Debug {
-    /// `sentence`, corrected. `lang` is the tag of the enabled language the sentence is written
-    /// in, `en-US`, or `und` when no enabled language speaks its script.
-    fn rewrite(&self, sentence: &str, lang: &str) -> Result<String, ScoreError>;
+/// What a rewrite asks of a model.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Rewrite {
+    /// The spelling and grammar corrected, and the wording kept wherever it is right.
+    #[default]
+    Correct,
+    /// The same meaning, said more naturally.
+    Rephrase,
 }
 
-/// Where a sentence is sent to be rewritten: an OpenAI-compatible endpoint the user runs (Ollama,
-/// llama.cpp's server, LM Studio), and the model it serves.
+impl Rewrite {
+    /// The name a setting and an action's data give it: `rewrite`, `rephrase`.
+    pub fn name(self) -> &'static str {
+        match self {
+            Rewrite::Correct => "rewrite",
+            Rewrite::Rephrase => "rephrase",
+        }
+    }
+
+    /// The rewrite `name` names, if it names one.
+    pub fn named(name: &str) -> Option<Rewrite> {
+        [Rewrite::Correct, Rewrite::Rephrase]
+            .into_iter()
+            .find(|rewrite| rewrite.name() == name)
+    }
+}
+
+/// A model that rewrites a sentence, or a selection: corrected, or rephrased. The one generative
+/// use of a model in orthra, and the one place the context tier may take seconds, because
+/// somebody chose the action and is waiting for it (`docs/04-context.md` §2 C, rule 3).
+pub trait Rewriter: Send + Sync + fmt::Debug {
+    /// `text` rewritten as `how` asks. `lang` is the tag of the enabled language the text is
+    /// written in, `en-US`, or `und` when no enabled language speaks its script.
+    fn rewrite(&self, text: &str, lang: &str, how: Rewrite) -> Result<String, ScoreError>;
+}
+
+/// Where text is sent to be rewritten: an OpenAI-compatible endpoint the user runs (Ollama,
+/// llama.cpp's server, LM Studio), the model it serves, and how to ask it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Endpoint {
     /// The API's base, `http://127.0.0.1:11434/v1`: a request goes to `<url>/chat/completions`.
@@ -160,6 +187,38 @@ pub struct Endpoint {
     /// Whether the endpoint may be on another machine. Off unless the user writes it: text stays
     /// on the machine (rule 7, `CLAUDE.md` §5).
     pub allow_remote: bool,
+    /// Sent as `Authorization: Bearer`, for a server that asks for one.
+    pub api_key: Option<ApiKey>,
+    /// The settings' own prompt for each rewrite, in place of orthra's. `{language}` in one is
+    /// where the language is named.
+    pub prompts: Prompts,
+}
+
+/// The prompts the settings give, each in place of orthra's own.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Prompts {
+    pub correct: Option<String>,
+    pub rephrase: Option<String>,
+}
+
+impl Prompts {
+    /// The settings' prompt for `how`, if they give one.
+    pub fn of(&self, how: Rewrite) -> Option<&str> {
+        match how {
+            Rewrite::Correct => self.correct.as_deref(),
+            Rewrite::Rephrase => self.rephrase.as_deref(),
+        }
+    }
+}
+
+/// An API key: shown as `<api key>` wherever an endpoint is printed, so that no log holds it.
+#[derive(Clone, PartialEq, Eq)]
+pub struct ApiKey(pub String);
+
+impl fmt::Debug for ApiKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("<api key>")
+    }
 }
 
 /// What reaches a model that rewrites: `orthra-ml-http`'s, which the binary hands to the server,
@@ -170,14 +229,17 @@ pub trait Connector: Send + Sync + fmt::Debug {
     fn connect(&self, endpoint: &Endpoint) -> Result<Arc<dyn Rewriter>, ScoreError>;
 }
 
-/// The rewriter every test uses, with no model: deterministic, and never right by accident. It
-/// upper-cases the sentence, which no correction does, so an edit it made cannot be mistaken for
-/// the text it replaced.
+/// The rewriter every test uses, with no model: deterministic, and never right by accident. A
+/// correction upper-cases the text and a rephrasing lower-cases it, which no model does, so an
+/// edit it made cannot be mistaken for the text it replaced, nor one rewrite for the other.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct FakeRewriter;
 
 impl Rewriter for FakeRewriter {
-    fn rewrite(&self, sentence: &str, _: &str) -> Result<String, ScoreError> {
-        Ok(sentence.to_uppercase())
+    fn rewrite(&self, text: &str, _: &str, how: Rewrite) -> Result<String, ScoreError> {
+        Ok(match how {
+            Rewrite::Correct => text.to_uppercase(),
+            Rewrite::Rephrase => text.to_lowercase(),
+        })
     }
 }

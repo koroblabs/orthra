@@ -6,7 +6,7 @@
 use std::sync::{Arc, Mutex};
 
 use expect_test::expect;
-use orthra_engine::context::{Connector, Endpoint, FakeRewriter, Rewriter, ScoreError};
+use orthra_engine::context::{Connector, Endpoint, FakeRewriter, Rewrite, Rewriter, ScoreError};
 use serde_json::{Value, json};
 
 use crate::tests::{Fixture, zed_client};
@@ -67,13 +67,13 @@ struct Recording {
 }
 
 impl Rewriter for Recording {
-    fn rewrite(&self, sentence: &str, lang: &str) -> Result<String, ScoreError> {
+    fn rewrite(&self, sentence: &str, lang: &str, how: Rewrite) -> Result<String, ScoreError> {
         self.asked
             .lock()
             .unwrap()
-            .push(format!("rewrite {lang} {sentence:?}"));
+            .push(format!("{} {lang} {sentence:?}", how.name()));
         match self.answer {
-            Answer::Fake => FakeRewriter.rewrite(sentence, lang),
+            Answer::Fake => FakeRewriter.rewrite(sentence, lang, how),
             Answer::Same => Ok(sentence.to_owned()),
             Answer::Broken => Err(ScoreError(
                 "http://127.0.0.1:11434/v1/chat/completions: io: Connection refused".to_owned(),
@@ -84,7 +84,7 @@ impl Rewriter for Recording {
 
 /// The settings that name an endpoint, as Zed's `initialization_options` would.
 fn http() -> Value {
-    json!({ "context": { "http": { "endpoint": "http://127.0.0.1:11434/v1", "model": "qwen3:4b" } } })
+    json!({ "context": { "rewrite": { "endpoint": "http://127.0.0.1:11434/v1", "model": "qwen3:4b" } } })
 }
 
 async fn started(files: &[(&str, &str)], connector: Arc<Pretend>, options: Value) -> Fixture {
@@ -230,6 +230,7 @@ async fn asked_the_sentence_at_the_cursor_is_offered_then_rewritten() {
         {
           "data": {
             "rewrite": {
+              "how": "rewrite",
               "range": {
                 "end": {
                   "character": 21,
@@ -254,6 +255,7 @@ async fn asked_the_sentence_at_the_cursor_is_offered_then_rewritten() {
         {
           "data": {
             "rewrite": {
+              "how": "rewrite",
               "range": {
                 "end": {
                   "character": 21,
@@ -294,7 +296,7 @@ async fn asked_the_sentence_at_the_cursor_is_offered_then_rewritten() {
     expect![[r#"
         connect http://127.0.0.1:11434/v1 qwen3:4b allow_remote=false
         rewrite en-US "It are\nwrapped `here` today."
-        window/logMessage: orthra: "Rewrite sentence" asks qwen3:4b at http://127.0.0.1:11434/v1"#]]
+        window/logMessage: orthra: the rewrite actions ask qwen3:4b at http://127.0.0.1:11434/v1"#]]
     .assert_eq(&format!("{}\n{}", pretend.asked(), said(&server)));
 }
 
@@ -357,18 +359,18 @@ async fn a_model_that_fails_gives_no_edit_and_is_shown_once() {
     assert_eq!(resolved, action, "no edit");
     expect![[r#"
         window/showMessage: orthra: the sentence was not rewritten: http://127.0.0.1:11434/v1/chat/completions: io: Connection refused
-        window/logMessage: orthra: "Rewrite sentence" asks qwen3:4b at http://127.0.0.1:11434/v1
+        window/logMessage: orthra: the rewrite actions ask qwen3:4b at http://127.0.0.1:11434/v1
         window/logMessage: orthra: the sentence was not rewritten: http://127.0.0.1:11434/v1/chat/completions: io: Connection refused
         --
         window/showMessage: orthra: the model left the sentence as it was
-        window/logMessage: orthra: "Rewrite sentence" asks qwen3:4b at http://127.0.0.1:11434/v1"#]]
+        window/logMessage: orthra: the rewrite actions ask qwen3:4b at http://127.0.0.1:11434/v1"#]]
     .assert_eq(&format!("{}\n--\n{}", said(&server), said(&unchanged)));
 }
 
 #[tokio::test]
 async fn an_endpoint_allowed_to_be_remote_is_named_where_local_would_be() {
     let pretend = Pretend::answering(Answer::Fake);
-    let options = json!({ "context": { "http": {
+    let options = json!({ "context": { "rewrite": {
         "endpoint": "https://models.example.com/v1", "model": "big", "allowRemote": true,
     } } });
     let mut server = started(FILES, Arc::clone(&pretend), options).await;
@@ -382,9 +384,10 @@ async fn an_endpoint_allowed_to_be_remote_is_named_where_local_would_be() {
 #[tokio::test]
 async fn no_endpoint_no_rewrite_and_one_that_cannot_be_had_is_said() {
     let options = [
-        json!({ "context": { "enabled": true } }),
-        json!({ "context": { "enabled": false, "http": { "model": "qwen3:4b" } } }),
-        json!({ "context": { "http": { "endpoint": "http://127.0.0.1:11434/v1" } } }),
+        json!({ "context": { "rank": true } }),
+        json!({ "context": { "rewrite": { "endpoint": "http://127.0.0.1:11434/v1" } } }),
+        // 0.1.0's keys, which no longer do anything, and say so.
+        json!({ "context": { "enabled": true, "http": { "model": "qwen3:4b" } } }),
     ];
     let mut got = Vec::new();
     for options in options {
@@ -404,20 +407,20 @@ async fn no_endpoint_no_rewrite_and_one_that_cannot_be_had_is_said() {
     without.initialized().await;
     got.push(format!("without ml-http\n  said: {}", said(&without)));
     expect![[r#"
-        {"context":{"enabled":true}}
+        {"context":{"rank":true}}
           actions: none
           asked: none
           said: none
-        {"context":{"enabled":false,"http":{"model":"qwen3:4b"}}}
+        {"context":{"rewrite":{"endpoint":"http://127.0.0.1:11434/v1"}}}
           actions: none
           asked: none
-          said: none
-        {"context":{"http":{"endpoint":"http://127.0.0.1:11434/v1"}}}
+          said: window/showMessage: orthra: `context.rewrite` names no `model` to run, so there is no rewrite action
+        {"context":{"enabled":true,"http":{"model":"qwen3:4b"}}}
           actions: none
           asked: none
-          said: window/showMessage: orthra: `context.http` names no `model` for its endpoint to run, so there is no "Rewrite sentence" action
+          said: window/showMessage: orthra: `context.enabled` and `context.http` are no longer read: the built-in model is `context.rank`, and a model you run is `context.rewrite` (see orthra's README)
         without ml-http
-          said: window/showMessage: orthra: this orthra was built without `ml-http`, so there is no "Rewrite sentence" action"#]]
+          said: window/showMessage: orthra: this orthra was built without `ml-http`, so there is no rewrite action"#]]
     .assert_eq(&got.join("\n"));
 }
 
@@ -434,23 +437,34 @@ async fn what_is_selected_is_offered_and_rewritten_as_selected() {
     let selected = actions(&mut server, span(0, 16, 22), asked()).await;
     let spaces = actions(&mut server, span(0, 15, 16), asked()).await;
     let in_code = actions(&mut server, span(4, 0, 4), asked()).await;
-    let action = the_rewrite(&selected);
-    let resolved = server.request("codeAction/resolve", action).await;
-    let edit = &resolved["edit"]["changes"][server.uri("notes.md").as_str()][0];
+    let mut edits = Vec::new();
+    for action in selected
+        .iter()
+        .filter(|action| action["kind"] == "refactor.rewrite")
+    {
+        let resolved = server.request("codeAction/resolve", action.clone()).await;
+        let edit = &resolved["edit"]["changes"][server.uri("notes.md").as_str()][0];
+        edits.push(format!(
+            "{}: {} at {}",
+            action["title"].as_str().unwrap_or("?"),
+            edit["newText"],
+            edit["range"]
+        ));
+    }
     expect![[r#"
-        selected: Rewrite selection (local model)
+        selected: Rewrite selection (local model), Rephrase selection (local model)
         spaces: Rewrite sentence (local model)
         in a code block: none
-        edit: "IT ARE" at {"end":{"character":22,"line":0},"start":{"character":16,"line":0}}
+        Rewrite selection (local model): "IT ARE" at {"end":{"character":22,"line":0},"start":{"character":16,"line":0}}
+        Rephrase selection (local model): "it are" at {"end":{"character":22,"line":0},"start":{"character":16,"line":0}}
         connect http://127.0.0.1:11434/v1 qwen3:4b allow_remote=false
-        rewrite en-US "It are""#]]
-    .assert_eq(&format!(
-        "selected: {}\nspaces: {}\nin a code block: {}\nedit: {} at {}\n{}",
+        rewrite en-US "It are"
+        rephrase en-US "It are""#]].assert_eq(&format!(
+        "selected: {}\nspaces: {}\nin a code block: {}\n{}\n{}",
         titles(&selected),
         titles(&spaces),
         titles(&in_code),
-        edit["newText"],
-        edit["range"],
+        edits.join("\n"),
         pretend.asked(),
     ));
 }

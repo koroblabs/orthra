@@ -241,6 +241,11 @@ fn path_of(uri: &Uri) -> String {
 impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> jsonrpc::Result<InitializeResult> {
         let (languages, severity) = options(params.initialization_options.as_ref());
+        if let Some(outdated) = context::outdated(params.initialization_options.as_ref()) {
+            self.client
+                .show_message(MessageType::WARNING, outdated)
+                .await;
+        }
         let wanted = context::wanted(params.initialization_options.as_ref());
         // Connected now, so that an endpoint that cannot be had is said once, at the start. Nothing
         // is sent until somebody chooses the action.
@@ -253,7 +258,7 @@ impl LanguageServer for Backend {
                 self.client
                     .show_message(
                         MessageType::WARNING,
-                        format!("orthra: {why}, so there is no \"Rewrite sentence\" action"),
+                        format!("orthra: {why}, so there is no rewrite action"),
                     )
                     .await;
                 None
@@ -264,7 +269,7 @@ impl LanguageServer for Backend {
                 .log_message(
                     MessageType::INFO,
                     format!(
-                        "orthra: \"Rewrite sentence\" asks {} at {}",
+                        "orthra: the rewrite actions ask {} at {}",
                         endpoint.model, endpoint.url
                     ),
                 )
@@ -453,7 +458,7 @@ impl LanguageServer for Backend {
             let rewrite = if asked && rewrite::wanted(params.context.only.as_deref()) {
                 rewrite::offer(&mut state, uri, params.range)
             } else {
-                None
+                Vec::new()
             };
             (plan, rewrite)
         };

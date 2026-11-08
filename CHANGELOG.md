@@ -10,8 +10,12 @@ names the tag's version.
   Kotlin, Swift, C, C++ and Ruby; a property name in a stylesheet is held to known typos (`widht`);
 - leaves a template's code out of an HTML page (`{{ }}`, `{% %}`, `{# #}`, `<% %>`): Django's admin
   templates went from 268 findings to none;
-- rewrites the selection, not only the sentence at the cursor, with a model you run through a local
-  OpenAI-compatible endpoint, now described in the README;
+- rewrites the selection, not only the sentence at the cursor, and rephrases it, with a model you
+  run through a local OpenAI-compatible endpoint, now described in the README; the prompts can be
+  your own, and an API key is sent to a server that asks for one;
+- **settings:** the built-in model is `context.rank` and a model you run is `context.rewrite`, each
+  on its own. 0.1.0's `context.enabled` and `context.http` are no longer read, and the server says
+  so;
 - reads a doc comment's markup as markup, whatever the language: `<pre>`, `<code>`, `{@code}`,
   `{@link}`, and a code block indented in Markdown's way;
 - English is either spelling until a setting names one: en-US and en-GB are built in, and

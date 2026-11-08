@@ -9,15 +9,16 @@ use std::{
 };
 
 use expect_test::expect;
-use orthra_context::{Connector, Endpoint, Rewriter, ScoreError};
+use orthra_context::{ApiKey, Connector, Endpoint, Prompts, Rewrite, Rewriter, ScoreError};
 use serde_json::{Value, json};
 
 use crate::Http;
 
-/// What the server was asked: the request line, the content type, and the body.
+/// What the server was asked: the request line, the content type, the authorization, and the body.
 struct Asked {
     line: String,
     content_type: String,
+    authorization: String,
     body: String,
 }
 
@@ -62,6 +63,7 @@ fn read_request(stream: &mut TcpStream) -> Asked {
     Asked {
         line: head.first().cloned().unwrap_or_default(),
         content_type: header("content-type"),
+        authorization: header("authorization"),
         body: String::from_utf8(body).expect("UTF-8"),
     }
 }
@@ -93,6 +95,8 @@ fn endpoint(url: &str) -> Endpoint {
         url: url.to_owned(),
         model: "qwen3:4b".to_owned(),
         allow_remote: false,
+        api_key: None,
+        prompts: Prompts::default(),
     }
 }
 
@@ -113,7 +117,7 @@ fn error(got: Result<String, ScoreError>, endpoint: &str) -> String {
 #[test]
 fn a_sentence_is_posted_with_the_prompt_and_the_answer_is_its_rewrite() {
     let (url, server) = serve(completion("\"The cat sat on the mat.\""));
-    let got = rewriter(&url).rewrite("Teh cat sat on teh mat.", "en-US");
+    let got = rewriter(&url).rewrite("Teh cat sat on teh mat.", "en-US", Rewrite::Correct);
     let asked = server.join().unwrap();
     let body: Value = serde_json::from_str(&asked.body).expect("a JSON body");
     expect![[r#"
@@ -146,7 +150,7 @@ fn a_sentence_is_posted_with_the_prompt_and_the_answer_is_its_rewrite() {
 #[test]
 fn a_language_no_pack_speaks_is_not_named() {
     let (url, server) = serve(completion("Γεια σου."));
-    let got = rewriter(&format!("{url}/")).rewrite("Γεια σου.", "und");
+    let got = rewriter(&format!("{url}/")).rewrite("Γεια σου.", "und", Rewrite::Correct);
     let asked = server.join().unwrap();
     let body: Value = serde_json::from_str(&asked.body).unwrap();
     let prompt = body["messages"][0]["content"].as_str().unwrap();
@@ -161,16 +165,16 @@ fn an_error_status_says_what_the_endpoint_said() {
         "404 Not Found",
         r#"{"error":{"message":"model \"qwen3:4b\" not found, try pulling it first","type":"api_error","param":null,"code":null}}"#,
     ));
-    let got = rewriter(&url).rewrite("Teh cat.", "en-US");
+    let got = rewriter(&url).rewrite("Teh cat.", "en-US", Rewrite::Correct);
     server.join().unwrap();
     let (old, old_server) = serve(http(
         "500 Internal Server Error",
         r#"{"error":"out of memory"}"#,
     ));
-    let old_got = rewriter(&old).rewrite("Teh cat.", "en-US");
+    let old_got = rewriter(&old).rewrite("Teh cat.", "en-US", Rewrite::Correct);
     old_server.join().unwrap();
     let (bare, bare_server) = serve(http("502 Bad Gateway", "<html>Bad gateway</html>"));
-    let bare_got = rewriter(&bare).rewrite("Teh cat.", "en-US");
+    let bare_got = rewriter(&bare).rewrite("Teh cat.", "en-US", Rewrite::Correct);
     bare_server.join().unwrap();
     expect![[r#"
         <endpoint>/chat/completions: answered 404 Not Found: model "qwen3:4b" not found, try pulling it first
@@ -189,7 +193,7 @@ fn an_answer_that_is_not_a_rewrite_is_an_error() {
     let (url, server) = serve(completion(
         "Here is the corrected sentence:\n\nThe cat sat.",
     ));
-    let got = rewriter(&url).rewrite("Teh cat sat.", "en-US");
+    let got = rewriter(&url).rewrite("Teh cat sat.", "en-US", Rewrite::Correct);
     server.join().unwrap();
     expect![[r#"<endpoint>/chat/completions: the model answered more lines than the sentence has, which is not a rewrite of it"#]]
     .assert_eq(&error(got, &url));
@@ -205,7 +209,7 @@ fn a_redirect_is_not_followed() {
     let (url, server) = serve(format!(
         "HTTP/1.1 307 Temporary Redirect\r\nLocation: {to}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
     ));
-    let got = rewriter(&url).rewrite("Teh cat.", "en-US");
+    let got = rewriter(&url).rewrite("Teh cat.", "en-US", Rewrite::Correct);
     server.join().unwrap();
     elsewhere.set_nonblocking(true).unwrap();
     assert!(
@@ -230,7 +234,7 @@ fn an_endpoint_slower_than_the_timeout_is_an_error() {
     let got = Http::timing_out_after(Duration::from_millis(200))
         .connect(&endpoint(&url))
         .unwrap()
-        .rewrite("Teh cat.", "en-US");
+        .rewrite("Teh cat.", "en-US", Rewrite::Correct);
     done.send(()).unwrap();
     server.join().unwrap();
     let got = error(got, &url);
@@ -243,7 +247,7 @@ fn an_endpoint_slower_than_the_timeout_is_an_error() {
 #[test]
 fn an_answer_larger_than_the_limit_is_an_error() {
     let (url, server) = serve(completion(&"word ".repeat(60_000)));
-    let got = rewriter(&url).rewrite("Teh cat.", "en-US");
+    let got = rewriter(&url).rewrite("Teh cat.", "en-US", Rewrite::Correct);
     let _ = server.join();
     let got = error(got, &url);
     assert!(got.contains("larger than request limit"), "{got}");
@@ -255,7 +259,7 @@ fn an_endpoint_nobody_listens_on_is_an_error() {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         format!("http://{}/v1", listener.local_addr().unwrap())
     };
-    let got = rewriter(&url).rewrite("Teh cat.", "en-US");
+    let got = rewriter(&url).rewrite("Teh cat.", "en-US", Rewrite::Correct);
     assert!(got.is_err(), "{got:?}");
 }
 
@@ -267,6 +271,8 @@ fn an_endpoint_on_another_machine_is_refused_before_anything_is_sent() {
                 url: url.to_owned(),
                 model: "qwen3:4b".to_owned(),
                 allow_remote,
+                api_key: None,
+                prompts: Prompts::default(),
             })
             .map(|_| "connected".to_owned())
             .unwrap_or_else(|err| err.0)
@@ -289,6 +295,50 @@ fn an_endpoint_on_another_machine_is_refused_before_anything_is_sent() {
             refused("http://192.168.1.5:11434/v1", true),
             refused("http://localhost:11434/v1/", false),
             model,
+        ]
+        .join("\n"),
+    );
+}
+
+/// A rephrasing gets orthra's rephrasing prompt, a prompt the settings give replaces orthra's with
+/// the language named where it says, and an API key goes as a bearer token.
+#[test]
+fn a_rephrasing_a_prompt_of_ones_own_and_an_api_key_are_sent() {
+    let ask = |endpoint: Endpoint, how: Rewrite| {
+        let (url, server) = serve(completion("Said again."));
+        let got = Http::default()
+            .connect(&Endpoint {
+                url: url.clone(),
+                ..endpoint
+            })
+            .unwrap()
+            .rewrite("Said it.", "en-GB", how);
+        let asked = server.join().unwrap();
+        let body: Value = serde_json::from_str(&asked.body).unwrap();
+        format!(
+            "{} | authorization: {:?} | {got:?}",
+            body["messages"][0]["content"].as_str().unwrap(),
+            asked.authorization,
+        )
+    };
+    let own = Endpoint {
+        api_key: Some(ApiKey("sk-local-1".to_owned())),
+        prompts: Prompts {
+            correct: None,
+            rephrase: Some("Say it more formally{language}.".to_owned()),
+        },
+        ..endpoint("")
+    };
+    expect![[r#"
+        You rephrase text so that it reads naturally. The user's message is part of a document, written in en-GB. Keep its meaning and its language, and keep its markup and line breaks exactly as they are: Markdown, backticks, links, code. Correct its spelling and grammar too. Do not complete it, explain it or add to it. Reply with the rephrased text only, without quotes. | authorization: "" | Ok("Said again.")
+        Say it more formally, written in en-GB. | authorization: "Bearer sk-local-1" | Ok("Said again.")
+        You correct the spelling and grammar of text. The user's message is one sentence of a document, or part of one, written in en-GB. Keep its meaning, keep its wording wherever it is correct, and keep its markup and line breaks exactly as they are: Markdown, backticks, links, code. Do not complete it, explain it or add to it. Reply with the corrected text only, without quotes. | authorization: "Bearer sk-local-1" | Ok("Said again.")
+        Endpoint { url: "", model: "qwen3:4b", allow_remote: false, api_key: Some(<api key>), prompts: Prompts { correct: None, rephrase: Some("Say it more formally{language}.") } }"#]].assert_eq(
+        &[
+            ask(endpoint(""), Rewrite::Rephrase),
+            ask(own.clone(), Rewrite::Rephrase),
+            ask(own.clone(), Rewrite::Correct),
+            format!("{own:?}"),
         ]
         .join("\n"),
     );

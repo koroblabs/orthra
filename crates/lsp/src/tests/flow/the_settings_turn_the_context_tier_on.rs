@@ -96,7 +96,7 @@ fn said(server: &Fixture) -> String {
 
 #[tokio::test]
 async fn turned_on_the_model_is_installed_loaded_and_reorders() {
-    let (mut server, models) = started(&[NOTES], json!({ "context": { "enabled": true } })).await;
+    let (mut server, models) = started(&[NOTES], json!({ "context": { "rank": true } })).await;
     let order = offered(&mut server).await;
     expect![[r#"
         installed? small, install small, load small
@@ -111,10 +111,10 @@ async fn turned_on_the_model_is_installed_loaded_and_reorders() {
 
 #[tokio::test]
 async fn off_or_with_auto_install_off_nothing_is_installed_and_the_order_is_lexical() {
-    let (mut off, off_models) = started(&[NOTES], json!({ "context": { "enabled": false } })).await;
+    let (mut off, off_models) = started(&[NOTES], json!({ "context": { "rank": false } })).await;
     let (mut manual, manual_models) = started(
         &[NOTES, ("orthra.toml", "auto-install = false\n")],
-        json!({ "context": { "enabled": true, "model": "small" } }),
+        json!({ "context": { "rank": { "model": "small" } } }),
     )
     .await;
     let (off_order, manual_order) = (offered(&mut off).await, offered(&mut manual).await);
@@ -157,7 +157,7 @@ async fn asked(server: &mut Fixture) -> String {
 async fn left_unasked_the_model_is_unloaded_and_the_next_asked_action_loads_it_again() {
     let (mut server, models) = started(
         &[NOTES],
-        json!({ "context": { "enabled": true, "idleUnload": 60 } }),
+        json!({ "context": { "rank": { "idleUnload": 60 } } }),
     )
     .await;
     server.open("notes.md").await;

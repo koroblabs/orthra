@@ -278,23 +278,34 @@ context tier.** That is an acceptable outcome.
 
 ## 6. Configuration
 
-**Built (2026-11-06):** the editor's initialization options, as `.zed/settings.json` writes them.
+**Built (2026-11-06), split in two (2026-11-08):** the editor's initialization options, as
+`.zed/settings.json` writes them. The built-in model and a model the user runs answer different
+questions at different speeds, and each has its own key: either, both or neither may be on.
 
 ```jsonc
 "lsp": { "orthra": { "initialization_options": {
   "context": {
-    // Re-ranking. Off unless enabled. "small" by default; unloaded after `idleUnload` seconds
-    // unasked (600).
-    "enabled": true, "model": "small", "idleUnload": 600,
-    // "Rewrite sentence (local model)". Absent means no such action. `endpoint` is Ollama's
-    // unless given, `model` is required, and `allowRemote` is false unless it is `true` itself.
-    "http": { "endpoint": "http://127.0.0.1:11434/v1", "model": "qwen3:4b", "allowRemote": false }
+    // Re-ranking by the built-in model. Off unless given: `true`, or "small" by default and
+    // unloaded after `idleUnload` seconds unasked (600).
+    "rank": { "model": "small", "idleUnload": 600 },
+    // "Rewrite sentence", and "Rewrite selection" and "Rephrase selection". Absent means no such
+    // action. `endpoint` is Ollama's unless given, `model` is required, `allowRemote` is false
+    // unless it is `true` itself, `apiKey` is sent as a bearer token, and `prompts` replace
+    // orthra's, `{language}` naming the language.
+    "rewrite": {
+      "endpoint": "http://127.0.0.1:11434/v1", "model": "qwen3:4b", "allowRemote": false,
+      "apiKey": "...", "prompts": { "rewrite": "...", "rephrase": "..." }
+    }
   }
 } } }
 ```
 
-- **The rewrite action** needs only `http`: it does not need `enabled`. `"enabled": false` turns the
-  whole tier off, rewriting included.
+- **0.1.0's keys** (`enabled`, `model`, `idleUnload`, `http`) are not read, and the server says so
+  once at `initialize`: a setting quietly ignored leaves somebody wondering why their model never
+  answers.
+- **The rewrite actions** need only `rewrite`. Rephrasing is offered for a selection only, since a
+  rephrasing nobody selected would be one more entry in every menu.
+- **An API key** is never written to a log: an endpoint prints it as `<api key>`.
   - The endpoint is checked at `initialize`. One that cannot be had is said once: no model named,
     not on this machine, or a binary without `ml-http`.
   - It is read from the editor's settings only, never from a project's `orthra.toml`.
@@ -347,8 +358,8 @@ Still to build, as first written:
 confusables = true                 # not built: a small model is not quiet enough (§4)
 ```
 
-`[context.http]` in `orthra.toml` is not built, deliberately. A repository's own settings must not
-be able to choose where its reader's text is sent.
+`[context.rewrite]` in `orthra.toml` is not built, deliberately. A repository's own settings must
+not be able to choose where its reader's text is sent.
 
 ---
 
