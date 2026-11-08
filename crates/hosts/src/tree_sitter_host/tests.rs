@@ -157,6 +157,10 @@ fn every_builtin_host_loads() {
         "dart",
         "zig",
         "objective-c",
+        "haskell",
+        "ocaml",
+        "ocaml_interface",
+        "elm",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }

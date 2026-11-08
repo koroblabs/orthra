@@ -1,0 +1,6 @@
+# Words of Elm and its ecosystem that are words in an Elm file, whatever a dictionary says:
+# keywords, the core packages and the most-used tools. A dictionary word needs no line here. One
+# word per line, sorted, so two additions merge without a conflict.
+appendable
+appendables
+comparables

@@ -16,10 +16,12 @@ mod cpp;
 mod csharp;
 mod css;
 mod dart;
+mod elm;
 mod fsharp;
 pub mod git_commit;
 mod go;
 mod groovy;
+mod haskell;
 mod html;
 mod java;
 mod javascript;
@@ -29,6 +31,7 @@ mod less;
 mod lua;
 pub mod markdown;
 mod objc;
+mod ocaml;
 pub mod parsed;
 mod php;
 pub mod plain_text;
@@ -181,6 +184,10 @@ impl Hosts {
                 Box::new(&dart::HOST),
                 Box::new(&zig::HOST),
                 Box::new(&objc::HOST),
+                Box::new(&haskell::HOST),
+                Box::new(&ocaml::HOST),
+                Box::new(&ocaml::INTERFACE),
+                Box::new(&elm::HOST),
             ],
         }
     }

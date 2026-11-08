@@ -1,0 +1,25 @@
+# Words of Haskell and its ecosystem that are words in a Haskell file, whatever a dictionary says:
+# keywords, Prelude and the base library, language extensions and the most-used tools. A dictionary
+# word needs no line here. One word per line, sorted, so two additions merge without a conflict.
+bytestring
+bytestrings
+catamorphism
+contravariantly
+deepseq
+fmap
+fmaps
+functors
+kinded
+lazify
+lazifies
+lookups
+mempty
+monoidal
+mzero
+polyadic
+polykinded
+popcount
+primops
+typeclass
+typeclasses
+whnf

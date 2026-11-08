@@ -1,0 +1,15 @@
+# Words of OCaml and its ecosystem that are words in an OCaml file, whatever a dictionary says:
+# keywords, the standard library, ppx attributes and the most-used tools. A dictionary word needs
+# no line here. One word per line, sorted, so two additions merge without a conflict.
+functors
+hashtbl
+ksprintf
+ocamlbuild
+ocamlformat
+parsetree
+ppxlib
+refmt
+topfind
+topkg
+tuareg
+typedtree

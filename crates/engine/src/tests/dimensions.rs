@@ -1203,3 +1203,108 @@ fn objective_c_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn haskell_through_every_dimension() {
+    check(
+        r#"
+        //- /src/Greet.hs
+        -- | Seperates teh greeting.
+        module Greet where
+
+        recieve :: String -> String
+        recieve person = "Hello\nworld, occured"
+
+        main = putStrLn (recieve "x")
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > -- | Seperates teh greeting.
+                   ^^^^^^^^^ known-typo -> Separates
+                             ^^^ known-typo -> the
+            > module Greet where
+            >
+            > recieve :: String -> String
+            > recieve person = "Hello\nworld, occured"
+              ^^^^^^^ known-typo -> receive
+                                              ^^^^^^^ known-typo -> occurred
+            >
+            > main = putStrLn (recieve "x")
+        "#]],
+    );
+}
+
+#[test]
+fn ocaml_through_every_dimension() {
+    check(
+        r#"
+        //- /lib/greet.ml
+        (* Seperates teh greeting. *)
+        let recieve person = "Hello\nworld, occured"
+
+        let () = print_endline (recieve "x")
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > (* Seperates teh greeting. *)
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > let recieve person = "Hello\nworld, occured"
+                  ^^^^^^^ known-typo -> receive
+                                                  ^^^^^^^ known-typo -> occurred
+            >
+            > let () = print_endline (recieve "x")
+        "#]],
+    );
+}
+
+#[test]
+fn ocaml_interface_through_every_dimension() {
+    check(
+        r#"
+        //- /lib/greet.mli
+        (** Seperates teh greeting. *)
+        val recieve : string -> string
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > (** Seperates teh greeting. *)
+                  ^^^^^^^^^ known-typo -> Separates
+                            ^^^ known-typo -> the
+            > val recieve : string -> string
+                  ^^^^^^^ known-typo -> receive
+        "#]],
+    );
+}
+
+#[test]
+fn elm_through_every_dimension() {
+    check(
+        r#"
+        //- /src/Main.elm
+        module Main exposing (main)
+
+        -- Seperates teh greeting.
+        recieve : String -> String
+        recieve person =
+            "Hello\nworld, occured"
+
+        main = recieve "x"
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > module Main exposing (main)
+            >
+            > -- Seperates teh greeting.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > recieve : String -> String
+            > recieve person =
+              ^^^^^^^ known-typo -> receive
+            >     "Hello\nworld, occured"
+                                 ^^^^^^^ known-typo -> occurred
+            >
+            > main = recieve "x"
+        "#]],
+    );
+}
