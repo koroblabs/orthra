@@ -5,8 +5,13 @@ names the tag's version.
 
 ## Unreleased
 
-- checks CSS: its comments, the text of `content:`, the class and id names, custom properties and
-  `@keyframes` names a stylesheet declares, and known typos in property names (`widht`);
+- checks fourteen more languages, each in its comments, its strings and the names a file declares:
+  JavaScript and JSX, shell scripts (bash, sh, zsh, ksh), HTML, CSS, SCSS, LESS, SQL, Lua, Java,
+  Kotlin, Swift, C, C++ and Ruby; a property name in a stylesheet is held to known typos (`widht`);
+- leaves a template's code out of an HTML page (`{{ }}`, `{% %}`, `{# #}`, `<% %>`): Django's admin
+  templates went from 268 findings to none;
+- reads a doc comment's markup as markup, whatever the language: `<pre>`, `<code>`, `{@code}`,
+  `{@link}`, and a code block indented in Markdown's way;
 - English is either spelling until a setting names one: en-US and en-GB are built in, and
   `languages = ["en-US"]` makes a project American only;
 - test data is not checked: `fixtures/`, `*-fixtures/`, `__fixtures__/` and `testdata/` in every

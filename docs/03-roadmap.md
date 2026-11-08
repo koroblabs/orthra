@@ -130,6 +130,10 @@ Nothing in this phase checks a word. It builds everything that will judge the wo
 - **Hosts:** Rust, TypeScript, TSX, Python, Go, PHP, TOML, YAML and JSON on tree-sitter. They are
   pinned with `=`, their grammars load on first use, and a failure stays with its host. Each names
   its own test files and doc tags as data.
+- **Fourteen more (2026-11-08):** JavaScript, shell, HTML, CSS, SCSS, LESS, SQL, Lua, Java, Kotlin,
+  Swift, C, C++ and Ruby, each one agent's directory, measured quiet on two to four well-kept
+  projects of its language. SCSS's and LESS's grammars predate the `LANGUAGE` constant and load
+  through `LanguageSource::Function`; HTML cuts a template's code out of its text.
 - **Every English incumbent case passes** (13 of 13). The two Ukrainian cases wait for Phase 4.
 - **The quiet exit:** on every `.rs` and `.md` file, before any words file, phrost is at **2.5**
   findings per 1 000 lines (target ≤ 3, met) and ripgrep at **4.6** (target ≤ 6, met). What ripgrep

@@ -58,8 +58,9 @@ Things that are never words are never checked:
 - Words are routed by script, word by word, so Ukrainian comments next to English names need no
   setting.
 
-**Formats:** plain text, Markdown, Git commit messages, Rust, TypeScript and TSX, Python, Go, PHP,
-TOML, YAML, JSON and CSS.
+**Formats:** plain text, Markdown, Git commit messages, Rust, TypeScript and TSX, JavaScript and
+JSX, Python, Go, PHP, Java, Kotlin, Swift, C, C++, Ruby, Lua, shell scripts, SQL, HTML (with the
+code of its templates left out), CSS, SCSS, LESS, TOML, YAML and JSON.
 
 ## Install
 

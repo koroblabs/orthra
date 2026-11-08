@@ -17,11 +17,12 @@ Phases 0 to 3 are done, and 0.1.0 is the first release: `orthra serve` runs in Z
 `orthra-zed`, which downloads the release binary for the platform. Phases 4 and 5 are done in part:
 uk-UA is installed on first use and compiled to an FST, and the context tier, opt-in, reorders an
 asked word's corrections with a model in the process and rewrites a sentence through an endpoint on
-the machine. orthra checks words in plain text, Markdown, commit messages, Rust, TypeScript, Python,
-Go, PHP, TOML, YAML, JSON and CSS, in the editor and from the command line (`orthra check`,
-`explain`, `perf`). Every number in §3 and in `docs/02-testing.md` level 9 is measured, with its
-date. On the zero corpus orthra is 16 to 23 times quieter than codebook on the same files, and
-`just zero` ratchets its counts so they only go down. What is still a target says so.
+the machine. orthra checks words in plain text, Markdown, commit messages, Rust, TypeScript,
+JavaScript, Python, Go, PHP, Java, Kotlin, Swift, C, C++, Ruby, Lua, shell scripts, SQL, HTML, CSS,
+SCSS, LESS, TOML, YAML and JSON, in the editor and from the command line (`orthra check`, `explain`,
+`perf`). Every number in §3 and in `docs/02-testing.md` level 9 is measured, with its date. On the
+zero corpus orthra is 16 to 23 times quieter than codebook on the same files, and `just zero`
+ratchets its counts so they only go down. What is still a target says so.
 
 orthra exists because the incumbent for Zed, codebook, is reported by the people who use it as not
 good enough. "Not good enough" is a feeling. Phase 0 turns it into a list of failing fixtures, and
@@ -303,6 +304,16 @@ first word en-US refuses, and the pages of the rare-word lists a lookup reads ab
 keystroke did not move. A CSS keystroke costs 3.4 ms per 2 000 lines, Rust's 5.4 on the same machine
 (`bootstrap.css`, 12 056 lines, against phrost's `skeleton.rs`); a 467-line stylesheet's, 1.1 ms.
 The grammar loads in 1.3 ms.
+
+**The hosts added on 2026-11-08,** on the same VM, beside Rust's 16 to 21 ms cold per 2 000 lines
+and 0.6 to 0.8 ms keystroke p95: JavaScript, shell, HTML, Lua, Java, Kotlin, C and LESS cost about
+what Rust does. Dense SQL costs four to five times Rust per line (13 ms for a keystroke in
+pgvector's 918-line `vector.sql`). SCSS's old grammar recovers from errors on every `!default`:
+twice Rust cold, six times on a keystroke, 35 ms at worst in bootstrap's `_variables.scss`.
+tree-sitter-cpp is slow on template-heavy headers, about 90 ms a keystroke in fmt's `format.h`
+whatever the query. Ruby's query loads in 63 ms and Swift's in about 45, against a 50 ms budget,
+after merging patterns that tree-sitter's query analysis made expensive (a pattern rooted at Swift's
+`function_declaration` alone cost 200 ms).
 
 **Memory rule:** RSS is dominated by _the dictionaries in use plus the open documents_. If RSS
 scales with workspace size, that is the bug. The project lexicon stores hashed words, not text, for
