@@ -18,6 +18,20 @@ fn a_translation_is_named_by_its_path() {
         "docs/de/README.md",
         "locales/sr-Latn/a.json",
         "i18n",
+        "app/src/main/res/values-es/strings.xml",
+        "app/src/main/res/values-pt-rBR/strings.xml",
+        "app/src/main/res/values-b+sr+Latn/strings.xml",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-night/colors.xml",
+        "app/src/main/res/values-v21/styles.xml",
+        "app/src/main/res/values-in/strings.xml",
+        "app/src/main/res/values-ast/strings.xml",
+        "app/src/main/res/values-car/dimens.xml",
+        "Sources/Base.lproj/Main.storyboard",
+        "Sources/de.lproj/Localizable.strings",
+        "src/Properties/Strings.fr.resx",
+        "src/Properties/Strings.resx",
+        "src/Forms/Main.Designer.resx",
     ];
     let named: Vec<String> = paths
         .iter()
@@ -37,6 +51,20 @@ fn a_translation_is_named_by_its_path() {
         -        docs/de/README.md
         sr       locales/sr-Latn/a.json
         -        i18n
+        es       app/src/main/res/values-es/strings.xml
+        pt       app/src/main/res/values-pt-rBR/strings.xml
+        sr       app/src/main/res/values-b+sr+Latn/strings.xml
+        -        app/src/main/res/values/strings.xml
+        -        app/src/main/res/values-night/colors.xml
+        -        app/src/main/res/values-v21/styles.xml
+        in       app/src/main/res/values-in/strings.xml
+        ast      app/src/main/res/values-ast/strings.xml
+        -        app/src/main/res/values-car/dimens.xml
+        -        Sources/Base.lproj/Main.storyboard
+        de       Sources/de.lproj/Localizable.strings
+        fr       src/Properties/Strings.fr.resx
+        -        src/Properties/Strings.resx
+        -        src/Forms/Main.Designer.resx
     "#]]
     .assert_eq(&(named.join("\n") + "\n"));
 }

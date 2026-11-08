@@ -68,3 +68,41 @@ fn a_translation_into_a_language_nobody_enabled_has_unchecked_strings() {
         text,
     ));
 }
+
+/// An Android app's translations are `res/values-de/`, wherever the app keeps `res/`, and their
+/// text is the markup's prose. The comment is still checked; the same text in the app's own
+/// `values/` is English, and is.
+#[test]
+fn an_android_translation_has_unchecked_text() {
+    let text = r#"<?xml version="1.0" encoding="utf-8"?>
+<!-- Recieve the strings. -->
+<resources>
+    <string name="save">Einstellungen speichern</string>
+</resources>
+"#;
+    expect![[r#"
+        app/src/main/res/values-de/strings.xml
+        > <?xml version="1.0" encoding="utf-8"?>
+        > <!-- Recieve the strings. -->
+               ^^^^^^^ known-typo
+        > <resources>
+        >     <string name="save">Einstellungen speichern</string>
+        > </resources>
+        app/src/main/res/values/strings.xml
+        > <?xml version="1.0" encoding="utf-8"?>
+        > <!-- Recieve the strings. -->
+               ^^^^^^^ known-typo
+        > <resources>
+        >     <string name="save">Einstellungen speichern</string>
+                                  ^^^^^^^^^^^^^ unknown-word
+                                                ^^^^^^^^^ unknown-word
+        > </resources>
+    "#]]
+    .assert_eq(&check(
+        &[
+            "app/src/main/res/values-de/strings.xml",
+            "app/src/main/res/values/strings.xml",
+        ],
+        text,
+    ));
+}

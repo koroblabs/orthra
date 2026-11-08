@@ -66,6 +66,14 @@ impl NameLabels {
                 || matches!(
                     place,
                     SpanKind::Comment | SpanKind::DocComment | SpanKind::Prose
+                ) && self.is_notice(&text[word.range])
+                    && {
+                        named_until = text[start..].find('\n').map_or(text.len(), |at| start + at);
+                        true
+                    }
+                || matches!(
+                    place,
+                    SpanKind::Comment | SpanKind::DocComment | SpanKind::Prose
                 ) && (Self::first_on_line(gap, i) || Self::after_copyright_sign(gap, i))
                     && {
                         let line_end = text[start..].find('\n').map_or(text.len(), |at| start + at);
@@ -109,6 +117,17 @@ impl NameLabels {
         word.chars()
             .flat_map(char::to_lowercase)
             .eq(lowered.chars())
+    }
+
+    /// Whether `word` is a one-word name line written with its capital, `Copyright` or
+    /// `COPYRIGHT`, which starts its holders' names wherever it is in a line: `<!-- Original image
+    /// Copyright Dave Gandy -->`. A sentence about copyright writes it in lower case.
+    fn is_notice(&self, word: &str) -> bool {
+        word.starts_with(char::is_uppercase)
+            && self
+                .lines
+                .iter()
+                .any(|line| !line.contains(' ') && Self::same(word, line))
     }
 
     /// Whether `line`, whose first word is `first`, starts with the words of a name line:

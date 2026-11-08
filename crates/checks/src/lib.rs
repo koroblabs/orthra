@@ -75,14 +75,21 @@ impl DocFacts<'_> {
     /// Whether word `i` is in a string that is not text: test data, or a translation into a
     /// language no pack speaks. Not checked at all, not even for known typos, because a test's data
     /// is often a typo on purpose (orthra's own fixtures spell `recieve`), and a German word is not
-    /// an English typo. A comment in such a file is still prose.
+    /// an English typo. A translation's text is its markup's prose too, an Android `strings.xml`'s.
+    /// A comment in such a file is still prose.
     pub fn is_fixture(&self, i: usize) -> bool {
         Self::fixture(self.strings, self.places[i])
     }
 
     /// [`DocFacts::is_fixture`], for a word found in a span of kind `place`.
     pub fn fixture(strings: Strings, place: SpanKind) -> bool {
-        strings != Strings::Text && matches!(place, SpanKind::String | SpanKind::Value)
+        match strings {
+            Strings::Text => false,
+            Strings::TestData => matches!(place, SpanKind::String | SpanKind::Value),
+            Strings::Foreign => {
+                matches!(place, SpanKind::String | SpanKind::Value | SpanKind::Prose)
+            }
+        }
     }
 }
 
