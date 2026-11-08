@@ -24,6 +24,7 @@ mod erlang;
 mod fsharp;
 pub mod git_commit;
 mod go;
+mod graphql;
 mod groovy;
 mod haskell;
 mod html;
@@ -42,6 +43,7 @@ pub mod parsed;
 mod php;
 pub mod plain_text;
 mod powershell;
+mod proto;
 mod python;
 mod r;
 mod ruby;
@@ -204,6 +206,8 @@ impl Hosts {
                 Box::new(&make::HOST),
                 Box::new(&cmake::HOST),
                 Box::new(&dockerfile::HOST),
+                Box::new(&graphql::HOST),
+                Box::new(&proto::HOST),
             ],
         }
     }

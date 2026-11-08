@@ -741,6 +741,27 @@ const WRAPPINGS: &[Wrapping] = &[
         line: "# ",
         close: "",
     },
+    Wrapping {
+        language: "proto",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: "message M {}\n",
+    },
+    Wrapping {
+        language: "proto",
+        name: "/* */",
+        open: "/*\n",
+        line: " * ",
+        close: " */\nmessage M {}\n",
+    },
+    Wrapping {
+        language: "graphql",
+        name: "#",
+        open: "",
+        line: "# ",
+        close: "type M { a: Int }\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.

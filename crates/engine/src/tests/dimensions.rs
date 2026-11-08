@@ -1532,3 +1532,82 @@ fn dockerfile_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn proto_through_every_dimension() {
+    check(
+        r#"
+        //- /api/v1/greet.proto
+        // Seperates teh greeting.
+        syntax = "proto3";
+
+        import "qzxv/other.proto";
+
+        message Recieve {
+          string occured_name = 1;
+        }
+
+        service Greeter {
+          rpc Say(Recieve) returns (Recieve);
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Seperates teh greeting.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > syntax = "proto3";
+            >
+            > import "qzxv/other.proto";
+            >
+            > message Recieve {
+                      ^^^^^^^ known-typo -> Receive
+            >   string occured_name = 1;
+                       ^^^^^^^ known-typo -> occurred
+            > }
+            >
+            > service Greeter {
+            >   rpc Say(Recieve) returns (Recieve);
+            > }
+        "#]],
+    );
+}
+
+#[test]
+fn graphql_through_every_dimension() {
+    check(
+        r#"
+        //- /schema.graphql
+        # Seperates teh greeting.
+        """
+        Seperates the occured greeting.
+        """
+        type Recieve {
+          qzxv(first: Int): Recieve
+        }
+
+        query Greet {
+          recieve { qzxv }
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > """
+            > Seperates the occured greeting.
+              ^^^^^^^^^ known-typo -> Separates
+                            ^^^^^^^ known-typo -> occurred
+            > """
+            > type Recieve {
+                   ^^^^^^^ known-typo -> Receive
+            >   qzxv(first: Int): Recieve
+            > }
+            >
+            > query Greet {
+            >   recieve { qzxv }
+            > }
+        "#]],
+    );
+}

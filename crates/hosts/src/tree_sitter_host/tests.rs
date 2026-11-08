@@ -169,6 +169,8 @@ fn every_builtin_host_loads() {
         "makefile",
         "cmake",
         "dockerfile",
+        "graphql",
+        "proto",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }
