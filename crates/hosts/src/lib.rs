@@ -17,6 +17,7 @@ mod go;
 mod html;
 mod javascript;
 mod json;
+mod kotlin;
 mod less;
 mod lua;
 pub mod markdown;
@@ -144,6 +145,7 @@ impl Hosts {
                 Box::new(&lua::HOST),
                 Box::new(&scss::HOST),
                 Box::new(&less::HOST),
+                Box::new(&kotlin::HOST),
             ],
         }
     }

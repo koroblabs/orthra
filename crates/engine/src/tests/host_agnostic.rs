@@ -279,6 +279,27 @@ const WRAPPINGS: &[Wrapping] = &[
         line: "// ",
         close: ".a { color: red; }\n",
     },
+    Wrapping {
+        language: "kotlin",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: "",
+    },
+    Wrapping {
+        language: "kotlin",
+        name: "/* */",
+        open: "/*\n",
+        line: "",
+        close: "*/\n",
+    },
+    Wrapping {
+        language: "kotlin",
+        name: "/** */",
+        open: "/**\n",
+        line: " * ",
+        close: " */\nfun f() {}\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.

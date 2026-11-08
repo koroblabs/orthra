@@ -684,3 +684,38 @@ fn less_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn kotlin_through_every_dimension() {
+    check(
+        r#"
+        //- /src/main/kotlin/Greeter.kt
+        // Package seperates teh greeting.
+        package com.example
+
+        /** Says teh name. */
+        fun recieve(person: String): String {
+            val message = "Hello\n$person, occured"
+            println(message)
+            return recieve(person)
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Package seperates teh greeting.
+                         ^^^^^^^^^ known-typo -> separates
+                                   ^^^ known-typo -> the
+            > package com.example
+            >
+            > /** Says teh name. */
+                       ^^^ known-typo -> the
+            > fun recieve(person: String): String {
+                  ^^^^^^^ known-typo -> receive
+            >     val message = "Hello\n$person, occured"
+                                                 ^^^^^^^ known-typo -> occurred
+            >     println(message)
+            >     return recieve(person)
+            > }
+        "#]],
+    );
+}

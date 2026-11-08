@@ -19,6 +19,7 @@ tree-sitter-go.workspace = true
 tree-sitter-html.workspace = true
 tree-sitter-javascript.workspace = true
 tree-sitter-json.workspace = true
+tree-sitter-kotlin-ng.workspace = true
 tree-sitter-less.workspace = true
 tree-sitter-lua.workspace = true
 tree-sitter-php.workspace = true

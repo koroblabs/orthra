@@ -1,0 +1,6 @@
+# Words of Kotlin and its ecosystem that are words in a Kotlin file, whatever a dictionary says:
+# keywords, the standard library, and the most-used tools. A dictionary word needs no line here.
+# One word per line, sorted, so two additions merge without a conflict.
+buildscript
+dukat
+kotlinx
