@@ -135,6 +135,7 @@ fn every_builtin_host_loads() {
         "php",
         "toml",
         "yaml",
+        "sql",
         "json",
         "jsonc",
     ] {

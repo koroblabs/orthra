@@ -1,0 +1,5 @@
+# Words of SQL that are words in a SQL file, whatever a dictionary says. A dictionary word needs no
+# line here. One word per line, sorted, so two additions merge without a conflict.
+opclass
+opclasses
+unlogged

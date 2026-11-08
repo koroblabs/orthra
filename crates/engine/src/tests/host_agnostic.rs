@@ -98,6 +98,20 @@ const WRAPPINGS: &[Wrapping] = &[
         close: "*/\npackage main\n",
     },
     Wrapping {
+        language: "sql",
+        name: "--",
+        open: "",
+        line: "-- ",
+        close: "",
+    },
+    Wrapping {
+        language: "sql",
+        name: "/* */",
+        open: "/*\n",
+        line: "",
+        close: "*/\n",
+    },
+    Wrapping {
         language: "typescript",
         name: "//",
         open: "",

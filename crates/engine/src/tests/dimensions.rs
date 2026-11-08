@@ -309,6 +309,34 @@ fn css_through_every_dimension() {
 }
 
 #[test]
+fn sql_through_every_dimension() {
+    check(
+        r#"
+        //- /migrations/0001_users.sql
+        -- Seperates teh greeting.
+        CREATE TABLE recieve (
+          person_id uuid,
+          note text DEFAULT 'Hello, occured'
+        );
+        CREATE VIEW people AS SELECT person_id FROM recieve;
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > -- Seperates teh greeting.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > CREATE TABLE recieve (
+                           ^^^^^^^ known-typo -> receive
+            >   person_id uuid,
+            >   note text DEFAULT 'Hello, occured'
+                                          ^^^^^^^ known-typo -> occurred
+            > );
+            > CREATE VIEW people AS SELECT person_id FROM recieve;
+        "#]],
+    );
+}
+
+#[test]
 fn php_through_every_dimension() {
     check(
         r#"
