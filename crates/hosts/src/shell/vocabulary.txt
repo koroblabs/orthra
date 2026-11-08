@@ -1,0 +1,4 @@
+# Words of shell and its ecosystem that are words in a shell script, whatever a dictionary says:
+# builtins, option names and the variables every system sets. A dictionary word needs no line here.
+# One word per line, sorted, so two additions merge without a conflict.
+subshell

@@ -182,6 +182,13 @@ const WRAPPINGS: &[Wrapping] = &[
         close: "key = 1\n",
     },
     Wrapping {
+        language: "shellscript",
+        name: "#",
+        open: "",
+        line: "# ",
+        close: "key=1\n",
+    },
+    Wrapping {
         language: "yaml",
         name: "#",
         open: "",

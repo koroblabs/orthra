@@ -22,6 +22,7 @@ mod php;
 pub mod plain_text;
 mod python;
 mod rust;
+mod shell;
 pub mod test_files;
 mod toml;
 mod tree_sitter_host;
@@ -124,6 +125,7 @@ impl Hosts {
                 Box::new(&rust::HOST),
                 Box::new(&python::HOST),
                 Box::new(&go::HOST),
+                Box::new(&shell::HOST),
                 Box::new(&php::HOST),
                 Box::new(&toml::HOST),
                 Box::new(&yaml::HOST),

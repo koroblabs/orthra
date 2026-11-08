@@ -475,3 +475,35 @@ fn rust_test_code_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn shell_through_every_dimension() {
+    check(
+        r#"
+        //- /bin/greet.sh
+        #!/usr/bin/env bash
+        # Seperates teh greeting.
+        recieve() {
+          local message="Hello\nworld, occured"
+          echo "$message"
+        }
+
+        recieve
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > #!/usr/bin/env bash
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > recieve() {
+              ^^^^^^^ known-typo -> receive
+            >   local message="Hello\nworld, occured"
+                                             ^^^^^^^ known-typo -> occurred
+            >   echo "$message"
+            > }
+            >
+            > recieve
+        "#]],
+    );
+}

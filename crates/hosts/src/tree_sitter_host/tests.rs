@@ -130,6 +130,7 @@ fn every_builtin_host_loads() {
         "python",
         "css",
         "go",
+        "shellscript",
         "php",
         "toml",
         "yaml",
