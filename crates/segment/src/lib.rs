@@ -5,7 +5,7 @@
 //! to be noise:
 //!
 //! - **Whole chunks that are never words**: URLs, email addresses, paths, hashes, UUIDs, colors,
-//!   command-line flags, and code between backticks.
+//!   command-line flags, qualified names (`os.path.join`, `Vec::new`), and code between backticks.
 //! - **Escapes end words.** In `"Hello\nworld"` the words are `Hello` and `world`, never `nworld`.
 //! - **Letters glued to a digit are a token, not a word**: `100ms`, `utf8`, `x86`, `k8s`, `v2`.
 //! - **Identifiers split** at `_` and at case changes, keeping an acronym's plural whole:
@@ -211,12 +211,27 @@ fn never_a_word(chunk: &str) -> bool {
         // more findings on the zero corpus, almost all `owner/repo` names (`nikic/php-parser`,
         // `sigstore/fulcio`), which prose writes the same way.
         || chunk.contains('/')
+        || qualified(chunk)
         || chunk.contains(":\\")
         || locale(chunk)
         || chunk.starts_with('-') && chunk.len() > 1
         || chunk.starts_with('#') && hex(&chunk[1..])
         || chunk.len() >= 7 && hex(chunk) && chunk.chars().any(|c| c.is_ascii_digit())
         || chunk.split('-').all(hex) && chunk.matches('-').count() == 4
+}
+
+/// A name qualified by its module, package or type, which refers to code and is not prose: three or
+/// more names joined by dots (`os.path.join`, `google.longrunning.Operations`), or two or more by
+/// `::` (`Vec::new`, `std::io::Error`). Two joined by a dot are not, since a sentence missing its
+/// space reads the same (`done.Then`). A comment that names somebody else's API is not where it is
+/// misspelled (`CLAUDE.md` §5).
+fn qualified(chunk: &str) -> bool {
+    let name = |part: &str| {
+        part.starts_with(|c: char| c.is_alphabetic() || c == '_')
+            && part.chars().all(|c| c.is_alphanumeric() || c == '_')
+    };
+    chunk.matches('.').count() >= 2 && chunk.split('.').all(name)
+        || chunk.contains("::") && chunk.split("::").all(name)
 }
 
 /// A language or locale tag, which names a language and is not a word in it: `uk-UA`, `en_US`,

@@ -372,3 +372,25 @@ fn a_doubled_escape_is_an_escape_where_strings_are_read_twice() {
         printf | nexport | the | path"#]]
     .assert_eq(&format!("{}\n{}", shown(true), shown(false)));
 }
+
+/// A qualified name refers to code: three names or more joined by dots, two or more by `::`. Two
+/// joined by one dot may be a sentence missing its space, and a call's parentheses inside a chain
+/// leave it to be read as words.
+#[test]
+fn a_qualified_name_is_never_words() {
+    check(
+        "See google.longrunning.Qzxv and Vec::qzxva, not Qzxvb.qzxvc or qzxvd().qzxve.qzxvf.",
+        false,
+        expect![[r#"
+            > See google.longrunning.Qzxv and Vec::qzxva, not Qzxvb.qzxvc or qzxvd().qzxve.qzxvf.
+              ^^^ title
+                                          ^^^ lower
+                                                          ^^^ lower
+                                                              ^^^^^ title
+                                                                    ^^^^^ lower
+                                                                             ^^^^^ lower code
+                                                                                     ^^^^^ lower code
+                                                                                           ^^^^^ lower code
+        "#]],
+    );
+}
