@@ -114,7 +114,7 @@ impl Engine {
             .collect();
         Engine {
             word_internal: packs.word_internal(),
-            name_labels: NameLabels::new(packs.name_labels()),
+            name_labels: NameLabels::new(packs.name_labels(), packs.name_lines()),
             packs,
             host_words: Arc::new(host_words),
             hosts: Arc::new(hosts),

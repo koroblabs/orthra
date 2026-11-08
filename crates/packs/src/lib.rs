@@ -81,14 +81,23 @@ impl Packs {
 
     /// Every enabled pack's labels for a line that names people, lower-cased: `author`.
     pub fn name_labels(&self) -> Vec<Box<str>> {
-        let mut labels: Vec<Box<str>> = self
+        self.union(|pack| pack.name_labels())
+    }
+
+    /// The words every enabled pack gives that start a comment line naming people: `copyright`.
+    pub fn name_lines(&self) -> Vec<Box<str>> {
+        self.union(|pack| pack.name_lines())
+    }
+
+    fn union(&self, of: impl Fn(&Pack) -> &[Box<str>]) -> Vec<Box<str>> {
+        let mut all: Vec<Box<str>> = self
             .packs
             .iter()
-            .flat_map(|pack| pack.name_labels().iter().cloned())
+            .flat_map(|pack| of(pack).iter().cloned())
             .collect();
-        labels.sort_unstable();
-        labels.dedup();
-        labels
+        all.sort_unstable();
+        all.dedup();
+        all
     }
 
     /// Every character an enabled pack treats as inside a word, with the script of the words it is

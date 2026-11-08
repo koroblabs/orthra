@@ -39,3 +39,36 @@ name = "Author: Qzxvd"
         "#]],
     );
 }
+
+/// A copyright line names its holders without a colon, and a line of a few words and an email in
+/// angle brackets is a name whatever the language. A sentence that mentions an email is still
+/// prose, and so is a line about copyright that does not start with the word.
+#[test]
+fn a_copyright_line_and_a_name_with_an_email_are_names() {
+    check(
+        "/src/server.c",
+        r#"/*
+ * Copyright (c) 2009-2012, Qzxva Sanfilippo <qzxva at gmail dot com>
+ * Copyright 2014 Qzxvb Noordhuis
+ *   qzxvc <qzxvc@example.com>
+ *   Qzxvd Qzxve <qzxvd@example.com>
+ * Mail qzxvf at <bugs@example.com> when the build breaks.
+ * The copyright qzxvg is in LICENSE.
+ */
+int main(void) { return 0; }
+"#,
+        expect![[r#"
+            > /*
+            >  * Copyright (c) 2009-2012, Qzxva Sanfilippo <qzxva at gmail dot com>
+            >  * Copyright 2014 Qzxvb Noordhuis
+            >  *   qzxvc <qzxvc@example.com>
+            >  *   Qzxvd Qzxve <qzxvd@example.com>
+            >  * Mail qzxvf at <bugs@example.com> when the build breaks.
+                      ^^^^^ unknown-word
+            >  * The copyright qzxvg is in LICENSE.
+                               ^^^^^ unknown-word
+            >  */
+            > int main(void) { return 0; }
+        "#]],
+    );
+}

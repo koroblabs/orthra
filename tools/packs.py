@@ -228,6 +228,9 @@ normalize = { "\u2019" = "'" }
 # A comment line that starts with one of these and a colon names people, not prose:
 # `# Author: Jens Getreu <...>`.
 name-labels = ["author", "authors", "contributor", "contributors", "credits", "maintainer", "maintainers", "original author"]
+# A comment line that starts with one of these, colon or not, names people too: `Copyright (c)
+# 2009 Salvatore Sanfilippo`.
+name-lines = ["copyright"]
 """
 EN_GB_SOURCES = """\
 # en-GB — sources
@@ -269,6 +272,9 @@ normalize = { "’" = "'" }
 # A comment line that starts with one of these and a colon names people, not prose:
 # `# Author: Jens Getreu <...>`.
 name-labels = ["author", "authors", "contributor", "contributors", "credits", "maintainer", "maintainers", "original author"]
+# A comment line that starts with one of these, colon or not, names people too: `Copyright (c)
+# 2009 Salvatore Sanfilippo`.
+name-lines = ["copyright"]
 """
 
 SOURCES = """\

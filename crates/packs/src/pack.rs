@@ -59,6 +59,8 @@ pub struct Pack {
     normalize: Vec<(char, char)>,
     /// Lower-cased labels that, with a colon, start a comment line naming people: `author`.
     name_labels: Vec<Box<str>>,
+    /// Lower-cased words that start a comment line naming people, colon or not: `copyright`.
+    name_lines: Vec<Box<str>>,
 }
 
 impl Pack {
@@ -296,14 +298,18 @@ impl Pack {
             .flatten()
             .map(|(from, to)| Ok((one_char(from)?, one_char(to.as_str().unwrap_or_default())?)))
             .collect::<Result<_, PackError>>()?;
-        let name_labels = table
-            .get("name-labels")
-            .and_then(toml::Value::as_array)
-            .into_iter()
-            .flatten()
-            .filter_map(toml::Value::as_str)
-            .map(|label| label.to_lowercase().into_boxed_str())
-            .collect();
+        let lowered_list = |key: &str| -> Vec<Box<str>> {
+            table
+                .get(key)
+                .and_then(toml::Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(toml::Value::as_str)
+                .map(|label| label.to_lowercase().into_boxed_str())
+                .collect()
+        };
+        let name_labels = lowered_list("name-labels");
+        let name_lines = lowered_list("name-lines");
         Ok(Pack {
             tag,
             script,
@@ -317,6 +323,7 @@ impl Pack {
             word_internal,
             normalize,
             name_labels,
+            name_lines,
         })
     }
 
@@ -335,6 +342,11 @@ impl Pack {
     /// Labels that, followed by a colon, start a comment line naming people: `Author:`.
     pub fn name_labels(&self) -> &[Box<str>] {
         &self.name_labels
+    }
+
+    /// Words that start a comment line naming people, colon or not: `Copyright`.
+    pub fn name_lines(&self) -> &[Box<str>] {
+        &self.name_lines
     }
 
     /// Whether the dictionary or the vocabulary accepts `word`, after normalization (`’` checked as
