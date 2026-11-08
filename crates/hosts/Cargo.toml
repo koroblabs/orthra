@@ -18,6 +18,7 @@ tree-sitter-c-sharp.workspace = true
 tree-sitter-c.workspace = true
 tree-sitter-cpp.workspace = true
 tree-sitter-css.workspace = true
+tree-sitter-dart.workspace = true
 tree-sitter-fsharp.workspace = true
 tree-sitter-go.workspace = true
 tree-sitter-groovy.workspace = true
@@ -28,6 +29,7 @@ tree-sitter-json.workspace = true
 tree-sitter-kotlin-ng.workspace = true
 tree-sitter-less.workspace = true
 tree-sitter-lua.workspace = true
+tree-sitter-objc.workspace = true
 tree-sitter-php.workspace = true
 tree-sitter-python.workspace = true
 tree-sitter-ruby.workspace = true
@@ -41,6 +43,7 @@ tree-sitter-toml-ng.workspace = true
 tree-sitter-typescript.workspace = true
 tree-sitter-vue-next.workspace = true
 tree-sitter-yaml.workspace = true
+tree-sitter-zig.workspace = true
 
 [dev-dependencies]
 expect-test.workspace = true

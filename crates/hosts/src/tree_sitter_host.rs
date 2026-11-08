@@ -497,14 +497,15 @@ impl Loaded {
                 }
                 Some(kind) => {
                     in_fence = false;
-                    // A string the grammar split only at an escaped apostrophe is one span, so
-                    // that `didn\'t` is one word: `It didn` and `t work` are not.
+                    // A string the grammar split only at an apostrophe, escaped or not, is one
+                    // span, so that `didn\'t` is one word: `It didn` and `t work` are not.
+                    // tree-sitter-dart ends a piece of a double-quoted string at a bare `'`.
                     if let Some(last) = out.last_mut()
                         && kind == SpanKind::String
                         && last.kind == SpanKind::String
                         && matches!(
                             &text[last.range.end().into()..range.start().into()],
-                            "\\'" | "\\’"
+                            "\\'" | "\\’" | "'" | "’"
                         )
                     {
                         last.range = TextRange::new(last.range.start(), range.end());

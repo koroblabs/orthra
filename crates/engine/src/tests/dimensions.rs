@@ -1101,3 +1101,105 @@ fn fsharp_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn dart_through_every_dimension() {
+    check(
+        r#"
+        //- /lib/greet.dart
+        // Seperates teh greeting.
+        class Greeter {
+          void recieve(String person) {
+            var message = 'Hello\n$person, occured';
+            print(message);
+            recieve(person);
+          }
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Seperates teh greeting.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > class Greeter {
+            >   void recieve(String person) {
+                     ^^^^^^^ known-typo -> receive
+            >     var message = 'Hello\n$person, occured';
+                                                 ^^^^^^^ known-typo -> occurred
+            >     print(message);
+            >     recieve(person);
+            >   }
+            > }
+        "#]],
+    );
+}
+
+#[test]
+fn zig_through_every_dimension() {
+    check(
+        r#"
+        //- /src/greet.zig
+        // Seperates teh greeting.
+        const std = @import("std");
+
+        fn recieve(person: []const u8) void {
+            const message = "Hello\nworld, occured";
+            std.debug.print("{s} {s}", .{ message, person });
+            recieve(person);
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Seperates teh greeting.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > const std = @import("std");
+            >
+            > fn recieve(person: []const u8) void {
+                 ^^^^^^^ known-typo -> receive
+            >     const message = "Hello\nworld, occured";
+                                                 ^^^^^^^ known-typo -> occurred
+            >     std.debug.print("{s} {s}", .{ message, person });
+            >     recieve(person);
+            > }
+        "#]],
+    );
+}
+
+#[test]
+fn objective_c_through_every_dimension() {
+    check(
+        r#"
+        //- /Sources/Greeter.m
+        // Seperates teh greeting.
+        @interface Greeter : NSObject
+        - (void)recieve:(NSString *)person;
+        @end
+
+        @implementation Greeter
+        - (void)recieve:(NSString *)person {
+            NSString *message = @"Hello\nworld, occured";
+            [self recieve:message];
+        }
+        @end
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Seperates teh greeting.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > @interface Greeter : NSObject
+            > - (void)recieve:(NSString *)person;
+                      ^^^^^^^ known-typo -> receive
+            > @end
+            >
+            > @implementation Greeter
+            > - (void)recieve:(NSString *)person {
+            >     NSString *message = @"Hello\nworld, occured";
+                                                      ^^^^^^^ known-typo -> occurred
+            >     [self recieve:message];
+            > }
+            > @end
+        "#]],
+    );
+}

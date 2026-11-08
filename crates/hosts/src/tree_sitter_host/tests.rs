@@ -154,6 +154,9 @@ fn every_builtin_host_loads() {
         "groovy",
         "csharp",
         "fsharp",
+        "dart",
+        "zig",
+        "objective-c",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }

@@ -1,0 +1,5 @@
+# Words of Dart and its ecosystem that are words in a Dart file, whatever a dictionary says. A
+# dictionary word needs no line here. One word per line, sorted, so two additions merge without a
+# conflict.
+dartc
+dartium

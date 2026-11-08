@@ -15,6 +15,7 @@ mod c;
 mod cpp;
 mod csharp;
 mod css;
+mod dart;
 mod fsharp;
 pub mod git_commit;
 mod go;
@@ -27,6 +28,7 @@ mod kotlin;
 mod less;
 mod lua;
 pub mod markdown;
+mod objc;
 pub mod parsed;
 mod php;
 pub mod plain_text;
@@ -46,6 +48,7 @@ mod tsx;
 mod typescript;
 mod vue;
 mod yaml;
+mod zig;
 
 #[cfg(test)]
 mod tests;
@@ -175,6 +178,9 @@ impl Hosts {
                 Box::new(&groovy::HOST),
                 Box::new(&csharp::HOST),
                 Box::new(&fsharp::HOST),
+                Box::new(&dart::HOST),
+                Box::new(&zig::HOST),
+                Box::new(&objc::HOST),
             ],
         }
     }

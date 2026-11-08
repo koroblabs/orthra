@@ -1,0 +1,8 @@
+# Words of Zig and its ecosystem that are words in a Zig file, whatever a dictionary says. A
+# dictionary word needs no line here. One word per line, sorted, so two additions merge without a
+# conflict.
+bitcast
+callsite
+cmpxchg
+deinitialize
+deinitializes
