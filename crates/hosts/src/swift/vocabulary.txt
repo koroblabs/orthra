@@ -1,0 +1,15 @@
+# Words of Swift and its ecosystem that are words in a Swift file, whatever a dictionary says:
+# keywords, the standard library, Apple's frameworks and the most-used tools. A dictionary word needs
+# no line here. One word per line, sorted, so two additions merge without a conflict.
+corelibs
+deinitialization
+deinitialize
+deinitialized
+deinitializes
+deinitializing
+deque
+deques
+rdar
+sendability
+xcprivacy
+xctest

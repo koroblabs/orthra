@@ -755,3 +755,38 @@ fn java_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn swift_through_every_dimension() {
+    check(
+        r##"
+        //- /Sources/App/Greeter.swift
+        // Seperates teh header.
+        struct Greeter {
+            var recieve: Int = 0
+
+            func occured(person: String) -> String {
+                let message = "Hello\n occured, \(person)"
+                return message + String(recieve)
+            }
+        }
+        "##,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Seperates teh header.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > struct Greeter {
+            >     var recieve: Int = 0
+                      ^^^^^^^ known-typo -> receive
+            >
+            >     func occured(person: String) -> String {
+                       ^^^^^^^ known-typo -> occurred
+            >         let message = "Hello\n occured, \(person)"
+                                             ^^^^^^^ known-typo -> occurred
+            >         return message + String(recieve)
+            >     }
+            > }
+        "#]],
+    );
+}

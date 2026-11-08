@@ -314,6 +314,34 @@ const WRAPPINGS: &[Wrapping] = &[
         line: " * ",
         close: " */\nclass C {}\n",
     },
+    Wrapping {
+        language: "swift",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: "",
+    },
+    Wrapping {
+        language: "swift",
+        name: "///",
+        open: "",
+        line: "/// ",
+        close: "struct S {}\n",
+    },
+    Wrapping {
+        language: "swift",
+        name: "/* */",
+        open: "/*\n",
+        line: "",
+        close: "*/\n",
+    },
+    Wrapping {
+        language: "swift",
+        name: "/** */",
+        open: "/**\n",
+        line: " * ",
+        close: " */\nstruct S {}\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.

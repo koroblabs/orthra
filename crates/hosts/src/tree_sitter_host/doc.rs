@@ -56,10 +56,14 @@ impl Loaded {
         for line in text[range].split_inclusive('\n') {
             let line_start = at;
             at += line.len();
-            let content = line
-                .trim_start()
-                .trim_start_matches(['/', '*', '!', '-'])
-                .trim_start();
+            let marked = line.trim_start().trim_start_matches(['/', '*', '!', '-']);
+            let content = marked.trim_start();
+            // An indented code block: four spaces past the one that follows the marker. Markdown
+            // wants a blank line before it, which is not carried here: a list item's continuation
+            // indented that far goes unchecked, and none is misread as a word.
+            if scan.depth == 0 && marked.starts_with("     ") && !content.is_empty() {
+                continue;
+            }
             if scan.depth == 0 && content.starts_with("```") {
                 *in_fence = !*in_fence;
                 continue;

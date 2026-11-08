@@ -30,6 +30,7 @@ mod rust;
 mod scss;
 mod shell;
 mod sql;
+mod swift;
 pub mod test_files;
 mod toml;
 mod tree_sitter_host;
@@ -148,6 +149,7 @@ impl Hosts {
                 Box::new(&less::HOST),
                 Box::new(&kotlin::HOST),
                 Box::new(&java::HOST),
+                Box::new(&swift::HOST),
             ],
         }
     }
