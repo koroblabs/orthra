@@ -72,8 +72,8 @@ Things that are never words are never checked:
   Elm, R, Julia, PowerShell, shell scripts and SQL.
 - **The web:** HTML (with the code of its templates left out), Vue and Svelte components, CSS, SCSS
   and LESS.
-- **Data and configuration:** TOML, YAML, JSON, XML (Android resources, MSBuild, SVG, plists),
-  Protocol Buffers, GraphQL, Nix, HCL and Terraform, INI and Java properties.
+- **Data and configuration:** TOML, YAML, JSON, XML (Android resources, MSBuild, plists), Protocol
+  Buffers, GraphQL, Nix, HCL and Terraform, INI and Java properties.
 - **Builds:** Makefiles, CMake and Dockerfiles.
 
 ## Install

@@ -15,11 +15,13 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // Every one is XML whose text is worth reading: schemas and stylesheets (`xsd`, `xsl`,
     // `xslt`), project files whose `<Description>` and `<PackageReleaseNotes>` are published
     // (`csproj`, `fsproj`, `vbproj`, `props`, `targets`), .NET and Android resources (`resx`,
-    // `xaml`), service descriptions and feeds (`wsdl`, `rss`, `atom`), icons (`svg`: its `<title>`
-    // and `<desc>`) and property lists (`plist`).
+    // `xaml`), service descriptions and feeds (`wsdl`, `rss`, `atom`) and property lists
+    // (`plist`). Not an icon: an SVG is a path's coordinates in one line of tens of kilobytes,
+    // with a `<title>` at most, and the starter workflows' 120 icons took their cold check from
+    // 6.4 ms per 2 000 lines to 58 and their slowest keystroke to 34 ms (2026-11-09).
     extensions: &[
-        "xml", "xsd", "xsl", "xslt", "svg", "plist", "csproj", "fsproj", "vbproj", "props",
-        "targets", "resx", "xaml", "wsdl", "rss", "atom",
+        "xml", "xsd", "xsl", "xslt", "plist", "csproj", "fsproj", "vbproj", "props", "targets",
+        "resx", "xaml", "wsdl", "rss", "atom",
     ],
     // An entity (`&amp;`) is its own node and is cut out of the text. Android's `strings.xml` is
     // the one XML that has backslash escapes (`\n`, `\'`, `\"`), and a stray backslash elsewhere is
