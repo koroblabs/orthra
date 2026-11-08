@@ -1,0 +1,6 @@
+# Words of C# and .NET that are words in a C# file, whatever a dictionary says: the tags of XML
+# documentation comments. A dictionary word needs no line here. One word per line, sorted, so two
+# additions merge without a conflict.
+paramref
+typeparam
+typeparamref

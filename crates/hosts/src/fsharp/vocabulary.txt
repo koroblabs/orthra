@@ -1,0 +1,5 @@
+# Words of F# and .NET that are words in an F# file, whatever a dictionary says. A dictionary word
+# needs no line here. One word per line, sorted, so two additions merge without a conflict.
+paramref
+typeparam
+typeparamref

@@ -1033,3 +1033,71 @@ fn groovy_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn csharp_through_every_dimension() {
+    check(
+        r#"
+        //- /src/Greeter.cs
+        // Seperates teh greeting.
+        namespace Demo;
+
+        public class Greeter
+        {
+            public string Recieve(string person)
+            {
+                var message = "Hello\nworld, occured";
+                return Console.WriteLine(message + Recieve(person));
+            }
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Seperates teh greeting.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > namespace Demo;
+            >
+            > public class Greeter
+            > {
+            >     public string Recieve(string person)
+                                ^^^^^^^ known-typo -> Receive
+            >     {
+            >         var message = "Hello\nworld, occured";
+                                                   ^^^^^^^ known-typo -> occurred
+            >         return Console.WriteLine(message + Recieve(person));
+            >     }
+            > }
+        "#]],
+    );
+}
+
+#[test]
+fn fsharp_through_every_dimension() {
+    check(
+        r#"
+        //- /src/Greeter.fs
+        // Seperates teh greeting.
+        module Demo
+
+        let recieve (person: string) =
+            let message = "Hello\nworld, occured"
+            printfn "%s" message
+            recieve person
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Seperates teh greeting.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > module Demo
+            >
+            > let recieve (person: string) =
+                  ^^^^^^^ known-typo -> receive
+            >     let message = "Hello\nworld, occured"
+                                               ^^^^^^^ known-typo -> occurred
+            >     printfn "%s" message
+            >     recieve person
+        "#]],
+    );
+}

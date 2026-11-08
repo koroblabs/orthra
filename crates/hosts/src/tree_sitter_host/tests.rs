@@ -152,6 +152,8 @@ fn every_builtin_host_loads() {
         "svelte",
         "scala",
         "groovy",
+        "csharp",
+        "fsharp",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }

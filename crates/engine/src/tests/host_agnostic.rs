@@ -468,6 +468,48 @@ const WRAPPINGS: &[Wrapping] = &[
         line: " * ",
         close: " */\nclass C {}\n",
     },
+    Wrapping {
+        language: "csharp",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: "",
+    },
+    Wrapping {
+        language: "csharp",
+        name: "/* */",
+        open: "/*\n",
+        line: " * ",
+        close: " */\nclass C {}\n",
+    },
+    Wrapping {
+        language: "csharp",
+        name: "///",
+        open: "",
+        line: "/// ",
+        close: "class C {}\n",
+    },
+    Wrapping {
+        language: "fsharp",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: "",
+    },
+    Wrapping {
+        language: "fsharp",
+        name: "(* *)",
+        open: "(*\n",
+        line: "",
+        close: "*)\nlet x = 1\n",
+    },
+    Wrapping {
+        language: "fsharp",
+        name: "///",
+        open: "",
+        line: "/// ",
+        close: "let x = 1\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.

@@ -13,7 +13,9 @@ use crate::parsed::Parsed;
 
 mod c;
 mod cpp;
+mod csharp;
 mod css;
+mod fsharp;
 pub mod git_commit;
 mod go;
 mod groovy;
@@ -171,6 +173,8 @@ impl Hosts {
                 Box::new(&svelte::HOST),
                 Box::new(&scala::HOST),
                 Box::new(&groovy::HOST),
+                Box::new(&csharp::HOST),
+                Box::new(&fsharp::HOST),
             ],
         }
     }
