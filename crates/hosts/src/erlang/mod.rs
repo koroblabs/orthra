@@ -12,8 +12,10 @@ mod tests;
 pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     id: "erlang",
     language_ids: &["erlang"],
-    file_names: &[],
-    extensions: &["erl", "hrl"],
+    // Erlang terms, as Zed's Erlang extension reads them: rebar's settings, an application's
+    // resource file, `erl -make`'s.
+    file_names: &["rebar.config", "*.app.src", "Emakefile"],
+    extensions: &["erl", "hrl", "escript"],
     // A string's escapes stay inside its node, so segmentation has to know `"\n"` is one.
     conventions: Conventions {
         backslash_escapes: true,

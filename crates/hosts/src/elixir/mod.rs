@@ -27,7 +27,8 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     query: include_str!("spell.scm"),
     vocabulary: include_str!("vocabulary.txt"),
     test_files: &["*_test.exs", "test_helper.exs", "test/"],
-    generated_files: &[],
+    // Zed reads `mix.lock` as Elixir, and it is the lock mix writes: names and hashes.
+    generated_files: &["mix.lock"],
     doc_tags: DocTags::NONE,
     one_token_strings_are_values: false,
 });

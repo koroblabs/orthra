@@ -14,7 +14,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::cutting(
         language_ids: &["scala"],
         file_names: &[],
         // `build.sbt` and `.sc` scripts are Scala too.
-        extensions: &["scala", "sc", "sbt"],
+        extensions: &["scala", "sc", "sbt", "mill"],
         // A string is captured whole, as the grammar gives no node for the text between its
         // escapes, so the segmenter must know `\n` and `é` are not letters. A comment has them
         // in the examples a doc gives of a string.

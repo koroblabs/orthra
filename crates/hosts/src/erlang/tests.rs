@@ -67,3 +67,31 @@ round_trip_test() -> "Hello teh world".
         "#]],
     );
 }
+
+/// rebar's settings, an application's resource file, `erl -make`'s and an escript are Erlang terms
+/// and code, as Zed's Erlang extension reads them.
+#[test]
+fn erlang_terms_files_are_erlang() {
+    let hosts = crate::Hosts::builtin();
+    let claimed: Vec<String> = [
+        "rebar.config",
+        "src/cowboy.app.src",
+        "Emakefile",
+        "bin/tool.escript",
+    ]
+    .iter()
+    .map(|path| {
+        format!(
+            "{} {path}",
+            hosts.for_path(path).map_or("-", |host| host.id())
+        )
+    })
+    .collect();
+    expect![[r#"
+        erlang rebar.config
+        erlang src/cowboy.app.src
+        erlang Emakefile
+        erlang bin/tool.escript
+    "#]]
+    .assert_eq(&(claimed.join("\n") + "\n"));
+}

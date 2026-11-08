@@ -12,7 +12,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     id: "fsharp",
     language_ids: &["fsharp"],
     file_names: &[],
-    extensions: &["fs", "fsi", "fsx"],
+    extensions: &["fs", "fsi", "fsx", "fsscript"],
     // A string has its escapes in its text, as the grammar gives it no content node.
     conventions: Conventions {
         backslash_escapes: true,

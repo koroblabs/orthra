@@ -15,7 +15,13 @@ mod tests;
 pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     id: "makefile",
     language_ids: &["makefile"],
-    file_names: &["Makefile", "makefile", "GNUmakefile", "Makefile.*"],
+    file_names: &[
+        "Makefile",
+        "makefile",
+        "GNUmakefile",
+        "Makefile.*",
+        "OCamlMakefile",
+    ],
     extensions: &["mk", "mak"],
     // make reads no escapes of its own: a backslash continues a line, and what follows it in a
     // recipe is the shell's.

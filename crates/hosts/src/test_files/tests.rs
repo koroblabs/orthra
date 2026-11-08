@@ -89,6 +89,8 @@ fn a_generated_file_is_claimed_by_no_host() {
         "proto/user_pb2.py",
         "Sources/User.pb.swift",
         "lib/user_pb.rb",
+        "mix.lock",
+        "mix.exs",
     ];
     let claimed: Vec<String> = paths
         .iter()
@@ -114,6 +116,8 @@ fn a_generated_file_is_claimed_by_no_host() {
         -          proto/user_pb2.py
         -          Sources/User.pb.swift
         -          lib/user_pb.rb
+        -          mix.lock
+        elixir     mix.exs
     "#]]
     .assert_eq(&(claimed.join("\n") + "\n"));
 }
