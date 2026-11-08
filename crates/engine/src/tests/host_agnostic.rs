@@ -147,6 +147,13 @@ const WRAPPINGS: &[Wrapping] = &[
         close: " */\nfunction f() {}\n",
     },
     Wrapping {
+        language: "css",
+        name: "/* */",
+        open: "/*\n",
+        line: " * ",
+        close: " */\n",
+    },
+    Wrapping {
         language: "toml",
         name: "#",
         open: "",

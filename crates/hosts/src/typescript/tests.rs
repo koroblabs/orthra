@@ -33,7 +33,7 @@ export class Greeter {
                                     ^^^^^ string
                                            ^^^^^ string
             >   #count = 0;
-                ^^^^^^ declaration
+                 ^^^^^ declaration
             >   // Builds the greeting.
                 ^^^^^^^^^^^^^^^^^^^^^^^ comment
             >   /* A block comment. */

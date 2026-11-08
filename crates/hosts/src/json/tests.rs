@@ -24,28 +24,28 @@ fn json_prose_is_strings_keys_and_jsonc_comments() {
             >   // JSONC allows a comment.
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ comment
             >   "name": "greeter",
-                ^^^^^^ declaration
+                 ^^^^^ declaration
                         ^^^^^^^^^ value
             >   "description": "Says hello\nto whoever asks",
-                ^^^^^^^^^^^^^ declaration
+                 ^^^^^^^^^^^^ declaration
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
             >   "keywords": ["greeting", "hello world"],
-                ^^^^^^^^^^ declaration
+                 ^^^^^^^^^ declaration
                              ^^^^^^^^^^ value
                                          ^^^^^^^^^^^^^ string
             >   "private": true,
-                ^^^^^^^^^ declaration
+                 ^^^^^^^^ declaration
             >   "version": "1.0.0",
-                ^^^^^^^^^ declaration
+                 ^^^^^^^^ declaration
                            ^^^^^^^ value
             >   "scripts": { "test": "node --test" },
-                ^^^^^^^^^ declaration
+                 ^^^^^^^^ declaration
                            ^^^^^^^^^^^^^^^^^^^^^^^^^ value
             >   "motto": "Hello\nworld",
-                ^^^^^^^ declaration
+                 ^^^^^^ declaration
                          ^^^^^^^^^^^^^^ string
             >   "path": "C:\\Users\\qzxv"
-                ^^^^^^ declaration
+                 ^^^^^ declaration
                         ^^^^^^^^^^^^^^^^^ value
             > }
         "#]],

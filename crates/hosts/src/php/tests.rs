@@ -78,7 +78,7 @@ final class Greeter
                                ^^^^^ declaration
             >
             >     public function __construct(private Logger $logger) {}
-                                  ^^^^^^^^^^^ declaration
+                                    ^^^^^^^^^ declaration
                                                               ^^^^^^ declaration
             >
             >     // Builds the greeting.

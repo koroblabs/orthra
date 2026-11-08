@@ -58,10 +58,14 @@ impl Subject for Orthra {
         // rest of the file parses.
         let language = Orthra::language(fixture);
         let conventions = Engine::with_packs(packs()).conventions(&language)?;
-        Some(match conventions.line_comment {
-            Some(marker) => format!("{marker} Привіт 👋\n"),
-            None => "Привіт 👋\n".to_owned(),
-        })
+        // A language with no line comment has a block comment, CSS's `/* */`, or no comment at all.
+        Some(
+            match (conventions.line_comment, conventions.block_comment) {
+                (Some(marker), _) => format!("{marker} Привіт 👋\n"),
+                (None, Some((open, close))) => format!("{open} Привіт 👋 {close}\n"),
+                (None, None) => "Привіт 👋\n".to_owned(),
+            },
+        )
     }
 }
 

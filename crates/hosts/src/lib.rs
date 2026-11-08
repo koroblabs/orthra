@@ -11,6 +11,7 @@ use orthra_text::TextRange;
 
 use crate::parsed::Parsed;
 
+mod css;
 pub mod git_commit;
 mod go;
 mod json;
@@ -126,6 +127,7 @@ impl Hosts {
                 Box::new(&toml::HOST),
                 Box::new(&yaml::HOST),
                 Box::new(&json::HOST),
+                Box::new(&css::HOST),
                 Box::new(&typescript::HOST),
                 Box::new(&tsx::HOST),
             ],

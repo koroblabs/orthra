@@ -54,7 +54,7 @@ Things that are never words are never checked:
   setting.
 
 **Formats:** plain text, Markdown, Git commit messages, Rust, TypeScript and TSX, Python, Go, PHP,
-TOML, YAML and JSON.
+TOML, YAML, JSON and CSS.
 
 ## Install
 

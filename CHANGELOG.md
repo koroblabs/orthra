@@ -3,6 +3,11 @@
 A release's section is its notes on GitHub: the release workflow publishes the section whose heading
 names the tag's version.
 
+## Unreleased
+
+- checks CSS: its comments, the text of `content:`, the class and id names, custom properties and
+  `@keyframes` names a stylesheet declares, and known typos in property names (`widht`).
+
 ## 0.1.0
 
 The first release.

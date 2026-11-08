@@ -222,6 +222,43 @@ fn go_through_every_dimension() {
 }
 
 #[test]
+fn css_through_every_dimension() {
+    check(
+        r#"
+        //- /src/styles.css
+        /* Seperates teh header. */
+        :root {
+          --recieve-color: #336;
+        }
+
+        .card::before {
+          color: var(--recieve-color);
+          widht: 1px;
+          content: "Hello\a occured";
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > /* Seperates teh header. */
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > :root {
+            >   --recieve-color: #336;
+                  ^^^^^^^ known-typo -> receive
+            > }
+            >
+            > .card::before {
+            >   color: var(--recieve-color);
+            >   widht: 1px;
+                ^^^^^ known-typo -> width
+            >   content: "Hello\a occured";
+                                  ^^^^^^^ known-typo -> occurred
+            > }
+        "#]],
+    );
+}
+
+#[test]
 fn php_through_every_dimension() {
     check(
         r#"

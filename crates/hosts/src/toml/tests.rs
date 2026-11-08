@@ -52,7 +52,7 @@ basic string."""
                                                    ^^^^^^^^ value
                                                                ^^^^^^^^^^^^^^^ comment
             > "tree-sitter" = "=0.27.1"
-              ^^^^^^^^^^^^^ declaration
+               ^^^^^^^^^^^^ declaration
                               ^^^^^^^^^ value
             >
             > [profile.release]

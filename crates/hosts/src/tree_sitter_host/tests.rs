@@ -126,6 +126,7 @@ fn every_builtin_host_loads() {
         "typescript",
         "typescriptreact",
         "python",
+        "css",
         "go",
         "php",
         "toml",

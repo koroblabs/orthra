@@ -8,7 +8,8 @@
 //!   but it is not prose;
 //! - a name starting with `_` is a helper for a predicate, and makes nothing.
 //!
-//! Any other name is an error in the query. A span is its node without the whitespace at its ends.
+//! Any other name is an error in the query. A span is its node without the whitespace at its ends,
+//! and a declaration's starts at its first letter or digit.
 //! When captures nest, the outer one wins, so the spans are sorted and never overlap. When two
 //! capture the same range, a skip wins, then a value, then whichever pattern comes first.
 //!
@@ -275,7 +276,13 @@ impl Loaded {
                     Capture::Test => Found::Test,
                     Capture::Helper => continue,
                 };
-                if let Some(range) = Self::trimmed(text, capture.node.byte_range()) {
+                let range = match what {
+                    Found::Span(SpanKind::Declaration) => {
+                        Self::name(text, capture.node.byte_range())
+                    }
+                    _ => Self::trimmed(text, capture.node.byte_range()),
+                };
+                if let Some(range) = range {
                     out.push(Captured {
                         range,
                         what,
@@ -422,6 +429,14 @@ impl Loaded {
             && !["\\n", "\\t", "\\r"]
                 .iter()
                 .any(|escape| string.contains(escape))
+    }
+
+    /// A declared name's range from its first letter or digit, or `None` if it has none: CSS's
+    /// `--brand-color` declares `brand-color`. A name is never a flag, as a chunk that starts with
+    /// `-` otherwise reads, and `--recieve-color` went unreported.
+    fn name(text: &str, range: std::ops::Range<usize>) -> Option<TextRange> {
+        let lead = text.get(range.clone())?.find(char::is_alphanumeric)?;
+        Self::trimmed(text, range.start + lead..range.end)
     }
 
     /// A node's range without the whitespace at its ends, or `None` if nothing is left. A line

@@ -18,10 +18,10 @@ Phases 0 to 3 are done, and 0.1.0 is the first release: `orthra serve` runs in Z
 uk-UA is installed on first use and compiled to an FST, and the context tier, opt-in, reorders an
 asked word's corrections with a model in the process and rewrites a sentence through an endpoint on
 the machine. orthra checks words in plain text, Markdown, commit messages, Rust, TypeScript, Python,
-Go, PHP, TOML, YAML and JSON, in the editor and from the command line (`orthra check`, `explain`,
-`perf`). Every number in §3 and in `docs/02-testing.md` level 9 is measured, with its date. On the
-zero corpus orthra is 16 to 23 times quieter than codebook on the same files, and `just zero`
-ratchets its counts so they only go down. What is still a target says so.
+Go, PHP, TOML, YAML, JSON and CSS, in the editor and from the command line (`orthra check`,
+`explain`, `perf`). Every number in §3 and in `docs/02-testing.md` level 9 is measured, with its
+date. On the zero corpus orthra is 16 to 23 times quieter than codebook on the same files, and
+`just zero` ratchets its counts so they only go down. What is still a target says so.
 
 orthra exists because the incumbent for Zed, codebook, is reported by the people who use it as not
 good enough. "Not good enough" is a feeling. Phase 0 turns it into a list of failing fixtures, and
