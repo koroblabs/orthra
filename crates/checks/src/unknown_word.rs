@@ -7,7 +7,7 @@ use orthra_hosts::SpanKind;
 use orthra_lexicon::Verdict;
 use orthra_segment::Word;
 
-use crate::{Check, CheckCode, DocFacts, Finding};
+use crate::{Check, CheckCode, DocFacts, Finding, Strings};
 
 /// Why an unknown word makes no finding.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -16,6 +16,8 @@ pub enum Silenced {
     Code,
     /// It is a string in a test file: test data, not checked at all.
     TestData,
+    /// It is a string in a translation into a language no pack speaks.
+    Foreign,
     /// It has fewer than four letters.
     Short,
 }
@@ -23,7 +25,7 @@ pub enum Silenced {
 impl Silenced {
     /// Why the unknown word `word`, in a span of kind `place`, is not reported, or `None` when it
     /// is.
-    pub fn of(text: &str, word: &Word, place: SpanKind, test_file: bool) -> Option<Silenced> {
+    pub fn of(text: &str, word: &Word, place: SpanKind, strings: Strings) -> Option<Silenced> {
         // Three-letter unknowns are abbreviations far more often than typos (`dep`, `yml`, `uid`),
         // as cspell's default minimum of four letters agrees; a three-letter known typo (`teh`) is
         // still reported, by known-typo.
@@ -33,12 +35,21 @@ impl Silenced {
             .count();
         if DocFacts::code(word, place) {
             Some(Silenced::Code)
-        } else if DocFacts::fixture(test_file, place) {
-            Some(Silenced::TestData)
+        } else if DocFacts::fixture(strings, place) {
+            Silenced::of_strings(strings)
         } else if letters < 4 {
             Some(Silenced::Short)
         } else {
             None
+        }
+    }
+
+    /// Why a word in a string that is not text is not reported: `None` for text.
+    pub fn of_strings(strings: Strings) -> Option<Silenced> {
+        match strings {
+            Strings::Text => None,
+            Strings::TestData => Some(Silenced::TestData),
+            Strings::Foreign => Some(Silenced::Foreign),
         }
     }
 }
@@ -54,7 +65,7 @@ impl Check for UnknownWord {
     fn run(&self, facts: &DocFacts<'_>, out: &mut Vec<Finding>) {
         for (i, (word, verdict)) in facts.words.iter().zip(facts.verdicts).enumerate() {
             if *verdict == Verdict::Unknown
-                && Silenced::of(facts.text, word, facts.places[i], facts.test_file).is_none()
+                && Silenced::of(facts.text, word, facts.places[i], facts.strings).is_none()
             {
                 out.push(Finding {
                     range: word.range,

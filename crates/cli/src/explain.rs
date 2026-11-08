@@ -149,6 +149,8 @@ pub(crate) fn run(args: &[String]) -> ExitCode {
                     "it is code, which is held to known typos only: an unknown name is somebody's choice",
                 Silenced::TestData =>
                     "it is a string in a test file: test data, which may misspell on purpose",
+                Silenced::Foreign =>
+                    "it is a string in a translation into a language no enabled pack speaks",
                 Silenced::Short =>
                     "it has fewer than four letters: abbreviations far more often than typos",
             }

@@ -5,4 +5,5 @@ mod incumbent;
 mod lazy_packs;
 mod rare_words;
 mod subject;
+mod translations;
 mod words_files;

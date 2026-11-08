@@ -6,6 +6,7 @@
 
 mod frequency;
 pub mod installed;
+pub mod locale_path;
 pub mod pack;
 pub mod typos;
 mod vocabulary;

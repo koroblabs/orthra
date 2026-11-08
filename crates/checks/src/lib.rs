@@ -41,10 +41,22 @@ pub struct DocFacts<'a> {
     pub verdicts: &'a [Verdict],
     /// The kind of span each word was found in, in the same order.
     pub places: &'a [SpanKind],
-    /// Whether the document is a test file, whose string literals are fixtures rather than text
-    /// anybody reads: `$ti@scalar@tle` in a phrost test is a marker, not a typo.
-    pub test_file: bool,
+    /// What the document's strings are, read off its path.
+    pub strings: Strings,
     pub packs: &'a Packs,
+}
+
+/// What a document's string literals are, by its path.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Strings {
+    /// Text somebody reads, checked as prose is.
+    Text,
+    /// A test file's: fixtures rather than text anybody reads. `$ti@scalar@tle` in a phrost test
+    /// is a marker, not a typo.
+    TestData,
+    /// A translation's, into a language no enabled pack speaks: `locales/de.json` without German.
+    /// Checked as English, its words would all be wrong.
+    Foreign,
 }
 
 impl DocFacts<'_> {
@@ -60,16 +72,17 @@ impl DocFacts<'_> {
         word.code || matches!(place, SpanKind::Declaration | SpanKind::Value)
     }
 
-    /// Whether word `i` is test data: a string literal in a test file. Not checked at all, not even
-    /// for known typos, because a test's data is often a typo on purpose; orthra's own fixtures
-    /// spell `recieve`. A comment in a test file is still prose.
+    /// Whether word `i` is in a string that is not text: test data, or a translation into a
+    /// language no pack speaks. Not checked at all, not even for known typos, because a test's data
+    /// is often a typo on purpose (orthra's own fixtures spell `recieve`), and a German word is not
+    /// an English typo. A comment in such a file is still prose.
     pub fn is_fixture(&self, i: usize) -> bool {
-        Self::fixture(self.test_file, self.places[i])
+        Self::fixture(self.strings, self.places[i])
     }
 
     /// [`DocFacts::is_fixture`], for a word found in a span of kind `place`.
-    pub fn fixture(test_file: bool, place: SpanKind) -> bool {
-        test_file && matches!(place, SpanKind::String | SpanKind::Value)
+    pub fn fixture(strings: Strings, place: SpanKind) -> bool {
+        strings != Strings::Text && matches!(place, SpanKind::String | SpanKind::Value)
     }
 }
 

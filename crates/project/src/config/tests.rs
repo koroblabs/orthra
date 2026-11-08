@@ -1,4 +1,7 @@
-use std::fs;
+use std::{
+    fs,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 
 use expect_test::{Expect, expect};
 
@@ -7,10 +10,12 @@ use super::Config;
 /// The configuration read from a project and a user directory of `files`, rendered with what it
 /// ignores among `paths`.
 fn check(files: &[(&str, &str)], paths: &[&str], expect: Expect) {
+    // A directory of its own for each call: the tests run on threads of one process.
+    static CALLS: AtomicUsize = AtomicUsize::new(0);
     let root = std::env::temp_dir().join(format!(
         "orthra-config-{}-{}",
         std::process::id(),
-        files.len() * 31 + paths.len()
+        CALLS.fetch_add(1, Ordering::Relaxed)
     ));
     let _ = fs::remove_dir_all(&root);
     for (path, text) in files {
@@ -64,12 +69,86 @@ fn languages_and_words_are_unions_of_every_layer() {
         ],
         &["fixtures/a.md", "hosts/vocabulary.txt", "src/lib.rs"],
         expect![[r#"
-            languages ["en-US", "en-GB", "uk-UA"]
+            languages ["en-GB", "uk-UA"]
             words ["qzxvuser", "orthra", "phrost"]
             problems []
             ignored fixtures/a.md
             ignored hosts/vocabulary.txt
             read    src/lib.rs
+        "#]],
+    );
+}
+
+#[test]
+fn english_is_either_spelling_until_a_layer_names_one() {
+    check(
+        &[],
+        &[],
+        expect![[r#"
+            languages ["en-US", "en-GB"]
+            words []
+            problems []
+
+        "#]],
+    );
+    check(
+        &[("project/orthra.toml", "languages = [\"uk-UA\"]\n")],
+        &[],
+        expect![[r#"
+            languages ["en-US", "en-GB", "uk-UA"]
+            words []
+            problems []
+
+        "#]],
+    );
+    check(
+        &[("project/orthra.toml", "languages = [\"en-US\"]\n")],
+        &[],
+        expect![[r#"
+            languages ["en-US"]
+            words []
+            problems []
+
+        "#]],
+    );
+    // A later layer still adds: the user's British and the project's American are both asked.
+    check(
+        &[
+            ("user/config.toml", "languages = [\"en-GB\"]\n"),
+            ("project/orthra.toml", "languages = [\"en-US\"]\n"),
+        ],
+        &[],
+        expect![[r#"
+            languages ["en-GB", "en-US"]
+            words []
+            problems []
+
+        "#]],
+    );
+}
+
+#[test]
+fn test_data_is_ignored_in_every_language() {
+    check(
+        &[],
+        &[
+            "crates/zfs/fixtures/zpool-status.txt",
+            "web/api-fixtures/capabilities.json",
+            "src/__fixtures__/page.md",
+            "cmd/parse/testdata/input.go",
+            "src/fixtures.rs",
+            "tests/fixture_test.rs",
+        ],
+        expect![[r#"
+            languages ["en-US", "en-GB"]
+            words []
+            problems []
+            ignored crates/zfs/fixtures/zpool-status.txt
+            ignored web/api-fixtures/capabilities.json
+            ignored src/__fixtures__/page.md
+            ignored cmd/parse/testdata/input.go
+            read    src/fixtures.rs
+            read    tests/fixture_test.rs
         "#]],
     );
 }
@@ -83,7 +162,7 @@ fn a_broken_settings_file_is_a_problem_said_out_loud() {
         )],
         &[],
         expect![[r#"
-            languages ["en-US"]
+            languages ["en-US", "en-GB"]
             words []
             problems ["<root>/project/orthra.toml: TOML parse error at line 3, column 11\n  |\n3 | ignore = [\n  |           ^\nunclosed array, expected `]`\n"]
 
@@ -96,7 +175,7 @@ fn a_broken_settings_file_is_a_problem_said_out_loud() {
         )],
         &["src/lib.rs"],
         expect![[r#"
-            languages ["en-US"]
+            languages ["en-US", "en-GB"]
             words []
             problems ["<root>/project/orthra.toml: languages is not a list of strings", "<root>/project/orthra.toml: spelling is not a setting"]
             read    src/lib.rs

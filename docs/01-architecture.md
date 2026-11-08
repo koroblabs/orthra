@@ -211,6 +211,17 @@ it.
 Packs load lazily, on the first word of their script. An enabled pack whose script never appears
 costs nothing.
 
+### Translations
+
+A file whose path names a language is a translation, and its strings are in that language: below a
+directory that holds translations (`locales/`, `i18n/`, `lang/`, `_locales/`, `messages/`…), a file
+or directory named by a language tag, `locales/de.json`, `config/locales/devise.de.yml`,
+`public/locales/pt-BR/common.json` (`orthra-packs`, `locale_path.rs`). When no enabled pack speaks
+that language, its strings are not checked at all, as a test file's are not; its keys and comments
+still are. It is read off the path, never guessed from the words (§1.2's inputs: the path is part of
+what a document is). On a project beside orthra, three such files were 8 800 findings, German,
+Spanish and French checked as English (2026-11-08).
+
 ---
 
 ## 5. Checks, and why projections are the unit of cost
@@ -433,21 +444,24 @@ containment, and names neither: both come through lspkit (`lspkit_runtime::proto
 
 | layer    | where                                                        | holds                                            |
 | -------- | ------------------------------------------------------------ | ------------------------------------------------ |
-| built in | the binary                                                   | en-US, hosts, defaults                           |
+| built in | the binary                                                   | en-US and en-GB, hosts, defaults                 |
 | user     | `~/.config/orthra/config.toml`, `~/.config/orthra/words.txt` | personal words and languages                     |
 | project  | `orthra.toml`, `.orthra/words.txt`                           | project words, ignored paths, per-glob languages |
 | editor   | LSP settings (`lsp.orthra.settings` in Zed)                  | on/off, severities, the context tier             |
 
-Word lists and `languages` are **unions** across the layers. For scalar settings, the most specific
-layer wins: editor, then project, then user, then built in. Word files are watched. A change bumps
-the epoch and re-checks the open documents.
+Word lists and `languages` are **unions** across the layers, but a language a layer names replaces
+the built-in variants of its own: built in, English is either spelling, `languages = ["en-US"]`
+makes it American only, and `["uk-UA"]` adds Ukrainian to both. A project that names no variant has
+not said which, and on the projects beside orthra a sixth of what en-US alone reported was British
+(2026-11-08). For scalar settings, the most specific layer wins: editor, then project, then user,
+then built in. Word files are watched. A change bumps the epoch and re-checks the open documents.
 
 **Built (2026-11-05)** in `orthra-project`, and read the same way by `orthra check`,
 `orthra explain` and the server:
 
 ```toml
 # orthra.toml, at the project's root
-languages = ["en-GB"]                           # added to en-US and the user's
+languages = ["en-GB"]                           # British only, with the user's languages
 ignore = ["crates/hosts/src/*/vocabulary.txt"]  # gitignore patterns: files that are not prose
 ```
 
@@ -460,6 +474,10 @@ ignore = ["crates/hosts/src/*/vocabulary.txt"]  # gitignore patterns: files that
   shows it. A key that is not a setting is one too.
 - **The instruments run `--isolated`,** built-in settings only, so the corpora's numbers do not
   depend on whose machine or which checkout they run in.
+- **Test data is ignored in the built-in layer,** before any layer's patterns: `fixtures/`,
+  `*-fixtures/`, `__fixtures__/` and `testdata/`, whole files and in every language. Captured output
+  in a `.txt` has no strings to leave out, it is all data. On the projects beside orthra, such
+  directories held 1 330 of the 3 876 words reported (2026-11-08).
 - **The editor's layer** is `initialization_options`: `languages` and `severity`.
 
 ---

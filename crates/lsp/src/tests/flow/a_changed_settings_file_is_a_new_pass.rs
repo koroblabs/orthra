@@ -1,5 +1,5 @@
 //! A settings file the client watches changes, and the project is checked with what it says now:
-//! a language added, a severity lowered.
+//! a language named, a severity lowered.
 
 use std::fs;
 
@@ -32,17 +32,12 @@ async fn a_language_and_a_severity_take_effect() {
         "the settings files are watched"
     );
     server.open("notes.md").await;
-    assert_eq!(
-        published(&server),
-        [
-            "2 `colour` is not a known word",
-            "2 `qzxv` is not a known word"
-        ]
-    );
+    // Built in, English is either spelling.
+    assert_eq!(published(&server), ["2 `qzxv` is not a known word"]);
 
     fs::write(
         server.root.join("orthra.toml"),
-        "languages = [\"en-GB\"]\nseverity = \"information\"\n",
+        "languages = [\"en-US\"]\nseverity = \"information\"\n",
     )
     .unwrap();
     let toml = server.uri("orthra.toml");
@@ -54,5 +49,11 @@ async fn a_language_and_a_severity_take_effect() {
         )
         .await;
     server.pass_finished(pass).await;
-    assert_eq!(published(&server), ["3 `qzxv` is not a known word"]);
+    assert_eq!(
+        published(&server),
+        [
+            "3 `colour` is not a known word",
+            "3 `qzxv` is not a known word"
+        ]
+    );
 }

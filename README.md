@@ -41,11 +41,14 @@ Things that are never words are never checked:
 - hashes, UUIDs and versions;
 - CLI flags and language tags (`uk-UA`);
 - inline code;
-- Markdown link targets and front matter.
+- Markdown link targets and front matter;
+- test data: `fixtures/`, `*-fixtures/`, `__fixtures__/` and `testdata/`;
+- the strings of a translation into a language you have not enabled (`locales/de.json`).
 
 **Languages:**
 
-- `en-US` and `en-GB` are built in, with 27 000 names and terms of software from
+- `en-US` and `en-GB` are built in, and both are on until a setting names one. They come with 27 000
+  names and terms of software from
   [cspell-dicts](https://github.com/streetsidesoftware/cspell-dicts): `rustup`, `kubectl`, `Gitea`,
   `PostgreSQL`.
 - `uk-UA` (from [dict_uk](https://github.com/brown-uk/dict_uk)) is installed on first use. orthra
@@ -77,7 +80,7 @@ Everything is optional.
 - **`orthra.toml`** at the root of a project:
 
   ```toml
-  languages = ["en-GB", "uk-UA"]   # default: ["en-US"]
+  languages = ["en-GB", "uk-UA"]   # default: en-US and en-GB; naming one replaces both
   ignore = ["vendor/", "*.lock"]   # gitignore patterns
   severity = "information"         # error | warning (default) | information | hint
   auto-install = false             # never fetch a pack; say how to instead

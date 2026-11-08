@@ -12,10 +12,10 @@ use std::{borrow::Cow, fmt, sync::Arc};
 
 use judge::{Directives, Judge};
 use named_lines::NameLabels;
-use orthra_checks::{Check, DocFacts};
-use orthra_hosts::{Hosts, Span, SpanKind, test_files::is_test_path};
+use orthra_checks::{Check, DocFacts, Strings};
+use orthra_hosts::{Host, Hosts, Span, SpanKind, test_files::is_test_path};
 use orthra_lexicon::{Lexicon, Verdict};
-use orthra_packs::Packs;
+use orthra_packs::{Packs, locale_path};
 use orthra_segment::{Rules, Word};
 use orthra_text::{TextSize, script::Script};
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -150,8 +150,26 @@ impl Engine {
         let Some(host) = self.hosts.for_path(path) else {
             return Vec::new();
         };
-        let (language, test_file) = (host.language_ids()[0], is_test_path(host, path));
-        self.check_as(language, text, test_file, None)
+        let (language, strings) = (host.language_ids()[0], self.strings(host, path));
+        self.check_as(language, text, strings, None)
+    }
+
+    /// What the strings of the file at `path`, read by `host`, are: a test file's are test data, a
+    /// translation's into a language no enabled pack speaks are foreign, and any other's are text.
+    /// Read off the path alone, as which host reads it is.
+    fn strings(&self, host: &dyn Host, path: &str) -> Strings {
+        if is_test_path(host, path) {
+            return Strings::TestData;
+        }
+        let spoken = |language: &str| {
+            let tags = self.packs.iter().map(|pack| pack.tag());
+            tags.chain(self.missing.iter().map(String::as_str))
+                .any(|tag| locale_path::language(tag).eq_ignore_ascii_case(language))
+        };
+        match locale_path::named_language(path) {
+            Some(language) if !spoken(language) => Strings::Foreign,
+            _ => Strings::Text,
+        }
     }
 
     /// The findings for a document an editor has open: read as `language_id` when a host speaks
@@ -175,8 +193,8 @@ impl Engine {
         else {
             return Vec::new();
         };
-        let (language, test_file) = (host.language_ids()[0], is_test_path(host, path));
-        self.check_as(language, text, test_file, Some(parsed))
+        let (language, strings) = (host.language_ids()[0], self.strings(host, path));
+        self.check_as(language, text, strings, Some(parsed))
     }
 
     /// How a file of this kind writes a comment, for a directive to be written in: `("//", "")`,
@@ -224,7 +242,7 @@ impl Engine {
 
     /// The findings for `text` read as `language_id`, by range. A language no host speaks has none.
     pub fn check(&mut self, language_id: &str, text: &str) -> Vec<Finding> {
-        self.check_as(language_id, text, false, None)
+        self.check_as(language_id, text, Strings::Text, None)
     }
 
     /// [`Engine::check`] of a document whose last check kept `parsed`.
@@ -234,14 +252,14 @@ impl Engine {
         text: &str,
         parsed: &mut Parsed,
     ) -> Vec<Finding> {
-        self.check_as(language_id, text, false, Some(parsed))
+        self.check_as(language_id, text, Strings::Text, Some(parsed))
     }
 
     fn check_as(
         &mut self,
         language_id: &str,
         text: &str,
-        test_file: bool,
+        strings: Strings,
         parsed: Option<&mut Parsed>,
     ) -> Vec<Finding> {
         let Some((host, words, places)) = self.words(language_id, text, parsed) else {
@@ -270,7 +288,7 @@ impl Engine {
             words: &words,
             verdicts: &verdicts,
             places: &places,
-            test_file,
+            strings,
             packs,
         };
         let mut findings = Vec::new();
@@ -386,7 +404,7 @@ impl Engine {
     /// one here too. `None` when no host claims the path.
     pub fn explain(&mut self, path: &str, text: &str, at: TextSize) -> Option<Explanation> {
         let host = self.hosts.for_path(path)?;
-        let (language_id, test_file) = (host.language_ids()[0], is_test_path(host, path));
+        let (language_id, strings) = (host.language_ids()[0], self.strings(host, path));
         let mut spans = Vec::new();
         host.spans(text, &mut spans);
         let span = spans
@@ -436,13 +454,16 @@ impl Engine {
         }
         .verdict(&mut self.lexicon, text, &word, place);
         let silenced = match verdict {
-            Verdict::Unknown => Silenced::of(text, &word, place, test_file),
-            // A known typo is reported anywhere but in test data, which may misspell on purpose.
-            Verdict::KnownTypo => DocFacts::fixture(test_file, place).then_some(Silenced::TestData),
-            Verdict::Correct | Verdict::NotChecked => None,
+            Verdict::Unknown => Silenced::of(text, &word, place, strings),
+            // A known typo is reported anywhere but in test data, which may misspell on purpose,
+            // and in a translation's strings, which are in another language.
+            Verdict::KnownTypo if DocFacts::fixture(strings, place) => {
+                Silenced::of_strings(strings)
+            }
+            Verdict::KnownTypo | Verdict::Correct | Verdict::NotChecked => None,
         };
         let finding = self
-            .check_as(language_id, text, test_file, None)
+            .check_as(language_id, text, strings, None)
             .into_iter()
             .find(|finding| finding.range == word.range);
         let suggestions = if matches!(verdict, Verdict::Unknown | Verdict::KnownTypo) {

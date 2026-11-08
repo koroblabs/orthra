@@ -6,7 +6,13 @@ names the tag's version.
 ## Unreleased
 
 - checks CSS: its comments, the text of `content:`, the class and id names, custom properties and
-  `@keyframes` names a stylesheet declares, and known typos in property names (`widht`).
+  `@keyframes` names a stylesheet declares, and known typos in property names (`widht`);
+- English is either spelling until a setting names one: en-US and en-GB are built in, and
+  `languages = ["en-US"]` makes a project American only;
+- test data is not checked: `fixtures/`, `*-fixtures/`, `__fixtures__/` and `testdata/` in every
+  language;
+- a translation into a language no enabled pack speaks has its strings left unchecked:
+  `locales/de.json`, `config/locales/devise.de.yml`, `_locales/zh_CN/messages.json`.
 
 ## 0.1.0
 
