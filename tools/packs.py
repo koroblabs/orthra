@@ -37,6 +37,25 @@ SCOWL_LARGE = (
     "https://downloads.sourceforge.net/project/wordlist/speller/2020.12.07/hunspell-en_US-large-2020.12.07.zip",
     "5a93617312ffb7cccc54c8fd8a3e6712eb0e9cd4a69f1d358b82eb4d352072b7",
 )
+# SCOWL's word lists by size, from the same 2020.12.07 release: what size 80 adds to size 70 becomes
+# `en_US-huge.txt`, accepted as the rare words are and never offered. On the projects beside orthra
+# it held 9 % of the words reported in files people wrote (`chipset`, `writeback`, `natively`,
+# 2026-11-08). As a Hunspell dictionary its 150 000 forms would cost about 9 MB of heap; as a sorted
+# list read where it is embedded, an offset each, and fewer: see `scowl_huge`.
+SCOWL = (
+    "https://downloads.sourceforge.net/project/wordlist/SCOWL/2020.12.07/scowl-2020.12.07.tar.gz",
+    "5587667caa20c4891390c2d42dbb4d5c4c3f41bee77af1457ece3ba23fb859cc",
+)
+SCOWL_HUGE = ["english-words.80", "american-words.80", "english-upper.80", "american-upper.80", "english-contractions.80"]
+# tldr-pages' English pages at a release: each page is named for a command, and the commands of
+# Unix, Linux, macOS and Windows are words in a system's docs and code (`journalctl`, `wipefs`,
+# `nslookup`). On the projects beside orthra they held 8 % of the words reported in files people
+# wrote (2026-11-08). Only the names are taken, never a page's text.
+TLDR = (
+    "https://github.com/tldr-pages/tldr/releases/download/v2.3/tldr-pages.en.zip",
+    "0f7c37d65729d0bfa395f16906ea0114fab4348ae2c31ee518b3e0744ea015a9",
+)
+TLDR_PLATFORMS = {"common", "linux", "osx", "windows", "android", "freebsd", "openbsd", "netbsd", "sunos"}
 CSPELL_COMMIT = "72b65202e1b774153003577073303c4ef1d72e4e"
 CSPELL = f"https://raw.githubusercontent.com/streetsidesoftware/cspell-dicts/{CSPELL_COMMIT}/dictionaries"
 VOCABULARY_LICENSE = (f"{CSPELL}/software-terms/LICENSE", "6245ecd81789d113a600fa0e4f5f503e6d1b4f425860f6047dc945560dfcf13c")
@@ -195,7 +214,15 @@ script = "Latn"
 dictionary = { hunspell = "en_GB" }
 # English's known typos and technical vocabulary are en-US's: shared, not copied.
 typos = "../en-US/typos.tsv"
+# A word the pack accepts, of four letters or more, with one of these before it is accepted as a
+# rare word is: `unconfigured`, `refetched`, `subpool`, `multihost`.
+prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
+# A vocabulary word, which no dictionary inflects, with one of these after it is accepted the same
+# way: `datagrams`, `demuxes`.
+vocabulary-suffixes = ["s", "es"]
 vocabulary = ["../en-US/vocabulary.txt", "../en-US/vocabulary.orthra.txt", "../en-US/vocabulary.code.txt"]
+# The names of commands, accepted as rare words are and never offered: en-US's, shared.
+rare-words = ["../en-US/commands.txt"]
 word-internal = ["'", "\u2019"]
 normalize = { "\u2019" = "'" }
 # A comment line that starts with one of these and a colon names people, not prose:
@@ -222,6 +249,15 @@ script = "Latn"
 # `rare` holds what SCOWL size 70 adds to the size-60 dictionary: accepted only when the known typos
 # do not name the word, since uncommon words are also common misspellings.
 dictionary = { hunspell = "en_US", rare = "en_US-rare" }
+# Words accepted as the rare words are and never offered as a correction: what size 80 adds, and the
+# names of commands, which as corrections were noise (`kubctl` got `busctl` and `keyctl`).
+rare-words = ["en_US-huge.txt", "commands.txt"]
+# A word the pack accepts, of four letters or more, with one of these before it is accepted as the
+# rare words are: `unconfigured`, `refetched`, `subpool`, `multihost`.
+prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
+# A vocabulary word, which no dictionary inflects, with one of these after it is accepted the same
+# way: `datagrams`, `demuxes`.
+vocabulary-suffixes = ["s", "es"]
 typos = "typos.tsv"
 # Words accepted whatever their case, beside the dictionary: technical vocabulary. Each is accepted
 # alike; among corrections as near, an earlier file's come first: names and software terms, then
@@ -246,6 +282,8 @@ by SHA-256 before it is written.
 | `en_US.aff`, `en_US.dic`                | [wooorm/dictionaries](https://github.com/wooorm/dictionaries) `dictionary-en` at `8cfea406`: the SCOWL en_US Hunspell dictionary, version 2020.12.07, SCOWL size 60                                                                                                                                                                                                                                                                                                                                                                                             | MIT AND BSD, in `LICENSE.dictionary`                                             |
 | `en_US-rare.dic`                        | [SCOWL](http://wordlist.aspell.net/dicts/) `hunspell-en_US-large-2020.12.07.zip` from SourceForge: the lines of `en_US-large.dic` (SCOWL size 70, accents kept) that `en_US.dic` does not have, read with `en_US.aff`                                                                                                                                                                                                                                                                                                                                           | SCOWL's, the same terms as `LICENSE.dictionary`; its README is in `LICENSE.rare` |
 | `vocabulary.txt`, `vocabulary.code.txt` | [streetsidesoftware/cspell-dicts](https://github.com/streetsidesoftware/cspell-dicts) at `72b65202`: the 107 word lists for software that `tools/packs.py` pins by SHA-256, with cspell's markers (`~`, `*`, `+`) and comments removed, and without its forbidden words (`!`), known typos, British spellings, and API names (mixed-case entries outside the lists of names). `vocabulary.txt` is from the lists of software terms, tools, companies and services; `vocabulary.code.txt` is what the lists of 40 programming languages and their ecosystems add | MIT, in `LICENSE.vocabulary`                                                     |
+| `en_US-huge.txt`                        | [SCOWL](http://wordlist.aspell.net/) `scowl-2020.12.07.tar.gz` from SourceForge: what size 80 adds (`final/english-words.80`, `american-words.80`, `english-upper.80`, `american-upper.80`, `english-contractions.80`), without known typos, British spellings, plurals `en_US.dic` refuses, and words one edit from a word of size 70 or less                                                                                                                                                                                                                  | SCOWL's, the same terms as `LICENSE.rare`                                        |
+| `commands.txt`                          | [tldr-pages](https://github.com/tldr-pages/tldr) `v2.3`, `tldr-pages.en.zip`: the names of its pages for Unix, Linux, macOS and Windows, split at `-` and `.`, the parts of four letters or more, without known typos and British spellings. Only the names, never a page's text                                                                                                                                                                                                                                                                                | CC-BY-4.0, in `LICENSE.commands`                                                 |
 | `vocabulary.orthra.txt`                 | orthra's own additions, kept by hand: general software English the zero corpus showed missing                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | orthra's                                                                         |
 | `typos.tsv`                             | [crate-ci/typos](https://github.com/crate-ci/typos) `v1.52.0`, `crates/typos-dict/assets/words.csv`, re-written as tab-separated `typo<TAB>fix…`                                                                                                                                                                                                                                                                                                                                                                                                                | MIT OR Apache-2.0; the MIT text is in `LICENSE.typos`                            |
 """
@@ -288,6 +326,20 @@ def en_us():
     with open(os.path.join(out, "LICENSE.vocabulary"), "wb") as f:
         f.write(get(*VOCABULARY_LICENSE))
     terms, code = vocabulary(out)
+    typos = known_typos(out)
+    british = british_only()
+    huge = scowl_huge(typos, british, plural_only(out))
+    with open(os.path.join(out, "en_US-huge.txt"), "w", encoding="utf-8") as f:
+        f.write("# What SCOWL size 80 adds to size 70 (see SOURCES.md): accepted as the rare words are,\n")
+        f.write("# never offered. Sorted by the word in lower case, one spelling of each.\n")
+        f.writelines(f"{word}\n" for word in huge)
+    commands, tldr_license = tldr_commands(typos, british)
+    with open(os.path.join(out, "commands.txt"), "w", encoding="utf-8") as f:
+        f.write("# The names of commands, from tldr-pages' page names (see SOURCES.md). Sorted by the word\n")
+        f.write("# in lower case, one spelling of each.\n")
+        f.writelines(f"{word}\n" for word in commands)
+    with open(os.path.join(out, "LICENSE.commands"), "wb") as f:
+        f.write(tldr_license)
     for name, what, words in (
         ("vocabulary.txt", "software terms, tools and companies", terms),
         ("vocabulary.code.txt", "programming languages' words", code),
@@ -301,7 +353,97 @@ def en_us():
         f.write(PACK_TOML)
     with open(os.path.join(out, "SOURCES.md"), "w", encoding="utf-8") as f:
         f.write(SOURCES)
-    print(f"{out}: dictionary, {len(rare)} rare words, {rows} known typos, {len(terms)} + {len(code)} vocabulary words, pack.toml, licenses, SOURCES.md")
+    print(f"{out}: dictionary, {len(rare)} rare words and {len(huge)} more, {rows} known typos, {len(terms)} + {len(code)} vocabulary words, {len(commands)} commands, pack.toml, licenses, SOURCES.md")
+
+
+# A word as segmentation makes one: letters, then letters, digits, apostrophes or hyphens. An
+# underscore or a dot splits a word, so `my_function` and `ASP.NET` could never be looked up.
+SHAPE = re.compile(r"^[^\W\d_](?:[^\W_]|['’-])*[^\W_]$")
+
+
+def known_typos(out):
+    with open(os.path.join(out, "typos.tsv"), encoding="utf-8") as f:
+        return {line.split("\t", 1)[0].lower() for line in f if not line.startswith("#")}
+
+
+def plural_only(out):
+    """The plurals en-US's dictionary refuses: `-s` forms of the words it does not mark with its
+    plural flag `S`, `feedbacks` of `feedback/M`. Size 80 lists `feedbacks`, `furnitures` and
+    `knowledges`, mistakes English learners make that no typo list names."""
+    refused = set()
+    with open(os.path.join(out, "en_US.dic"), encoding="utf-8") as f:
+        for line in f.read().splitlines()[1:]:
+            stem, _, flags = line.partition("/")
+            if "S" not in flags:
+                lower = stem.lower()
+                refused |= {lower + "s", lower + "es", lower[:-1] + "ies" if lower.endswith("y") else lower + "s"}
+    return refused
+
+
+def scowl_huge(typos, british, refused):
+    """What SCOWL size 80 adds, sorted by lower case, one spelling of each: lower case over a
+    capitalized one, which the list accepts in any case anyway.
+
+    Without a plural the dictionary refuses, and without a word one edit from a word of size 70 or
+    less. SCOWL warns that its uncommon words are often misspellings of common ones, and on the
+    typo sample whole, size 80 hid 9 real typos (`casted`, `plusing`, `repositors`, `digrams`);
+    without the words that near, 1 (2026-11-08). On the projects beside orthra it kept 111 of the
+    202 words size 80 had accepted."""
+    import tarfile
+    archive = tarfile.open(fileobj=io.BytesIO(get(*SCOWL)), mode="r:gz")
+    def words(name):
+        member = archive.extractfile(f"scowl-2020.12.07/final/{name}")
+        return member.read().decode("latin-1").split() if member else []
+    common = set()
+    for size in (10, 20, 35, 40, 50, 55, 60, 70):
+        for kind in ("english-words", "american-words", "english-upper", "american-upper", "english-contractions"):
+            if f"scowl-2020.12.07/final/{kind}.{size}" in archive.getnames():
+                common.update(word.lower() for word in words(f"{kind}.{size}"))
+    forms = {}
+    for name in SCOWL_HUGE:
+        for word in words(name):
+            lower = word.lower()
+            if (
+                SHAPE.match(word)
+                and lower not in typos
+                and lower not in refused
+                and not is_british(lower, british)
+                and not one_edit_from(lower, common)
+            ):
+                forms.setdefault(lower, set()).add(word)
+    return [sorted(forms[lower], key=lambda w: (w != lower, w))[0] for lower in sorted(forms)]
+
+
+def one_edit_from(word, words):
+    """Whether a word of `words` other than `word` is one edit from it: a letter left out, added,
+    changed, or two swapped."""
+    letters = "abcdefghijklmnopqrstuvwxyz'"
+    splits = [(word[:i], word[i:]) for i in range(len(word) + 1)]
+    edits = (
+        {a + b[1:] for a, b in splits if b}
+        | {a + b[1] + b[0] + b[2:] for a, b in splits if len(b) > 1}
+        | {a + c + b[1:] for a, b in splits if b for c in letters}
+        | {a + c + b for a, b in splits for c in letters}
+    )
+    edits.discard(word)
+    return not edits.isdisjoint(words)
+
+
+def tldr_commands(typos, british):
+    """The parts of tldr-pages' page names, four letters or more, sorted by lower case, and the
+    archive's license."""
+    archive = zipfile.ZipFile(io.BytesIO(get(*TLDR)))
+    words = set()
+    for name in archive.namelist():
+        platform, _, page = name.partition("/")
+        if platform not in TLDR_PLATFORMS or not page.endswith(".md"):
+            continue
+        for part in re.split(r"[-.+_]", page[: -len(".md")]):
+            lower = part.lower()
+            letters = sum(c.isalpha() for c in lower)
+            if letters >= 4 and SHAPE.match(lower) and lower not in typos and not is_british(lower, british):
+                words.add(lower)
+    return sorted(words), archive.read("LICENSE.md")
 
 
 def vocabulary(out):
@@ -315,11 +457,7 @@ def vocabulary(out):
     - a lower-case form of an all-capitals entry: `INOUT` is SQL, and `inout` is `input` mistyped.
       The lower-case or mixed-case spelling is kept when there is one, and an all-capitals entry
       matches only a word written in capitals (`orthra-packs`)."""
-    # A word as segmentation makes one: letters, then letters, digits, apostrophes or hyphens. An
-    # underscore or a dot splits a word, so `my_function` and `ASP.NET` could never be looked up.
-    shape = re.compile(r"^[^\W\d_](?:[^\W_]|['’-])*[^\W_]$")
-    with open(os.path.join(out, "typos.tsv"), encoding="utf-8") as f:
-        typos = {line.split("\t", 1)[0].lower() for line in f if not line.startswith("#")}
+    typos = known_typos(out)
     british = british_only()
     spellings = ({}, {})
     for path, digest in VOCABULARY:
@@ -334,7 +472,7 @@ def vocabulary(out):
                 lower = word.lower()
                 if mixed_case(word) and path not in NAMES:
                     continue
-                if shape.match(word) and lower not in typos and not is_british(lower, british):
+                if SHAPE.match(word) and lower not in typos and not is_british(lower, british):
                     tier.setdefault(lower, set()).add(word)
     def best(forms):
         # Lower or mixed case over all capitals, then the first in order.

@@ -53,7 +53,7 @@ fn en_us_accepts_the_words_and_refuses_the_typos() {
         .unwrap();
     }
     expect![[r#"
-        receive      accepted=true  rare=false known-typo=[]
+        receive      accepted=true  rare=true  known-typo=[]
         definitely   accepted=true  rare=true  known-typo=[]
         separate     accepted=true  rare=false known-typo=[]
         the          accepted=true  rare=false known-typo=[]
@@ -63,9 +63,9 @@ fn en_us_accepts_the_words_and_refuses_the_typos() {
         colors       accepted=true  rare=false known-typo=[]
         Ukraine      accepted=true  rare=false known-typo=[]
         iterator     accepted=true  rare=false known-typo=[]
-        toolchain    accepted=true  rare=false known-typo=[]
+        toolchain    accepted=true  rare=true  known-typo=[]
         PostgreSQL   accepted=true  rare=false known-typo=[]
-        Kubectl      accepted=true  rare=false known-typo=[]
+        Kubectl      accepted=true  rare=true  known-typo=[]
         recieve      accepted=false rare=false known-typo=[receive]
         definately   accepted=false rare=false known-typo=[definitely]
         seperate     accepted=false rare=false known-typo=[separate]
@@ -73,7 +73,7 @@ fn en_us_accepts_the_words_and_refuses_the_typos() {
         occured      accepted=false rare=false known-typo=[occurred]
         wierd        accepted=false rare=false known-typo=[weird]
         acheive      accepted=false rare=false known-typo=[achieve]
-        untill       accepted=false rare=false known-typo=[until]
+        untill       accepted=false rare=true  known-typo=[until]
         begining     accepted=false rare=false known-typo=[beginning]
         accomodate   accepted=false rare=false known-typo=[accommodate]
         vanishingly  accepted=false rare=true  known-typo=[]
@@ -134,4 +134,63 @@ fn a_language_without_a_built_in_pack_is_an_error_not_a_silence() {
         err.0,
         "uk-UA is installed, not built in: `orthra pack install uk-UA`"
     );
+}
+
+/// What en-US accepts as it accepts a rare word, after the known typos have had their say: what
+/// SCOWL size 80 adds, the names of commands, a prefix on a word it accepts, and a suffix on a
+/// vocabulary word. A base under four letters, and a suffix on a dictionary word, make nothing.
+#[test]
+fn en_us_accepts_derived_words_as_rare_words() {
+    let packs = Packs::builtin(&["en-US"]).unwrap();
+    let en = packs.iter().next().unwrap();
+    let mut out = String::new();
+    for word in [
+        "chipset",
+        "journalctl",
+        "unconfigured",
+        "Unconfigured",
+        "REFETCHED",
+        "subpool",
+        "multihost",
+        "datagrams",
+        "demuxes",
+        "recod",
+        "reson",
+        "informations",
+        "advices",
+        "feedbacks",
+        "busctl",
+        "unqzxv",
+    ] {
+        let fixes = en
+            .known_typo(word)
+            .map(|fixes| fixes.iter().collect::<Vec<_>>().join(", "))
+            .unwrap_or_default();
+        writeln!(
+            out,
+            "{word:<12} accepted={:<5} rare={:<5} known-typo=[{fixes}]",
+            en.accepts(word),
+            en.accepts_rare(word)
+        )
+        .unwrap();
+    }
+    expect![[r#"
+        chipset      accepted=false rare=true  known-typo=[]
+        journalctl   accepted=false rare=true  known-typo=[]
+        unconfigured accepted=false rare=true  known-typo=[]
+        Unconfigured accepted=false rare=true  known-typo=[]
+        REFETCHED    accepted=false rare=true  known-typo=[]
+        subpool      accepted=false rare=true  known-typo=[]
+        multihost    accepted=false rare=true  known-typo=[]
+        datagrams    accepted=false rare=true  known-typo=[]
+        demuxes      accepted=false rare=true  known-typo=[]
+        recod        accepted=false rare=false known-typo=[record]
+        reson        accepted=false rare=false known-typo=[reason]
+        informations accepted=false rare=false known-typo=[information]
+        advices      accepted=false rare=true  known-typo=[advice, advises]
+        feedbacks    accepted=false rare=false known-typo=[]
+        busctl       accepted=false rare=true  known-typo=[]
+        unqzxv       accepted=false rare=false known-typo=[]
+    "#]]
+    .assert_eq(&out);
 }

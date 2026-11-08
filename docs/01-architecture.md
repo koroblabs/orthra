@@ -176,6 +176,9 @@ tag = "uk-UA"
 script = "Cyrl"
 dictionary = { hunspell = "uk_UA" }
 vocabulary = ["vocabulary.txt"]             # accepted whatever the case, beside the dictionary
+rare-words = ["words.txt"]                  # accepted as rare words are, never offered (§7)
+prefixes = ["пере", "недо"]                  # a prefix on an accepted word: a rare word (§7)
+vocabulary-suffixes = []                    # an ending on a word only the vocabulary has (§7)
 word-internal = ["'", "’", "ʼ", "-"]          # characters that do not end a word
 normalize = { "'" = "ʼ", "’" = "ʼ" }          # checked in one form, reported in the original
 name-labels = ["автор", "автори"]            # `# Автор: …` starts a comment line of names
@@ -336,6 +339,38 @@ against size 70 used as the main dictionary:
 What the rare words silence is real English the smaller list lacks: plurals it does not inflect
 (`integrations`, `customizations`, `parsers`), derived forms (`vanishingly`, `reproducibly`,
 `decrypting`), and the rare words of a novel's text. Suggestions still come from size 60 alone.
+
+**Decided for en-US, 2026-11-08: SCOWL size 80, tldr-pages' command names, and affixes, all as rare
+words.** Measured on the projects beside orthra (foundry, foundry-ui, lineage-interlude, dip-rust,
+ferrite, phrost, lspkit, orthra), 2 551 words were reported in files people wrote that no dictionary
+accepted, both spellings of English enabled. With these three sources, and 59 words of software
+English added by hand to `vocabulary.orthra.txt`, 1 595 are; most of the rest are the projects' own
+names, which belong in their words files:
+
+- `rare-words`: sorted lists searched by halving the embedded text, with no index and no heap
+  (`word_list.rs`), accepted where no pack lists a known typo and never offered. What size 80 adds
+  is `en_US-huge.txt` (`chipset`, `writeback`, `natively`), without a plural `en_US.dic` refuses
+  (`feedbacks`, `knowledges`: size 80 lists English learners' mistakes) and without a word one edit
+  from a word of size 70 or less. Whole, size 80 hid 9 of the typo sample's real typos (`casted`,
+  `plusing`, `repositors`); filtered, 1. The names of commands, `commands.txt` (`journalctl`,
+  `wipefs`, `nslookup`), are rare words rather than vocabulary because as corrections they were
+  noise: `kubctl` got `busctl` and `keyctl`.
+- `prefixes`: `un`, `re`, `sub`, `pre`, `multi`, `non`, `over`, `under`, `auto` on a word the pack
+  accepts, of four letters or more (`unconfigured`, `refetched`, `subpool`). A shorter base made
+  `recod` of `cod`, and the known typos keep `untill` and `uncorrect` reported.
+- `vocabulary-suffixes`: `s` and `es` on a word the vocabulary has and the dictionary does not
+  (`datagrams`, `demuxes`). On a dictionary word, `informations` and `feedbacks` would be words.
+
+|                                    |        before |         after |
+| ---------------------------------- | ------------: | ------------: |
+| zero corpus `unknown-word`, 4 of 5 |         1 108 |           927 |
+| typo sample recall, code / prose   | 82.8 / 81.0 % | 82.6 / 80.8 % |
+| typo sample top-1, code / prose    | 71.2 / 71.2 % | 71.1 / 71.1 % |
+| peak RSS, en-US alone, on lspkit   |         21 MB |         23 MB |
+
+phrost's part of the zero corpus could not be taken on the machine this was measured on. The typo
+sample lost five words: `autofocuss` and `flatpack` are typos, `accessors`, `jedis` and `autotools`
+are not. The megabyte is the pages of the lists a lookup reads.
 
 `FstDict` is not built for English, then, because nothing measured asks for it. Two things could
 still make it worth building: Ukrainian (Phase 4), and spellbook's MPL-2.0, which `deny.toml`

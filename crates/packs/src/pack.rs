@@ -18,6 +18,7 @@ use crate::{
     installed::{self, Install},
     typos::{Fixes, KnownTypos},
     vocabulary::Vocabulary,
+    word_list::WordList,
 };
 
 /// A pack that could not be read. Its message names the pack and the field.
@@ -44,6 +45,15 @@ pub struct Pack {
     /// Words accepted beside the dictionary: `kubectl`, `PostgreSQL`, `toolchain`. Also what a
     /// correction is offered from beside it, `codebase` for `clodebase`.
     vocabulary: Arc<Vocabulary>,
+    /// Words accepted as the rare dictionary's are and never offered: lists too long to read as a
+    /// dictionary, `rare-words`.
+    rare_words: Vec<WordList>,
+    /// Prefixes, in lower case, a word the pack accepts may take and stay a word, accepted as the
+    /// rare words are: `un` makes `unconfigured` of `configured`.
+    prefixes: Vec<Box<str>>,
+    /// Endings a vocabulary word may take and stay a word, accepted as the rare words are: `s`
+    /// makes `datagrams` of `datagram`. Only the vocabulary's: no dictionary inflects it.
+    vocabulary_suffixes: Vec<Box<str>>,
     word_internal: Vec<char>,
     /// Each character on the left is checked as the one on the right; the finding keeps the original.
     normalize: Vec<(char, char)>,
@@ -246,6 +256,32 @@ impl Pack {
             texts.push(embedded(name)?);
         }
         let vocabulary = shared.vocabulary(&texts);
+        let strings = |key: &str| {
+            table
+                .get(key)
+                .and_then(toml::Value::as_array)
+                .into_iter()
+                .flatten()
+                .map(|value| {
+                    value
+                        .as_str()
+                        .ok_or_else(|| PackError(format!("`{key}` lists a non-string")))
+                })
+                .collect::<Result<Vec<&str>, PackError>>()
+        };
+        let rare_words = strings("rare-words")?
+            .into_iter()
+            .map(|name| embedded(name).map(WordList::new))
+            .collect::<Result<_, _>>()?;
+        let lowered = |key: &str| -> Result<Vec<Box<str>>, PackError> {
+            Ok(strings(key)?
+                .into_iter()
+                .filter(|affix| !affix.is_empty())
+                .map(|affix| affix.to_lowercase().into_boxed_str())
+                .collect())
+        };
+        let prefixes = lowered("prefixes")?;
+        let vocabulary_suffixes = lowered("vocabulary-suffixes")?;
         let word_internal = table
             .get("word-internal")
             .and_then(toml::Value::as_array)
@@ -275,6 +311,9 @@ impl Pack {
             frequency,
             typos,
             vocabulary,
+            rare_words,
+            prefixes,
+            vocabulary_suffixes,
             word_internal,
             normalize,
             name_labels,
@@ -305,15 +344,55 @@ impl Pack {
         self.vocabulary.accepts(&word) || self.dictionaries.get().main.check(&word)
     }
 
-    /// Whether the pack's rare words accept `word`, after normalization. Asked only once neither
+    /// Whether the pack's rare words accept `word`, after normalization: its rare dictionary, its
+    /// `rare-words`, or one of its prefixes on a word it accepts. Asked only once neither
     /// [`Pack::accepts`] nor any pack's known typos have answered: an uncommon word is accepted,
     /// and an uncommon word that is also a common misspelling (`incudes`, `algin`) is not.
     pub fn accepts_rare(&self, word: &str) -> bool {
+        let word = self.normalized(word);
         self.dictionaries
             .get()
             .rare
             .as_ref()
-            .is_some_and(|rare| rare.check(&self.normalized(word)))
+            .is_some_and(|rare| rare.check(&word))
+            || self.rare_words.iter().any(|list| list.accepts(&word))
+            || self.derived(&word)
+    }
+
+    /// Whether `word` is made of a word the pack accepts, of four letters or more, and one of its
+    /// affixes: a prefix on any such word (`un` on `configured`, `sub` on `pool`), or a vocabulary
+    /// suffix on a vocabulary word no dictionary has (`datagram` and `s`).
+    ///
+    /// A dictionary lets a word take only the affixes it is marked for, and software English makes
+    /// its own: on the projects beside orthra, 275 of the 2 551 words reported in files people
+    /// wrote had a prefix (`unwiped`, `refetched`, `multihost`, 2026-11-08). A shorter base made
+    /// `recod` of `cod` and `reson` of `son`. A suffix goes only on a word the vocabulary has and
+    /// the dictionary does not, which nothing else inflects: the vocabulary holds plain English too,
+    /// and on `information` and `feedback` the suffix made words of `informations` and `feedbacks`.
+    fn derived(&self, word: &str) -> bool {
+        const BASE: usize = 4;
+        let long_enough = |base: &str| base.chars().filter(|c| c.is_alphabetic()).count() >= BASE;
+        let prefixed = self.prefixes.iter().any(|prefix| {
+            let Some((at, _)) = word.char_indices().nth(prefix.chars().count()) else {
+                return false;
+            };
+            let (head, base) = word.split_at(at);
+            head.chars().flat_map(char::to_lowercase).eq(prefix.chars())
+                && long_enough(base)
+                && self.accepts(base)
+        });
+        prefixed
+            || self.vocabulary_suffixes.iter().any(|suffix| {
+                let length = suffix.chars().count();
+                let Some((at, _)) = word.char_indices().rev().nth(length - 1) else {
+                    return false;
+                };
+                let (base, tail) = word.split_at(at);
+                tail.chars().flat_map(char::to_lowercase).eq(suffix.chars())
+                    && long_enough(base)
+                    && self.vocabulary.accepts(base)
+                    && !self.dictionaries.get().main.check(base)
+            })
     }
 
     /// The fixes for `word` if it is a known typo, after normalization, whatever its case.

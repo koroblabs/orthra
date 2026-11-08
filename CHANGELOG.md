@@ -12,7 +12,11 @@ names the tag's version.
 - test data is not checked: `fixtures/`, `*-fixtures/`, `__fixtures__/` and `testdata/` in every
   language;
 - a translation into a language no enabled pack speaks has its strings left unchecked:
-  `locales/de.json`, `config/locales/devise.de.yml`, `_locales/zh_CN/messages.json`.
+  `locales/de.json`, `config/locales/devise.de.yml`, `_locales/zh_CN/messages.json`;
+- more of software English is a word: 86 000 uncommon words from SCOWL size 80, 5 000 names of
+  commands from tldr-pages, `un-`, `re-`, `sub-` and six more prefixes on a known word, and plurals
+  of the technical vocabulary (`datagrams`). On the projects beside orthra, 13 827 findings became 1
+  923, and the typo sample's recall moved by 0.2 points.
 
 ## 0.1.0
 

@@ -157,12 +157,12 @@ impl Sketch {
 }
 
 /// An entry as it is sorted: in lower case.
-fn key(entry: &str) -> impl Iterator<Item = char> + '_ {
+pub(crate) fn key(entry: &str) -> impl Iterator<Item = char> + '_ {
     entry.chars().flat_map(char::to_lowercase)
 }
 
 /// Whether `entry` is written in capitals: two letters or more, none of them lower case.
-fn capitals(entry: &str) -> bool {
+pub(crate) fn capitals(entry: &str) -> bool {
     entry.chars().filter(|c| c.is_alphabetic()).count() > 1
         && !entry.chars().any(char::is_lowercase)
 }

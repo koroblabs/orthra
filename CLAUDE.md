@@ -296,6 +296,14 @@ never appears in an open document costs nothing, because it is loaded on first u
 is reported on its own line. It exists only while the context tier is on, and it is released after
 the idle timeout.
 
+**Both spellings of English by default, and CSS** (2026-11-08, on Workspace, a VM about three times
+slower than the machine the tables above were taken on, so only its deltas compare). On lspkit, RSS
+after `orthra perf` went from 22 to 28.5 MB: en-GB's dictionary is about 4 MB of it, read on the
+first word en-US refuses, and the pages of the rare-word lists a lookup reads about 1. Cold and
+keystroke did not move. A CSS keystroke costs 3.4 ms per 2 000 lines, Rust's 5.4 on the same machine
+(`bootstrap.css`, 12 056 lines, against phrost's `skeleton.rs`); a 467-line stylesheet's, 1.1 ms.
+The grammar loads in 1.3 ms.
+
 **Memory rule:** RSS is dominated by _the dictionaries in use plus the open documents_. If RSS
 scales with workspace size, that is the bug. The project lexicon stores hashed words, not text, for
 the same reason as phrost's `WordSet`.

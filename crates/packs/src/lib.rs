@@ -10,6 +10,7 @@ pub mod locale_path;
 pub mod pack;
 pub mod typos;
 mod vocabulary;
+mod word_list;
 
 use std::path::Path;
 
