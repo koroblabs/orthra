@@ -955,3 +955,81 @@ fn svelte_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn scala_through_every_dimension() {
+    check(
+        r#"
+        //- /src/main/scala/Greeter.scala
+        // Package seperates teh greeting.
+        package com.example
+
+        /** Says teh name. */
+        object Greeter {
+          def recieve(person: String): String = {
+            val message = s"Hello\n$person, occured"
+            println(message)
+            recieve(person)
+          }
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Package seperates teh greeting.
+                         ^^^^^^^^^ known-typo -> separates
+                                   ^^^ known-typo -> the
+            > package com.example
+            >
+            > /** Says teh name. */
+                       ^^^ known-typo -> the
+            > object Greeter {
+            >   def recieve(person: String): String = {
+                    ^^^^^^^ known-typo -> receive
+            >     val message = s"Hello\n$person, occured"
+                                                  ^^^^^^^ known-typo -> occurred
+            >     println(message)
+            >     recieve(person)
+            >   }
+            > }
+        "#]],
+    );
+}
+
+#[test]
+fn groovy_through_every_dimension() {
+    check(
+        r#"
+        //- /src/main/groovy/Greeter.groovy
+        // Package seperates teh greeting.
+        package com.example
+
+        /** Says teh name. */
+        class Greeter {
+            String recieve(String person) {
+                def message = "Hello\n${person}, occured"
+                println message
+                return recieve(person)
+            }
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Package seperates teh greeting.
+                         ^^^^^^^^^ known-typo -> separates
+                                   ^^^ known-typo -> the
+            > package com.example
+            >
+            > /** Says teh name. */
+                       ^^^ known-typo -> the
+            > class Greeter {
+            >     String recieve(String person) {
+                         ^^^^^^^ known-typo -> receive
+            >         def message = "Hello\n${person}, occured"
+                                                       ^^^^^^^ known-typo -> occurred
+            >         println message
+            >         return recieve(person)
+            >     }
+            > }
+        "#]],
+    );
+}

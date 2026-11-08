@@ -16,6 +16,7 @@ mod cpp;
 mod css;
 pub mod git_commit;
 mod go;
+mod groovy;
 mod html;
 mod java;
 mod javascript;
@@ -30,6 +31,7 @@ pub mod plain_text;
 mod python;
 mod ruby;
 mod rust;
+mod scala;
 mod scss;
 mod shell;
 mod sql;
@@ -167,6 +169,8 @@ impl Hosts {
                 Box::new(&ruby::HOST),
                 Box::new(&vue::HOST),
                 Box::new(&svelte::HOST),
+                Box::new(&scala::HOST),
+                Box::new(&groovy::HOST),
             ],
         }
     }

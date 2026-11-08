@@ -150,6 +150,8 @@ fn every_builtin_host_loads() {
         "ruby",
         "vue",
         "svelte",
+        "scala",
+        "groovy",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }

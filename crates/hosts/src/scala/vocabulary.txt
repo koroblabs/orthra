@@ -1,0 +1,30 @@
+# Words of Scala and its ecosystem that are words in a Scala file, whatever a dictionary says: the
+# functional-programming terms its libraries are written in, and its most-used tools. A dictionary
+# word needs no line here. One word per line, sorted, so two additions merge without a conflict.
+applicative
+applicatives
+bifunctor
+bifunctors
+catamorphism
+catenable
+codomain
+codomains
+comonad
+comonads
+effectful
+functor
+functorial
+functors
+implicits
+injective
+kinded
+kleisli
+kleislis
+lightbend
+morphism
+scalactic
+scalaz
+typeclass
+typeclasses
+typelevel
+typesafe

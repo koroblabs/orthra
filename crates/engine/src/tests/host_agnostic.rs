@@ -426,6 +426,48 @@ const WRAPPINGS: &[Wrapping] = &[
         line: "  ",
         close: "-->\n",
     },
+    Wrapping {
+        language: "scala",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: "",
+    },
+    Wrapping {
+        language: "scala",
+        name: "/* */",
+        open: "/*\n",
+        line: "",
+        close: "*/\n",
+    },
+    Wrapping {
+        language: "scala",
+        name: "/** */",
+        open: "/**\n",
+        line: " * ",
+        close: " */\nobject O\n",
+    },
+    Wrapping {
+        language: "groovy",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: "",
+    },
+    Wrapping {
+        language: "groovy",
+        name: "/* */",
+        open: "/*\n",
+        line: "",
+        close: "*/\n",
+    },
+    Wrapping {
+        language: "groovy",
+        name: "/** */",
+        open: "/**\n",
+        line: " * ",
+        close: " */\nclass C {}\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.
