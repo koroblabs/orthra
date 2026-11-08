@@ -6,7 +6,8 @@
 //! a translation only by its path, never by guessing at its words (`CLAUDE.md` §1.2): somewhere
 //! below a directory that holds translations, named by a language tag or inside a directory that
 //! is; or named the way a platform names its translations wherever they are: Android's
-//! `res/values-es/`, Apple's `es.lproj/`, .NET's `Strings.es.resx`. AntennaPod's 77 Android
+//! `res/values-es/`, Apple's `es.lproj/`, .NET's `Strings.es.resx`, Java's
+//! `messages_es.properties`. AntennaPod's 77 Android
 //! translations were 59 800 findings checked as English (2026-11-09).
 
 /// Directories that hold translations, by the names i18n libraries give them: Rails' and
@@ -46,11 +47,20 @@ const LANGUAGES: &[&str] = &[
 
 /// The language, as its two-letter code, that the path of a translation names: `de` for
 /// `web/src/i18n/de.json`, `config/locales/devise.de.yml`, `public/locales/de-DE/common.json`,
-/// `res/values-de/strings.xml`, `de.lproj/Main.strings` and `Strings.de.resx`. `None` for any
-/// other path.
+/// `res/values-de/strings.xml`, `de.lproj/Main.strings`, `Strings.de.resx` and
+/// `messages_de.properties`. `None` for any other path.
 pub fn named_language(path: &str) -> Option<&str> {
     let mut parts = path.split(['/', '\\']).filter(|part| !part.is_empty());
     let name = parts.next_back()?;
+    // Java's resource bundles: `messages_de.properties`, `JabRef_pt_BR.properties`. JabRef's
+    // were 5 000 to 6 700 findings each, checked as English (2026-11-09).
+    if let Some(stem) = name.strip_suffix(".properties")
+        && let Some(language) = stem
+            .match_indices('_')
+            .find_map(|(at, _)| language_of(&stem[at + 1..]))
+    {
+        return Some(language);
+    }
     // .NET's satellite resources: `Strings.de.resx`, `Resources.pt-BR.resx`.
     if let Some(stem) = name.strip_suffix(".resx")
         && let Some((_, tag)) = stem.rsplit_once('.')

@@ -173,6 +173,12 @@ fn every_builtin_host_loads() {
         "proto",
         "xml",
         "restructuredtext",
+        "nix",
+        "hcl",
+        "terraform",
+        "terraform-vars",
+        "ini",
+        "properties",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }

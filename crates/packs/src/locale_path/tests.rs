@@ -32,6 +32,11 @@ fn a_translation_is_named_by_its_path() {
         "src/Properties/Strings.fr.resx",
         "src/Properties/Strings.resx",
         "src/Forms/Main.Designer.resx",
+        "src/main/resources/messages_de.properties",
+        "src/main/resources/l10n/JabRef_pt_BR.properties",
+        "src/main/resources/messages.properties",
+        "src/main/resources/my_app_messages.properties",
+        "src/main/resources/application.properties",
     ];
     let named: Vec<String> = paths
         .iter()
@@ -65,6 +70,11 @@ fn a_translation_is_named_by_its_path() {
         fr       src/Properties/Strings.fr.resx
         -        src/Properties/Strings.resx
         -        src/Forms/Main.Designer.resx
+        de       src/main/resources/messages_de.properties
+        pt       src/main/resources/l10n/JabRef_pt_BR.properties
+        -        src/main/resources/messages.properties
+        -        src/main/resources/my_app_messages.properties
+        -        src/main/resources/application.properties
     "#]]
     .assert_eq(&(named.join("\n") + "\n"));
 }

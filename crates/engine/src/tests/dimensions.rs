@@ -1690,3 +1690,117 @@ fn restructuredtext_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn nix_through_every_dimension() {
+    check(
+        r#"
+        //- /pkgs/greeter.nix
+        # Seperates teh greeting.
+        { pkgs }:
+        let
+          recieve = person: "Hello\nworld, occured ${person}";
+        in
+        pkgs.stdenv.mkDerivation {
+          pname = "greeter";
+          message = recieve "x";
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > { pkgs }:
+            > let
+            >   recieve = person: "Hello\nworld, occured ${person}";
+                ^^^^^^^ known-typo -> receive
+                                                 ^^^^^^^ known-typo -> occurred
+            > in
+            > pkgs.stdenv.mkDerivation {
+            >   pname = "greeter";
+            >   message = recieve "x";
+            > }
+        "#]],
+    );
+}
+
+#[test]
+fn hcl_through_every_dimension() {
+    check(
+        r#"
+        //- /infra/main.tf
+        # Seperates teh greeting.
+        variable "recieve" {
+          description = "Hello\nworld, occured"
+        }
+
+        resource "aws_s3_bucket" "logs" {
+          bucket = var.recieve
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > variable "recieve" {
+                        ^^^^^^^ known-typo -> receive
+            >   description = "Hello\nworld, occured"
+                                             ^^^^^^^ known-typo -> occurred
+            > }
+            >
+            > resource "aws_s3_bucket" "logs" {
+            >   bucket = var.recieve
+            > }
+        "#]],
+    );
+}
+
+#[test]
+fn ini_through_every_dimension() {
+    check(
+        r#"
+        //- /setup.cfg
+        # Seperates teh greeting.
+        [metadata]
+        recieve = 1
+        description = Hello world, occured
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > [metadata]
+            > recieve = 1
+              ^^^^^^^ known-typo -> receive
+            > description = Hello world, occured
+                                         ^^^^^^^ known-typo -> occurred
+        "#]],
+    );
+}
+
+#[test]
+fn properties_through_every_dimension() {
+    check(
+        r#"
+        //- /src/main/resources/messages.properties
+        # Seperates teh greeting.
+        recieve=1
+        greeting=Hello\nworld, occured \
+            twice
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > recieve=1
+              ^^^^^^^ known-typo -> receive
+            > greeting=Hello\nworld, occured \
+                                     ^^^^^^^ known-typo -> occurred
+            >     twice
+        "#]],
+    );
+}

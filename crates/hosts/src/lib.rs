@@ -27,7 +27,9 @@ mod go;
 mod graphql;
 mod groovy;
 mod haskell;
+mod hcl;
 mod html;
+mod ini;
 mod java;
 mod javascript;
 mod json;
@@ -37,12 +39,14 @@ mod less;
 mod lua;
 mod make;
 pub mod markdown;
+mod nix;
 mod objc;
 mod ocaml;
 pub mod parsed;
 mod php;
 pub mod plain_text;
 mod powershell;
+mod properties;
 mod proto;
 mod python;
 mod r;
@@ -212,6 +216,10 @@ impl Hosts {
                 Box::new(&proto::HOST),
                 Box::new(&xml::HOST),
                 Box::new(&rst::HOST),
+                Box::new(&nix::HOST),
+                Box::new(&hcl::HOST),
+                Box::new(&ini::HOST),
+                Box::new(properties::Properties),
             ],
         }
     }
