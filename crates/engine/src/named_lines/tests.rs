@@ -72,3 +72,20 @@ int main(void) { return 0; }
         "#]],
     );
 }
+
+/// A license file is prose, and its copyright line names people as a comment's does.
+#[test]
+fn a_license_files_copyright_line_is_names() {
+    check(
+        "/LICENSE",
+        "The MIT License (MIT)\n\nCopyright (c) 2016 Qzxva Brunsfeld\n\nPermission is hereby granted, qzxvb.\n",
+        expect![[r#"
+            > The MIT License (MIT)
+            >
+            > Copyright (c) 2016 Qzxva Brunsfeld
+            >
+            > Permission is hereby granted, qzxvb.
+                                            ^^^^^ unknown-word
+        "#]],
+    );
+}

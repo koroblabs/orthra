@@ -27,9 +27,13 @@ pub fn is_test_path(host: &dyn Host, path: &str) -> bool {
 /// [`Host::generated_files`].
 pub fn is_generated(host: &dyn Host, path: &str) -> bool {
     let name = path.rsplit(['/', '\\']).next().unwrap_or(path);
-    host.generated_files()
-        .iter()
-        .any(|pattern| matches(pattern, name))
+    names_match(host.generated_files(), name)
+}
+
+/// Whether the file name `name` matches one of `patterns`, where each `*` stands for any run of
+/// characters: a host's generated files, and the names it claims.
+pub(crate) fn names_match(patterns: &[&str], name: &str) -> bool {
+    patterns.iter().any(|pattern| matches(pattern, name))
 }
 
 /// Whether `name` matches `pattern`, where each `*` stands for any run of characters, empty

@@ -117,3 +117,44 @@ fn a_generated_file_is_claimed_by_no_host() {
     "#]]
     .assert_eq(&(claimed.join("\n") + "\n"));
 }
+
+/// A project's text files with no extension are plain text by their names, a pattern included;
+/// one with an extension keeps its host.
+#[test]
+fn a_projects_text_files_are_claimed_by_name() {
+    let hosts = Hosts::builtin();
+    let paths = [
+        "LICENSE",
+        "LICENSE-MIT",
+        "crates/core/LICENSE-APACHE",
+        "LICENSE.md",
+        "AUTHORS",
+        "NOTICE",
+        "CHANGELOG",
+        "CHANGELOG.md",
+        "Makefile",
+        "LICENSES",
+    ];
+    let claimed: Vec<String> = paths
+        .iter()
+        .map(|path| {
+            format!(
+                "{:<11}{path}",
+                hosts.for_path(path).map_or("-", |host| host.id())
+            )
+        })
+        .collect();
+    expect![[r#"
+        plain-text LICENSE
+        plain-text LICENSE-MIT
+        plain-text crates/core/LICENSE-APACHE
+        markdown   LICENSE.md
+        plain-text AUTHORS
+        plain-text NOTICE
+        plain-text CHANGELOG
+        markdown   CHANGELOG.md
+        -          Makefile
+        -          LICENSES
+    "#]]
+    .assert_eq(&(claimed.join("\n") + "\n"));
+}

@@ -1,4 +1,4 @@
-//! Comment lines that name people: `# Author: Jens Getreu <getreu at web.de>`. A license header or
+//! Comment lines, and lines of prose such as a `LICENSE`'s, that name people: `# Author: Jens Getreu <getreu at web.de>`. A license header or
 //! a theme's credits is a list of names, and on helix's TOML such lines were 121 of 262 findings.
 //! Which labels say so is each pack's data (`name-labels`, and `name-lines` for a word that needs no
 //! colon, `Copyright`), because `Author` is English. A line of a few words and an email in angle
@@ -57,8 +57,10 @@ impl NameLabels {
             let gap = &text[previous_end..start];
             previous_end = usize::from(word.range.end());
             let named = start < named_until
-                || matches!(place, SpanKind::Comment | SpanKind::DocComment)
-                    && Self::first_on_line(gap, i)
+                || matches!(
+                    place,
+                    SpanKind::Comment | SpanKind::DocComment | SpanKind::Prose
+                ) && Self::first_on_line(gap, i)
                     && {
                         let line_end = text[start..].find('\n').map_or(text.len(), |at| start + at);
                         let line = &text[start..line_end];

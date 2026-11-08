@@ -86,6 +86,7 @@ pub trait Host: Send + Sync + fmt::Debug {
     /// LSP language ids this host answers for.
     fn language_ids(&self) -> &'static [&'static str];
     /// File names and extensions this host claims when there is no language id: `COMMIT_EDITMSG`, `md`.
+    /// A name may hold `*` for any run of characters: `LICENSE-*`.
     fn file_names(&self) -> &'static [&'static str];
     fn extensions(&self) -> &'static [&'static str];
     fn conventions(&self) -> Conventions;
@@ -186,7 +187,7 @@ impl Hosts {
             .map(|(_, ext)| ext.to_ascii_lowercase());
         self.hosts
             .iter()
-            .find(|host| host.file_names().contains(&name))
+            .find(|host| test_files::names_match(host.file_names(), name))
             .or_else(|| {
                 let extension = extension.as_deref()?;
                 self.hosts
