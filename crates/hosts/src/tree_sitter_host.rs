@@ -2,8 +2,9 @@
 //!
 //! One implementation runs every such host. A capture's name is the kind of span it makes:
 //!
-//! - `@comment`, `@doc`, `@string` and `@declaration` make a span of that kind, and `@value` a
-//!   [`SpanKind::Value`]: a value that is code, such as a CI step's shell command;
+//! - `@comment`, `@doc`, `@string`, `@prose` (the text of markup) and `@declaration` make a span of
+//!   that kind, and `@value` a [`SpanKind::Value`]: a value that is code, such as a CI step's shell
+//!   command;
 //! - `@skip` makes none, and nothing inside it does either: an import's module path is a string,
 //!   but it is not prose;
 //! - a name starting with `_` is a helper for a predicate, and makes nothing.
@@ -231,6 +232,7 @@ impl Loaded {
                 "comment" => Ok(Capture::Span(SpanKind::Comment)),
                 "doc" => Ok(Capture::Span(SpanKind::DocComment)),
                 "string" => Ok(Capture::Span(SpanKind::String)),
+                "prose" => Ok(Capture::Span(SpanKind::Prose)),
                 "declaration" => Ok(Capture::Span(SpanKind::Declaration)),
                 "value" => Ok(Capture::Span(SpanKind::Value)),
                 "skip" => Ok(Capture::Skip),

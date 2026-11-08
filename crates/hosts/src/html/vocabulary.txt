@@ -1,0 +1,43 @@
+# Words of HTML that are words in a page, whatever a dictionary says. A dictionary word needs
+# no line here. One word per line, sorted, so two additions merge without a conflict.
+#
+# The placeholder text of a page: the Latin of the classic "lorem ipsum" passage, which is in
+# almost every template and mockup. A word from a generator's longer vocabulary is not here.
+adipiscing
+adipisicing
+aliqua
+aliquip
+amet
+aute
+cillum
+commodo
+consequat
+cupidatat
+deserunt
+dolore
+duis
+eiusmod
+elit
+enim
+excepteur
+fugiat
+incididunt
+irure
+labore
+laboris
+laborum
+mollit
+nostrud
+nulla
+occaecat
+officia
+pariatur
+proident
+quis
+reprehenderit
+sunt
+tempor
+ullamco
+velit
+veniam
+voluptate

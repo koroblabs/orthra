@@ -247,6 +247,31 @@ fn go_through_every_dimension() {
 }
 
 #[test]
+fn html_through_every_dimension() {
+    check(
+        r##"
+        //- /src/index.html
+        <!-- Seperates teh header. -->
+        <h1 id="recieve" title="Hello occured">Welcome&nbsp;Seperates</h1>
+        <a href="#recieve">teh link</a>
+        <script>var recieve = 1;</script>
+        "##,
+        &[("teh link", "the link")],
+        expect![[r##"
+            > <!-- Seperates teh header. -->
+                   ^^^^^^^^^ known-typo -> Separates
+                             ^^^ known-typo -> the
+            > <h1 id="recieve" title="Hello occured">Welcome&nbsp;Seperates</h1>
+                                            ^^^^^^^ known-typo -> occurred
+                                                                  ^^^^^^^^^ known-typo -> Separates
+            > <a href="#recieve">teh link</a>
+                                 ^^^ known-typo -> the
+            > <script>var recieve = 1;</script>
+        "##]],
+    );
+}
+
+#[test]
 fn css_through_every_dimension() {
     check(
         r#"

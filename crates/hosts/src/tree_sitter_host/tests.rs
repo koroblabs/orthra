@@ -129,6 +129,7 @@ fn every_builtin_host_loads() {
         "javascriptreact",
         "python",
         "css",
+        "html",
         "go",
         "shellscript",
         "php",

@@ -14,6 +14,7 @@ use crate::parsed::Parsed;
 mod css;
 pub mod git_commit;
 mod go;
+mod html;
 mod javascript;
 mod json;
 pub mod markdown;
@@ -131,6 +132,7 @@ impl Hosts {
                 Box::new(&yaml::HOST),
                 Box::new(&json::HOST),
                 Box::new(&css::HOST),
+                Box::new(&html::HOST),
                 Box::new(&typescript::HOST),
                 Box::new(&tsx::HOST),
                 Box::new(&javascript::HOST),

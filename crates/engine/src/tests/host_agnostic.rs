@@ -175,6 +175,13 @@ const WRAPPINGS: &[Wrapping] = &[
         close: " */\n",
     },
     Wrapping {
+        language: "html",
+        name: "<!-- -->",
+        open: "<!--\n",
+        line: "  ",
+        close: "-->\n",
+    },
+    Wrapping {
         language: "toml",
         name: "#",
         open: "",
