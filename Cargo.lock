@@ -1192,7 +1192,7 @@ checksum = "7e036b411754132fd6b74e94b74e9a13c5cf606fa93d1885c35860d3060820b1"
 
 [[package]]
 name = "orthra-arch"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "lspkit-arch",
@@ -1200,7 +1200,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-checks"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "orthra-hosts",
@@ -1212,7 +1212,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "lspkit-heap",
@@ -1230,7 +1230,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-context"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "orthra-text",
@@ -1238,7 +1238,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-dict"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "fst",
@@ -1247,7 +1247,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-engine"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "orthra-checks",
@@ -1264,7 +1264,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-harness"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "lspkit-fuzz",
@@ -1274,7 +1274,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-hosts"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "orthra-testkit",
@@ -1337,7 +1337,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-install"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "orthra-context",
@@ -1350,14 +1350,14 @@ dependencies = [
 
 [[package]]
 name = "orthra-lexicon"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "rustc-hash",
 ]
 
 [[package]]
 name = "orthra-lsp"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "lspkit-flow",
@@ -1375,7 +1375,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-ml-http"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "orthra-context",
@@ -1385,7 +1385,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-ml-local"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "candle-core",
  "candle-nn",
@@ -1399,7 +1399,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-packs"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "orthra-dict",
@@ -1410,7 +1410,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-project"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "lspkit-walk",
@@ -1421,7 +1421,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-segment"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "orthra-testkit",
@@ -1430,11 +1430,11 @@ dependencies = [
 
 [[package]]
 name = "orthra-suggest"
-version = "0.1.0"
+version = "0.2.0"
 
 [[package]]
 name = "orthra-testkit"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "lspkit-fixture",
@@ -1443,7 +1443,7 @@ dependencies = [
 
 [[package]]
 name = "orthra-text"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "expect-test",
  "lspkit-text",

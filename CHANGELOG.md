@@ -3,7 +3,7 @@
 A release's section is its notes on GitHub: the release workflow publishes the section whose heading
 names the tag's version.
 
-## Unreleased
+## 0.2.0
 
 - checks 45 more languages, each in its comments, its strings and the names a file declares:
   JavaScript and JSX, Scala, Groovy, Swift, Objective-C, C, C++, C#, F#, Dart, Zig, Kotlin, Java,
