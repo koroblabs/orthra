@@ -21,6 +21,7 @@ const CONVENTIONS: Conventions = Conventions {
 /// prose.
 const DOC_TAGS: DocTags = DocTags {
     prefixes: &[],
+    code: &[],
     typed: &["param", "raise"],
     unread: &["author", "before", "see", "since", "version"],
 };

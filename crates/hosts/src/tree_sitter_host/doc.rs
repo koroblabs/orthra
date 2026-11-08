@@ -12,6 +12,9 @@ use crate::{Span, SpanKind};
 pub(crate) struct DocTags {
     /// Prefixes a tool puts on a tag it shares with the language: `@phpstan-param` is `@param`.
     pub(crate) prefixes: &'static [&'static str],
+    /// Tags whose section is code, up to the next tag: roxygen's `@examples`. The lines after one
+    /// are not prose, and the next line that starts with a tag of any other name is.
+    pub(crate) code: &'static [&'static str],
     /// Tags followed by a type, which is code, and then perhaps a `$name`:
     /// `@param array{id: int, name: string} $user The user to greet.` A type's brackets can run
     /// over several lines, and every line they hold is code.
@@ -23,6 +26,7 @@ pub(crate) struct DocTags {
 impl DocTags {
     pub(crate) const NONE: DocTags = DocTags {
         prefixes: &[],
+        code: &[],
         typed: &[],
         unread: &[],
     };
@@ -59,7 +63,7 @@ impl Loaded {
             // A line comment's marker is `//`, `#` or `--` (Ruby's YARD tags follow `#`).
             let marked = line
                 .trim_start()
-                .trim_start_matches(['/', '*', '!', '-', '#']);
+                .trim_start_matches(['/', '*', '!', '-', '#', '\'']);
             let content = marked.trim_start();
             // An indented code block: four spaces past the one that follows the marker. Markdown
             // wants a blank line before it, which is not carried here: a list item's continuation
@@ -79,6 +83,15 @@ impl Loaded {
             if scan.depth == 0 && Self::command(content, &["endcode", "endverbatim"]) {
                 *in_fence = false;
                 continue;
+            }
+            let tag = content
+                .strip_prefix('@')
+                .filter(|tag| tag.starts_with(char::is_alphabetic));
+            if scan.depth == 0 && !self.doc_tags.code.is_empty() && tag.is_some() {
+                *in_fence = Self::command(content, self.doc_tags.code);
+                if *in_fence {
+                    continue;
+                }
             }
             if *in_fence {
                 continue;

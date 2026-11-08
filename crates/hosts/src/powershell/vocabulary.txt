@@ -1,0 +1,13 @@
+# Words of PowerShell and its ecosystem that are words in a script, whatever a dictionary says. A
+# dictionary word needs no line here. One word per line, sorted, so two additions merge without a
+# conflict.
+arraylist
+dotsourced
+jacoco
+nunit
+proxycommand
+psgallery
+psobject
+whatif
+wildcarded
+xmlwriter

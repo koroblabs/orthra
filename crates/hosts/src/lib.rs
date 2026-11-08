@@ -28,6 +28,7 @@ mod html;
 mod java;
 mod javascript;
 mod json;
+mod julia;
 mod kotlin;
 mod less;
 mod lua;
@@ -37,7 +38,9 @@ mod ocaml;
 pub mod parsed;
 mod php;
 pub mod plain_text;
+mod powershell;
 mod python;
+mod r;
 mod ruby;
 mod rust;
 mod scala;
@@ -192,6 +195,9 @@ impl Hosts {
                 Box::new(&elm::HOST),
                 Box::new(&elixir::HOST),
                 Box::new(&erlang::HOST),
+                Box::new(&r::HOST),
+                Box::new(&julia::HOST),
+                Box::new(&powershell::HOST),
             ],
         }
     }

@@ -41,6 +41,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::cutting(
         // code. `@example` holds code, and the rest hold references and versions.
         doc_tags: DocTags {
             prefixes: &[],
+            code: &[],
             typed: &["param", "tparam", "throws", "constructor"],
             unread: &[
                 "author",

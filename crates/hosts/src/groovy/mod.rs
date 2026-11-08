@@ -40,6 +40,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::cutting(
         // Groovydoc is Javadoc: `@param name text`, `@throws Type text`.
         doc_tags: DocTags {
             prefixes: &[],
+            code: &[],
             typed: &["exception", "param", "throws"],
             unread: &["author", "see", "since", "version"],
         },

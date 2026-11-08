@@ -13,6 +13,7 @@ mod tests;
 /// the file-level tags hold a reference, a name or a date, not prose.
 pub(crate) const DOC_TAGS: DocTags = DocTags {
     prefixes: &[],
+    code: &[],
     typed: &["param", "tparam", "throws", "throw", "exception", "retval"],
     unread: &[
         "author",

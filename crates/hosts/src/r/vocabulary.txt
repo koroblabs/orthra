@@ -1,0 +1,40 @@
+# Words of R and its ecosystem that are words in an R file, whatever a dictionary says: base
+# functions, tidyverse and roxygen. A dictionary word needs no line here. One word per line, sorted,
+# so two additions merge without a conflict.
+altrep
+bioconductor
+dplyr
+dtplyr
+emph
+enquo
+enquos
+geom
+geoms
+ggplot
+gpar
+grob
+grobs
+knitr
+lazyeval
+nocov
+plotmath
+plyr
+ptype
+ptypes
+purrr
+quosure
+quosured
+quosures
+ragg
+rlang
+roxygen
+svglite
+tibble
+tibbles
+tidyr
+tidyselect
+tidyverse
+usethis
+vctrs
+vdiffr
+vecsxp

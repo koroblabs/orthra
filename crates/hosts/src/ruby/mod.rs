@@ -41,6 +41,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // and `@raise [Error]` carry the type alone.
     doc_tags: DocTags {
         prefixes: &[],
+        code: &[],
         typed: &[
             "option",
             "param",

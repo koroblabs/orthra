@@ -671,6 +671,48 @@ const WRAPPINGS: &[Wrapping] = &[
         line: "%% ",
         close: "key() -> 1.\n",
     },
+    Wrapping {
+        language: "r",
+        name: "#",
+        open: "",
+        line: "# ",
+        close: "",
+    },
+    Wrapping {
+        language: "r",
+        name: "#'",
+        open: "",
+        line: "#' ",
+        close: "",
+    },
+    Wrapping {
+        language: "julia",
+        name: "#",
+        open: "",
+        line: "# ",
+        close: "",
+    },
+    Wrapping {
+        language: "julia",
+        name: "#= =#",
+        open: "#=\n",
+        line: "",
+        close: "=#\n",
+    },
+    Wrapping {
+        language: "powershell",
+        name: "#",
+        open: "",
+        line: "# ",
+        close: "",
+    },
+    Wrapping {
+        language: "powershell",
+        name: "<# #>",
+        open: "<#\n",
+        line: "",
+        close: "#>\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.

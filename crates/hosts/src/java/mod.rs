@@ -30,6 +30,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     generated_files: &[],
     doc_tags: DocTags {
         prefixes: &[],
+        code: &[],
         // `@param name`, `@throws Type`: the first token is a name or a type, then prose.
         typed: &["exception", "param", "throws"],
         // Names, references and versions.

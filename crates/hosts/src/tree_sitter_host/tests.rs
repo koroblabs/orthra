@@ -163,6 +163,9 @@ fn every_builtin_host_loads() {
         "elm",
         "elixir",
         "erlang",
+        "r",
+        "julia",
+        "powershell",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }

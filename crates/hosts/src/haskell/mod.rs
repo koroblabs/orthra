@@ -31,6 +31,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // Haddock has `@since` and nothing else at the start of a line.
     doc_tags: DocTags {
         prefixes: &[],
+        code: &[],
         typed: &[],
         unread: &["since"],
     },

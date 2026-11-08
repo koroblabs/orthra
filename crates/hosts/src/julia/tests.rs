@@ -1,0 +1,99 @@
+use expect_test::expect;
+
+use crate::tests::check;
+
+#[test]
+fn julia_prose_is_comments_docstrings_strings_and_declared_names() {
+    check(
+        "/src/greet.jl",
+        r##"# A line comment.
+#= A block
+comment =#
+
+"""
+    greet(person)
+
+Builds the greeting.
+"""
+function greet(person::String, count::Int = 1; flag = true) where {T}
+    msg = "Hello\nworld, $person"
+    pattern = r"not text"
+    return msg
+end
+
+"Docs for the point."
+struct Point{T} <: Shape
+    x::T
+    y
+end
+
+const LIMIT = 5
+short(a, b) = a + b
+Base.show(io::IO, p::Point) = print(io, "kept")
+"##,
+        expect![[r#"
+            julia
+            > # A line comment.
+              ^^^^^^^^^^^^^^^^^ comment
+            > #= A block
+              ^^^^^^^^^^ comment (+1 lines)
+            > comment =#
+            >
+            > """
+            >     greet(person)
+                  ^^^^^^^^^^^^^ doccomment
+            >
+            > Builds the greeting.
+              ^^^^^^^^^^^^^^^^^^^^ doccomment
+            > """
+            > function greet(person::String, count::Int = 1; flag = true) where {T}
+                       ^^^^^ declaration
+            >     msg = "Hello\nworld, $person"
+                  ^^^ declaration
+                         ^^^^^ value
+                                ^^^^^^ value
+            >     pattern = r"not text"
+                  ^^^^^^^ declaration
+            >     return msg
+            > end
+            >
+            > "Docs for the point."
+               ^^^^^^^^^^^^^^^^^^^ doccomment
+            > struct Point{T} <: Shape
+            >     x::T
+                  ^ declaration
+            >     y
+                  ^ declaration
+            > end
+            >
+            > const LIMIT = 5
+                    ^^^^^ declaration
+            > short(a, b) = a + b
+              ^^^^^ declaration
+            > Base.show(io::IO, p::Point) = print(io, "kept")
+                                                       ^^^^ value
+        "#]],
+    );
+}
+
+#[test]
+fn julia_math_is_not_prose() {
+    check(
+        "/src/math.jl",
+        r##"
+"The density is ``\\mathbf{x}`` here." # kept
+pdf(d, x) = exp(d.κ * αsum)
+αsum = 1
+"##,
+        expect![[r#"
+            julia
+            >
+            > "The density is ``\\mathbf{x}`` here." # kept
+               ^^^^^^^^^^^^^^^^^ doccomment
+                                                     ^^^^^^ comment
+            > pdf(d, x) = exp(d.κ * αsum)
+              ^^^ declaration
+            > αsum = 1
+        "#]],
+    );
+}

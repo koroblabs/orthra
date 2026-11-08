@@ -1372,3 +1372,83 @@ fn erlang_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn r_through_every_dimension() {
+    check(
+        r#"
+        //- /R/greet.R
+        #' Seperates teh greeting.
+        #' @param person The person.
+        recieve <- function(person) {
+          message <- "Hello\nworld, occured"
+          recieve(message)
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > #' Seperates teh greeting.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > #' @param person The person.
+            > recieve <- function(person) {
+              ^^^^^^^ known-typo -> receive
+            >   message <- "Hello\nworld, occured"
+                                          ^^^^^^^ known-typo -> occurred
+            >   recieve(message)
+            > }
+        "#]],
+    );
+}
+
+#[test]
+fn julia_through_every_dimension() {
+    check(
+        r#"
+        //- /src/greet.jl
+        # Seperates teh greeting.
+        function recieve(person)
+            message = "Hello\nworld, occured"
+            return recieve(message)
+        end
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > function recieve(person)
+                       ^^^^^^^ known-typo -> receive
+            >     message = "Hello\nworld, occured"
+                                           ^^^^^^^ known-typo -> occurred
+            >     return recieve(message)
+            > end
+        "#]],
+    );
+}
+
+#[test]
+fn powershell_through_every_dimension() {
+    check(
+        r#"
+        //- /scripts/greet.ps1
+        # Seperates teh greeting.
+        function Recieve-Greeting {
+          $message = "Hello world, occured"
+          Recieve-Greeting $message
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > function Recieve-Greeting {
+                       ^^^^^^^ known-typo -> Receive
+            >   $message = "Hello world, occured"
+                                         ^^^^^^^ known-typo -> occurred
+            >   Recieve-Greeting $message
+            > }
+        "#]],
+    );
+}

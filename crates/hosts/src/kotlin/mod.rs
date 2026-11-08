@@ -39,6 +39,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // name.
     doc_tags: DocTags {
         prefixes: &[],
+        code: &[],
         typed: &["param", "property", "throws", "exception"],
         unread: &["author", "sample", "see", "since", "suppress", "version"],
     },

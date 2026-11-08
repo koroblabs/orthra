@@ -28,6 +28,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // `@docs view, update` lists names, and is the one tag a module's doc comment has.
     doc_tags: DocTags {
         prefixes: &[],
+        code: &[],
         typed: &[],
         unread: &["docs"],
     },
