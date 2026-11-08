@@ -56,7 +56,10 @@ impl Loaded {
         for line in text[range].split_inclusive('\n') {
             let line_start = at;
             at += line.len();
-            let marked = line.trim_start().trim_start_matches(['/', '*', '!', '-']);
+            // A line comment's marker is `//`, `#` or `--` (Ruby's YARD tags follow `#`).
+            let marked = line
+                .trim_start()
+                .trim_start_matches(['/', '*', '!', '-', '#']);
             let content = marked.trim_start();
             // An indented code block: four spaces past the one that follows the marker. Markdown
             // wants a blank line before it, which is not carried here: a list item's continuation

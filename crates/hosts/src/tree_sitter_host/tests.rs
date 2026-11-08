@@ -146,6 +146,7 @@ fn every_builtin_host_loads() {
         "swift",
         "c",
         "cpp",
+        "ruby",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }

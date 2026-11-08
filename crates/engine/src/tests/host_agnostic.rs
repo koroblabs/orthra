@@ -398,6 +398,20 @@ const WRAPPINGS: &[Wrapping] = &[
         line: "/// ",
         close: "int f();\n",
     },
+    Wrapping {
+        language: "ruby",
+        name: "#",
+        open: "",
+        line: "# ",
+        close: "key = 1\n",
+    },
+    Wrapping {
+        language: "ruby",
+        name: "=begin =end",
+        open: "=begin\n",
+        line: "",
+        close: "=end\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.

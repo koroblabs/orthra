@@ -850,3 +850,34 @@ fn cpp_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn ruby_through_every_dimension() {
+    check(
+        r##"
+        //- /lib/greeter.rb
+        # Seperates teh greeting.
+        # @param person [String] who occured
+        def recieve(person)
+          message = "Hello\nworld, occured #{person}"
+          puts message
+          recieve(person)
+        end
+        "##,
+        &[("teh", "the")],
+        expect![[r#"
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > # @param person [String] who occured
+                                           ^^^^^^^ known-typo -> occurred
+            > def recieve(person)
+                  ^^^^^^^ known-typo -> receive
+            >   message = "Hello\nworld, occured #{person}"
+                                         ^^^^^^^ known-typo -> occurred
+            >   puts message
+            >   recieve(person)
+            > end
+        "#]],
+    );
+}

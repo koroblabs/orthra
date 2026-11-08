@@ -28,6 +28,7 @@ pub mod parsed;
 mod php;
 pub mod plain_text;
 mod python;
+mod ruby;
 mod rust;
 mod scss;
 mod shell;
@@ -154,6 +155,7 @@ impl Hosts {
                 Box::new(&swift::HOST),
                 Box::new(&c::HOST),
                 Box::new(&cpp::HOST),
+                Box::new(&ruby::HOST),
             ],
         }
     }

@@ -1,0 +1,9 @@
+# Words of Ruby and its ecosystem that are words in a Ruby file, whatever a dictionary says:
+# keywords, built-ins, the toolchain, and the most-used gems. A dictionary word needs no line here.
+# One word per line, sorted, so two additions merge without a conflict.
+cattr
+eigenclass
+httpdate
+kwarg
+mattr
+metaclass
