@@ -87,3 +87,48 @@ greet --no-verify teh_flag
         "#]],
     );
 }
+
+/// zsh's own syntax can open a string the bash grammar never closes, and the commands after it then
+/// read as its text. What the grammar could not parse is not checked: ripgrep's `rg.zsh`, this
+/// function, had `compset` reported five times.
+#[test]
+fn what_the_grammar_cannot_parse_is_not_words() {
+    check(
+        "/complete/_rg.zsh",
+        r##"# Complete custom hyperlink format strings
+(( $+functions[_rg_hyperlink_format_strings] )) ||
+_rg_hyperlink_format_strings() {
+  local bs
+  local -a pfx sfx rmv
+
+  [[ -n $compstate[quote] ]] || bs=\\
+
+  sfx=( -S "$bs}" )
+  rmv=( -r '}\-' )
+
+  compset -S "$bs{*"
+  compset -S "$bs}*" && sfx=( -S '' )
+  compset -P '*}'
+}
+"##,
+        expect![[r#"
+            shell
+            > # Complete custom hyperlink format strings
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment
+            > (( $+functions[_rg_hyperlink_format_strings] )) ||
+            > _rg_hyperlink_format_strings() {
+            >   local bs
+            >   local -a pfx sfx rmv
+            >
+            >   [[ -n $compstate[quote] ]] || bs=\\
+            >
+            >   sfx=( -S "$bs}" )
+            >   rmv=( -r '}\-' )
+            >
+            >   compset -S "$bs{*"
+            >   compset -S "$bs}*" && sfx=( -S '' )
+            >   compset -P '*}'
+            > }
+        "#]],
+    );
+}

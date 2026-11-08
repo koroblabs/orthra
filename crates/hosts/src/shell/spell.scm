@@ -24,3 +24,7 @@
 (variable_assignment name: (subscript name: (variable_name) @declaration))
 (declaration_command (variable_name) @declaration)
 (for_statement variable: (variable_name) @declaration)
+
+; What the grammar could not parse is not read as words: zsh's own syntax (`[^{}]##`, `${(j:,:)x}`)
+; can open a string the grammar never closes, and then a command reads as its text.
+(ERROR) @skip
