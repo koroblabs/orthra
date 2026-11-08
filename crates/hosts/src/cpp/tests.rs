@@ -80,7 +80,7 @@ std::string Greeter::greet(const Person &person, int *length) const {
             >      * Builds the greeting.
                      ^^^^^^^^^^^^^^^^^^^^ doccomment
             >      * \brief Greets.
-                     ^^^^^^^^^^^^^^ doccomment
+                            ^^^^^^^ doccomment
             >      * @param person who to greet
                                    ^^^^^^^^^^^^ doccomment
             >      * @tparam Value what it holds

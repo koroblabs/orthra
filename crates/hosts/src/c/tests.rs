@@ -104,7 +104,7 @@ int greet(greeter_t *person, size_t length) {
                                       ^^^^^^^^^ value
                                                    ^^ value
             >     /** \param length how many */
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^ doccomment
+                                    ^^^^^^^^^^^ doccomment
             >     size_t index = strlen(message);
                          ^^^^^ declaration
             >     printf("%dms of %s", total, "xyzzyq");
@@ -114,6 +114,45 @@ int greet(greeter_t *person, size_t length) {
                         ^^^^^^^ value
             >     return index;
             > }
+        "#]],
+    );
+}
+
+/// Doxygen writes its commands with a backslash as often as with `@`: `\param`'s name is a name,
+/// `\brief` is a command and what follows it prose, and `\code` to `\endcode` is code.
+#[test]
+fn doxygen_backslash_commands_are_tags() {
+    check(
+        "/src/greet.c",
+        r#"/**
+ * \brief Greets a qzxva person.
+ * \param qzxvname the person's name
+ * \return the greeting
+ * \code
+ * qzxvcall(qzxvarg);
+ * \endcode
+ * After the qzxvb example.
+ */
+int greet(const char *qzxvname);
+"#,
+        expect![[r#"
+            c
+            > /**
+            >  * \brief Greets a qzxva person.
+                        ^^^^^^^^^^^^^^^^^^^^^^ doccomment
+            >  * \param qzxvname the person's name
+                                 ^^^^^^^^^^^^^^^^^ doccomment
+            >  * \return the greeting
+                         ^^^^^^^^^^^^ doccomment
+            >  * \code
+            >  * qzxvcall(qzxvarg);
+            >  * \endcode
+            >  * After the qzxvb example.
+                 ^^^^^^^^^^^^^^^^^^^^^^^^ doccomment
+            >  */
+            > int greet(const char *qzxvname);
+                  ^^^^^ declaration
+                                    ^^^^^^^^ declaration
         "#]],
     );
 }

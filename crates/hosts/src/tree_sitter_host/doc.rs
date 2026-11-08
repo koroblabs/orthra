@@ -71,6 +71,15 @@ impl Loaded {
                 *in_fence = !*in_fence;
                 continue;
             }
+            // Doxygen's code blocks: `\code` or `@code` to `\endcode`, and `\verbatim`.
+            if scan.depth == 0 && Self::command(content, &["code", "verbatim"]) {
+                *in_fence = true;
+                continue;
+            }
+            if scan.depth == 0 && Self::command(content, &["endcode", "endverbatim"]) {
+                *in_fence = false;
+                continue;
+            }
             if *in_fence {
                 continue;
             }
@@ -87,6 +96,21 @@ impl Loaded {
                 }
             }
         }
+    }
+
+    /// Whether a doc line's `content` is one of Doxygen's `commands`, written `\name` or `@name`
+    /// and ending there or at a space.
+    fn command(content: &str, commands: &[&str]) -> bool {
+        let Some(rest) = content
+            .strip_prefix('\\')
+            .or_else(|| content.strip_prefix('@'))
+        else {
+            return false;
+        };
+        commands.iter().any(|name| {
+            rest.strip_prefix(name)
+                .is_some_and(|after| after.is_empty() || after.starts_with(char::is_whitespace))
+        })
     }
 
     /// The parts of one doc line that are prose: not an HTML `<pre>` block, which can run over
@@ -170,7 +194,12 @@ impl Loaded {
             let end = scan.token(line, content)?;
             return Some(scan.name(line, end));
         }
-        let Some(tag) = line[content..].strip_prefix('@') else {
+        // A tag is `@param`, or Doxygen's `\param`: a backslash before a letter.
+        let rest = &line[content..];
+        let Some(tag) = rest.strip_prefix('@').or_else(|| {
+            rest.strip_prefix('\\')
+                .filter(|tag| tag.starts_with(|c: char| c.is_ascii_alphabetic()))
+        }) else {
             return Some(content);
         };
         let name_len = tag
