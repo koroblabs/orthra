@@ -29,6 +29,15 @@
 (declaration declarator: [(identifier) (type_identifier)] @declaration)
 (init_declarator declarator: (identifier) @declaration)
 (function_declarator declarator: [(identifier) (field_identifier) (type_identifier)] @declaration)
+; A constructor is a function with no return type, named for its class: the class's name is declared
+; once, at the class, and `Greeter(...)` would report a typo in it twice. A skip wins over the
+; declaration at the same range.
+(function_definition !type
+  declarator: (function_declarator declarator: [(identifier) (field_identifier)] @skip))
+(declaration !type
+  declarator: (function_declarator declarator: [(identifier) (field_identifier)] @skip))
+(field_declaration !type
+  declarator: (function_declarator declarator: [(identifier) (field_identifier)] @skip))
 (pointer_declarator declarator: [(identifier) (field_identifier) (type_identifier)] @declaration)
 (array_declarator declarator: [(identifier) (field_identifier) (type_identifier)] @declaration)
 (reference_declarator [(identifier) (field_identifier) (type_identifier)] @declaration)

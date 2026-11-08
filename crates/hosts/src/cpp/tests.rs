@@ -72,7 +72,6 @@ std::string Greeter::greet(const Person &person, int *length) const {
                     ^^^^^^^ declaration
             > public:
             >     explicit Greeter(const std::string &name) : name_(name) {}
-                           ^^^^^^^ declaration
                                                       ^^^^ declaration
             >     ~Greeter() = default;
             >
@@ -131,6 +130,40 @@ std::string Greeter::greet(const Person &person, int *length) const {
             >
             > }  // namespace app::detail
                  ^^^^^^^^^^^^^^^^^^^^^^^^ comment
+        "#]],
+    );
+}
+
+/// A class's name is declared at the class, and its constructors bear the same name: they are not
+/// declarations again, so a typo in it is reported once. A method with a return type is one.
+#[test]
+fn a_constructor_does_not_declare_its_class_again() {
+    check(
+        "/src/reciever.hpp",
+        r#"class Reciever {
+public:
+    Reciever();
+    explicit Reciever(int count) : count_(count) {}
+    int recieve(int count);
+private:
+    int count_;
+};
+"#,
+        expect![[r#"
+            cpp
+            > class Reciever {
+                    ^^^^^^^^ declaration
+            > public:
+            >     Reciever();
+            >     explicit Reciever(int count) : count_(count) {}
+                                        ^^^^^ declaration
+            >     int recieve(int count);
+                      ^^^^^^^ declaration
+                                  ^^^^^ declaration
+            > private:
+            >     int count_;
+                      ^^^^^^ declaration
+            > };
         "#]],
     );
 }
