@@ -15,6 +15,7 @@ mod css;
 pub mod git_commit;
 mod go;
 mod html;
+mod java;
 mod javascript;
 mod json;
 mod kotlin;
@@ -146,6 +147,7 @@ impl Hosts {
                 Box::new(&scss::HOST),
                 Box::new(&less::HOST),
                 Box::new(&kotlin::HOST),
+                Box::new(&java::HOST),
             ],
         }
     }

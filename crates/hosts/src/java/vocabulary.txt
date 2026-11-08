@@ -1,0 +1,7 @@
+# Words of Java that are words in a source file, whatever a dictionary says. A dictionary word needs
+# no line here. One word per line, sorted, so two additions merge without a conflict.
+classloader
+classloaders
+dotall
+javax
+typesafe

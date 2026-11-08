@@ -51,6 +51,7 @@ impl Loaded {
         out: &mut Vec<Span>,
     ) {
         let mut scan = TypeScan::default();
+        let mut in_pre = false;
         let mut at = usize::from(range.start());
         for line in text[range].split_inclusive('\n') {
             let line_start = at;
@@ -69,13 +70,90 @@ impl Loaded {
             let Some(prose) = self.prose_start(line, line.len() - content.len(), &mut scan) else {
                 continue;
             };
-            if let Some(piece) = Self::trimmed(text, line_start + prose..at) {
-                out.push(Span {
-                    range: piece,
-                    kind: SpanKind::DocComment,
-                });
+            for piece in Self::outside_markup(&line[prose..], &mut in_pre) {
+                let start = line_start + prose;
+                if let Some(piece) = Self::trimmed(text, start + piece.start..start + piece.end) {
+                    out.push(Span {
+                        range: piece,
+                        kind: SpanKind::DocComment,
+                    });
+                }
             }
         }
+    }
+
+    /// The parts of one doc line that are prose: not an HTML `<pre>` block, which can run over
+    /// several lines and is carried in `in_pre`; not `<code>...</code>`; and not an inline tag,
+    /// `{@code max}` or `{@link List#of}`, whose content is code or a reference. Javadoc's
+    /// examples are written so, and `abcxyz` in `StringUtils.replaceChars("abcba", ...)` is not a
+    /// word of the doc. An opening with no end on its line is left as prose.
+    fn outside_markup(line: &str, in_pre: &mut bool) -> Vec<std::ops::Range<usize>> {
+        let bytes = line.as_bytes();
+        let starts = |at: usize, tag: &str| {
+            bytes
+                .get(at..at + tag.len())
+                .is_some_and(|head| head.eq_ignore_ascii_case(tag.as_bytes()))
+        };
+        let mut pieces = Vec::new();
+        let (mut from, mut at) = (0, 0);
+        while at < bytes.len() {
+            if *in_pre {
+                if starts(at, "</pre>") {
+                    *in_pre = false;
+                    at += "</pre>".len();
+                    from = at;
+                } else {
+                    at += 1;
+                }
+                continue;
+            }
+            if starts(at, "<pre>") || starts(at, "<pre ") {
+                pieces.push(from..at);
+                *in_pre = true;
+                at += "<pre".len();
+                continue;
+            }
+            let skipped = if starts(at, "<code>") {
+                line[at..]
+                    .to_ascii_lowercase()
+                    .find("</code>")
+                    .map(|end| end + "</code>".len())
+            } else if starts(at, "{@") {
+                Self::braced(&line[at..])
+            } else {
+                None
+            };
+            match skipped {
+                Some(len) => {
+                    pieces.push(from..at);
+                    at += len;
+                    from = at;
+                }
+                None => at += 1,
+            }
+        }
+        if !*in_pre {
+            pieces.push(from..bytes.len());
+        }
+        pieces
+    }
+
+    /// The length of the `{...}` that `text` starts with, braces nested, if it closes.
+    fn braced(text: &str) -> Option<usize> {
+        let mut depth = 0u32;
+        for (at, byte) in text.bytes().enumerate() {
+            match byte {
+                b'{' => depth += 1,
+                b'}' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return Some(at + 1);
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
     }
 
     /// Where the prose of a doc comment's `line` starts, after its tag and the tag's type; `None`

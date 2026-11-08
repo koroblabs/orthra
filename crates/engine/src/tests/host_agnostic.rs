@@ -300,6 +300,20 @@ const WRAPPINGS: &[Wrapping] = &[
         line: " * ",
         close: " */\nfun f() {}\n",
     },
+    Wrapping {
+        language: "java",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: "",
+    },
+    Wrapping {
+        language: "java",
+        name: "/** */",
+        open: "/**\n",
+        line: " * ",
+        close: " */\nclass C {}\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.

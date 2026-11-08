@@ -142,6 +142,7 @@ fn every_builtin_host_loads() {
         "scss",
         "less",
         "kotlin",
+        "java",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }

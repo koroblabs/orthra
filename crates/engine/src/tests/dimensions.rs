@@ -719,3 +719,39 @@ fn kotlin_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn java_through_every_dimension() {
+    check(
+        r#"
+        //- /src/main/java/org/example/Greeter.java
+        // Greeter seperates teh greeting.
+        package org.example;
+
+        public class Greeter {
+            /** Says it once. */
+            String recieve(String person) {
+                String message = "Hello\nworld, occured";
+                return recieve(message) + person;
+            }
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > // Greeter seperates teh greeting.
+                         ^^^^^^^^^ known-typo -> separates
+                                   ^^^ known-typo -> the
+            > package org.example;
+            >
+            > public class Greeter {
+            >     /** Says it once. */
+            >     String recieve(String person) {
+                         ^^^^^^^ known-typo -> receive
+            >         String message = "Hello\nworld, occured";
+                                                      ^^^^^^^ known-typo -> occurred
+            >         return recieve(message) + person;
+            >     }
+            > }
+        "#]],
+    );
+}
