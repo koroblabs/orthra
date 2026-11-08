@@ -18,6 +18,8 @@ names the tag's version.
   so;
 - offers to change every same finding in a file at once, and to ignore one line with an
   `orthra: ignore-next-line` comment above it;
+- applies every exact fix in a file at once, a known typo's only correction or a word in one script,
+  from the menu or when the editor saves: `source.fixAll.orthra`;
 - reads a doc comment's markup as markup, whatever the language: `<pre>`, `<code>`, `{@code}`,
   `{@link}`, and a code block indented in Markdown's way;
 - English is either spelling until a setting names one: en-US and en-GB are built in, and

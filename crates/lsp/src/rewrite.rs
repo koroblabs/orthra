@@ -76,14 +76,7 @@ pub(crate) fn connect(
 /// Whether a client that asked `only` for some kinds of action asked for this one: `refactor`
 /// and `refactor.rewrite` do, `quickfix` does not.
 pub(crate) fn wanted(only: Option<&[CodeActionKind]>) -> bool {
-    let kind = KIND;
-    let kind = kind.as_str();
-    only.is_none_or(|kinds| {
-        kinds.iter().any(|asked| {
-            kind.strip_prefix(asked.as_str())
-                .is_some_and(|rest| rest.is_empty() || rest.starts_with('.'))
-        })
-    })
+    crate::actions::asked_for(only, &KIND)
 }
 
 /// The actions for what is selected in the open document `uri`, rewritten or rephrased, or the one

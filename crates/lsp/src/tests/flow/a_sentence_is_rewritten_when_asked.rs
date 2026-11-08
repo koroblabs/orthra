@@ -308,8 +308,8 @@ async fn the_server_says_it_resolves_actions_only_when_it_can_rewrite() {
         result["capabilities"]["codeActionProvider"].to_string()
     };
     expect![[r#"
-        {"codeActionKinds":["quickfix","refactor.rewrite"],"resolveProvider":true}
-        {"codeActionKinds":["quickfix"],"resolveProvider":false}"#]]
+        {"codeActionKinds":["quickfix","source.fixAll.orthra","refactor.rewrite"],"resolveProvider":true}
+        {"codeActionKinds":["quickfix","source.fixAll.orthra"],"resolveProvider":false}"#]]
     .assert_eq(&format!(
         "{}\n{}",
         provider(http()).await,

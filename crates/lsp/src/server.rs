@@ -320,9 +320,9 @@ impl LanguageServer for Backend {
                 code_action_provider: Some(CodeActionProviderCapability::Options(
                     CodeActionOptions {
                         code_action_kinds: Some(if rewrites {
-                            vec![CodeActionKind::QUICKFIX, rewrite::KIND]
+                            vec![CodeActionKind::QUICKFIX, actions::FIX_ALL, rewrite::KIND]
                         } else {
-                            vec![CodeActionKind::QUICKFIX]
+                            vec![CodeActionKind::QUICKFIX, actions::FIX_ALL]
                         }),
                         resolve_provider: Some(rewrites),
                         work_done_progress_options: WorkDoneProgressOptions::default(),
@@ -476,7 +476,10 @@ impl LanguageServer for Backend {
                 .log_message(MessageType::WARNING, format!("orthra: {failed}"))
                 .await;
         }
-        let mut actions = plan.actions();
+        let only = params.context.only.as_deref();
+        let fix_all = plan.offers_fix_all(only, asked);
+        let mut actions =
+            plan.actions(actions::asked_for(only, &CodeActionKind::QUICKFIX), fix_all);
         actions.extend(rewrite);
         Ok((!actions.is_empty()).then_some(actions))
     }

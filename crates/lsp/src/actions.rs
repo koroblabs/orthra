@@ -1,5 +1,7 @@
 //! What can be done about a finding: change the word, here or wherever the file has the same
 //! finding, add it to the project's words or the user's, or ignore it in this file or on its line.
+//! And what can be done about the file: apply every fix that is the only one its finding has, at
+//! once, as a `source.fixAll` action a client can also run when it saves.
 //!
 //! Suggestions are computed here, for the one word asked about, and never while diagnosing
 //! (`CLAUDE.md` §5). They cost half a millisecond at the 95th percentile, so the actions carry
@@ -34,6 +36,10 @@ mod tests;
 /// The command an "add to words" action runs: `{"scope": "project" | "user", "word": "qzxv"}`.
 pub(crate) const ADD_WORD: &str = "orthra.addWord";
 
+/// The kind of the action that applies every exact fix in a file. A client runs it on its own when
+/// asked to: Zed's `"code_actions_on_format": { "source.fixAll.orthra": true }`.
+pub(crate) const FIX_ALL: CodeActionKind = CodeActionKind::new("source.fixAll.orthra");
+
 /// How many suggestions a finding offers.
 const SUGGESTIONS: usize = 5;
 
@@ -48,6 +54,9 @@ pub(crate) struct Plan {
     has_project: bool,
     has_user: bool,
     findings: Vec<Planned>,
+    /// Every finding in the file whose fix is the only one: a known typo with one correction, a
+    /// word in two scripts. Where it is, its word, and the fix.
+    exact: Vec<(Range, String, String)>,
 }
 
 /// One finding's actions.
@@ -83,11 +92,21 @@ pub(crate) fn plan(state: &mut State, uri: &Uri, range: Range) -> Option<Plan> {
     let comment = engine.comment_syntax(&path, &language);
     let index = LineIndex::new(&text);
     let mut planned = Vec::new();
+    let mut exact = Vec::new();
     for finding in &findings {
         let Some(diagnostic) = convert::diagnostic(&index, &text, finding, encoding, severity)
         else {
             continue;
         };
+        if let [fix] = finding.fixes.as_slice()
+            && matches!(finding.code.0, "known-typo" | "mixed-script")
+        {
+            exact.push((
+                diagnostic.range,
+                text[finding.range].to_owned(),
+                fix.clone(),
+            ));
+        }
         if !overlaps(diagnostic.range, range) {
             continue;
         }
@@ -128,15 +147,56 @@ pub(crate) fn plan(state: &mut State, uri: &Uri, range: Range) -> Option<Plan> {
         has_project,
         has_user,
         findings: planned,
+        exact,
     })
 }
 
+/// Whether a client that asked `only` for some kinds of action asked for `kind`: `refactor` asks for
+/// `refactor.rewrite`, `source` for `source.fixAll.orthra`, and no `only` for every kind.
+pub(crate) fn asked_for(only: Option<&[CodeActionKind]>, kind: &CodeActionKind) -> bool {
+    only.is_none_or(|kinds| kinds.iter().any(|asked| is_within(kind, asked)))
+}
+
+/// Whether `kind` is `asked` or one of its sub-kinds.
+fn is_within(kind: &CodeActionKind, asked: &CodeActionKind) -> bool {
+    kind.as_str()
+        .strip_prefix(asked.as_str())
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with('.'))
+}
+
 impl Plan {
-    /// The actions, each finding's corrections first, in the order the plan holds them.
-    pub(crate) fn actions(self) -> Vec<CodeActionOrCommand> {
+    /// Whether to offer to apply every exact fix in the file. When a client asks for that kind by
+    /// name, as it does when it saves, whenever there is one. In the menu somebody opened on a
+    /// finding that has one, when the file has exact fixes of more than one word: one word's are
+    /// already offered as "Change every `teh`". Never in a menu a client asks for on its own as
+    /// the cursor moves, which would light a bulb on every line of the file.
+    pub(crate) fn offers_fix_all(&self, only: Option<&[CodeActionKind]>, asked: bool) -> bool {
+        if self.exact.is_empty() {
+            return false;
+        }
+        if let Some(kinds) = only {
+            return kinds.iter().any(|kind| is_within(&FIX_ALL, kind));
+        }
+        let here = self.findings.iter().any(|planned| {
+            self.exact
+                .iter()
+                .any(|(range, _, _)| *range == planned.diagnostic.range)
+        });
+        let first = &self.exact[0].1;
+        asked && here && self.exact.iter().any(|(_, word, _)| word != first)
+    }
+
+    /// The actions: each finding's corrections first, in the order the plan holds them, when
+    /// `quick_fixes` are asked for, and then the one that applies every exact fix, with `fix_all`.
+    pub(crate) fn actions(self, quick_fixes: bool, fix_all: bool) -> Vec<CodeActionOrCommand> {
         let uri = &self.uri;
         let mut actions = Vec::new();
-        for planned in self.findings {
+        let findings = if quick_fixes {
+            self.findings
+        } else {
+            Vec::new()
+        };
+        for planned in findings {
             let diagnostic = &planned.diagnostic;
             for (i, fix) in planned.fixes.iter().enumerate() {
                 let edit = TextEdit::new(diagnostic.range, fix.clone());
@@ -185,6 +245,20 @@ impl Plan {
                     false,
                 ));
             }
+        }
+        if fix_all && !self.exact.is_empty() {
+            let count = self.exact.len();
+            let edits = self
+                .exact
+                .into_iter()
+                .map(|(range, _, fix)| TextEdit::new(range, fix))
+                .collect();
+            actions.push(CodeActionOrCommand::CodeAction(CodeAction {
+                title: format!("Apply every exact fix in this file ({count})"),
+                kind: Some(FIX_ALL),
+                edit: Some(edit_of(uri, edits)),
+                ..CodeAction::default()
+            }));
         }
         actions
     }
