@@ -33,12 +33,14 @@ mod rust;
 mod scss;
 mod shell;
 mod sql;
+mod svelte;
 mod swift;
 pub mod test_files;
 mod toml;
 mod tree_sitter_host;
 mod tsx;
 mod typescript;
+mod vue;
 mod yaml;
 
 #[cfg(test)]
@@ -163,6 +165,8 @@ impl Hosts {
                 Box::new(&c::HOST),
                 Box::new(&cpp::HOST),
                 Box::new(&ruby::HOST),
+                Box::new(&vue::HOST),
+                Box::new(&svelte::HOST),
             ],
         }
     }

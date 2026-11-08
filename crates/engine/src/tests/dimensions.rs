@@ -881,3 +881,77 @@ fn ruby_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn vue_through_every_dimension() {
+    check(
+        r##"
+        //- /src/Card.vue
+        <template>
+          <!-- Seperates teh header. -->
+          <h1 :id="recieve" title="Hello occured">Welcome&nbsp;Seperates</h1>
+          <p>{{ recieve.occured }} occured <a :href="recieve">teh link</a></p>
+        </template>
+        <script setup>
+        const recieve = 1;
+        </script>
+        "##,
+        &[
+            ("teh link", "the link"),
+            ("{{ recieve.occured }}", "{{ seperates }}"),
+        ],
+        expect![[r#"
+            > <template>
+            >   <!-- Seperates teh header. -->
+                     ^^^^^^^^^ known-typo -> Separates
+                               ^^^ known-typo -> the
+            >   <h1 :id="recieve" title="Hello occured">Welcome&nbsp;Seperates</h1>
+                                               ^^^^^^^ known-typo -> occurred
+                                                                     ^^^^^^^^^ known-typo -> Separates
+            >   <p>{{ recieve.occured }} occured <a :href="recieve">teh link</a></p>
+                                         ^^^^^^^ known-typo -> occurred
+                                                                    ^^^ known-typo -> the
+            > </template>
+            > <script setup>
+            > const recieve = 1;
+            > </script>
+        "#]],
+    );
+}
+
+#[test]
+fn svelte_through_every_dimension() {
+    check(
+        r##"
+        //- /src/Card.svelte
+        <script>
+          let recieve = 1;
+        </script>
+        <!-- Seperates teh header. -->
+        <h1 id={recieve} title="Hello occured">Welcome&nbsp;Seperates</h1>
+        {#if recieve}
+          <p>{recieve.occured} occured <a href={recieve}>teh link</a></p>
+        {/if}
+        "##,
+        &[
+            ("teh link", "the link"),
+            ("{recieve.occured}", "{seperates}"),
+        ],
+        expect![[r#"
+            > <script>
+            >   let recieve = 1;
+            > </script>
+            > <!-- Seperates teh header. -->
+                   ^^^^^^^^^ known-typo -> Separates
+                             ^^^ known-typo -> the
+            > <h1 id={recieve} title="Hello occured">Welcome&nbsp;Seperates</h1>
+                                            ^^^^^^^ known-typo -> occurred
+                                                                  ^^^^^^^^^ known-typo -> Separates
+            > {#if recieve}
+            >   <p>{recieve.occured} occured <a href={recieve}>teh link</a></p>
+                                     ^^^^^^^ known-typo -> occurred
+                                                               ^^^ known-typo -> the
+            > {/if}
+        "#]],
+    );
+}

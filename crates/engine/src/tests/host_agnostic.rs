@@ -412,6 +412,20 @@ const WRAPPINGS: &[Wrapping] = &[
         line: "",
         close: "=end\n",
     },
+    Wrapping {
+        language: "vue",
+        name: "<!-- -->",
+        open: "<!--\n",
+        line: "  ",
+        close: "-->\n",
+    },
+    Wrapping {
+        language: "svelte",
+        name: "<!-- -->",
+        open: "<!--\n",
+        line: "  ",
+        close: "-->\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.
