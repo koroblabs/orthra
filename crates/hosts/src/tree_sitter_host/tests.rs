@@ -125,6 +125,8 @@ fn every_builtin_host_loads() {
         "rust",
         "typescript",
         "typescriptreact",
+        "javascript",
+        "javascriptreact",
         "python",
         "css",
         "go",

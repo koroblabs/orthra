@@ -157,6 +157,31 @@ fn typescript_through_every_dimension() {
 }
 
 #[test]
+fn javascript_through_every_dimension() {
+    check(
+        r#"
+        //- /src/api.js
+        /** Fetches the definately current user. */
+        export function getURLsForIDs(ids) {
+          const recieveTimeoutMs = 3000;
+          return ids.map((id) => `user ${id} occured`);
+        }
+        "#,
+        &[("definately", "definitely")],
+        expect![[r#"
+            > /** Fetches the definately current user. */
+                              ^^^^^^^^^^ known-typo -> definitely
+            > export function getURLsForIDs(ids) {
+            >   const recieveTimeoutMs = 3000;
+                      ^^^^^^^ known-typo -> receive
+            >   return ids.map((id) => `user ${id} occured`);
+                                                   ^^^^^^^ known-typo -> occurred
+            > }
+        "#]],
+    );
+}
+
+#[test]
 fn python_through_every_dimension() {
     check(
         r#"

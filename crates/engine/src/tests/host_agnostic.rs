@@ -119,6 +119,27 @@ const WRAPPINGS: &[Wrapping] = &[
         close: "",
     },
     Wrapping {
+        language: "javascript",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: "",
+    },
+    Wrapping {
+        language: "javascript",
+        name: "/** */",
+        open: "/**\n",
+        line: " * ",
+        close: " */\nfunction f() {}\n",
+    },
+    Wrapping {
+        language: "javascriptreact",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: "",
+    },
+    Wrapping {
         language: "php",
         name: "//",
         open: "<?php\n",
