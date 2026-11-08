@@ -451,7 +451,7 @@ impl LanguageServer for Backend {
                 return Ok(None);
             };
             let rewrite = if asked && rewrite::wanted(params.context.only.as_deref()) {
-                rewrite::offer(&mut state, uri, params.range.start)
+                rewrite::offer(&mut state, uri, params.range)
             } else {
                 None
             };

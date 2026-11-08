@@ -80,7 +80,9 @@ runs in idle time, batched per sentence, and reports `confusable` findings with 
 
 ### C. Rewrite a sentence (third)
 
-This is an explicit code action, "Rewrite sentence (local model)". The edit is computed in
+This is an explicit code action, "Rewrite sentence (local model)", or "Rewrite selection (local
+model)" with text selected, when the selection starts in text meant to be read (2026-11-08,
+`what_is_selected_is_offered_and_rewritten_as_selected`). The edit is computed in
 `codeAction/resolve` through a localhost endpoint. It is never a diagnostic, and never automatic. It
 is also the only place a generative model is used, and the only place grammar reaches orthra.
 

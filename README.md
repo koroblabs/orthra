@@ -120,6 +120,26 @@ offers `letter` first, where the dictionary order puts `leer` first.
 - **What it never does.** It never adds a word the dictionary did not propose, and never changes
   what is reported.
 
+## Rewriting with a model you run
+
+With a model served on your machine through an OpenAI-compatible endpoint (Ollama, llama.cpp's
+server, LM Studio), the code-action menu offers **Rewrite sentence**, or **Rewrite selection** with
+text selected. The model's answer replaces the text once you choose it. It is never a diagnostic and
+never runs on its own, and the findings stay the dictionary's.
+
+```jsonc
+"lsp": { "orthra": { "initialization_options": {
+  "context": { "http": {
+    "model": "qwen2.5:3b",                       // any model the endpoint serves
+    "endpoint": "http://127.0.0.1:11434/v1"      // the default: Ollama
+  } }
+} } }
+```
+
+orthra refuses an endpoint that is not on this machine unless the settings say
+`"allowRemote": true`, and the menu then names the endpoint instead of saying "local model". The
+built-in model above cannot do this: it ranks a word's corrections and writes nothing.
+
 ## Command line
 
 ```sh

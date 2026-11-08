@@ -1,8 +1,10 @@
 //! "Rewrite sentence (local model)": a code action that hands the sentence at the cursor to a model
-//! the user runs, and writes what it answers over it (`docs/04-context.md` §2 C).
+//! the user runs, and writes what it answers over it (`docs/04-context.md` §2 C). With text
+//! selected, it is "Rewrite selection", and hands over what is selected.
 //!
-//! It is offered only when somebody asks for the actions, and only with the cursor in text meant to
-//! be read. The action carries no edit: only the document, its version and the sentence's range.
+//! It is offered only when somebody asks for the actions, and only with the cursor, or the start of
+//! the selection, in text meant to be read. The action carries no edit: only the document, its
+//! version and the range to rewrite.
 //! The edit is made in `codeAction/resolve`, once the action is chosen, off the server's lock and
 //! on a blocking thread. That is the one place the context tier may take seconds, because the
 //! person chose it and is waiting (rule 3). It is never a diagnostic and never made on its own.
@@ -29,20 +31,26 @@ const BUDGET: Duration = Duration::from_secs(30);
 /// A rewriter, and what its action is called in the client's menu.
 pub(crate) struct Rewriting {
     rewriter: Arc<dyn Rewriter>,
-    title: String,
+    /// Where the model is, as the menu says it: "local model", or the endpoint.
+    model: String,
 }
 
 impl Rewriting {
-    /// "Rewrite sentence (local model)", or with the endpoint named when the settings allow it to
-    /// be another machine: a project's `.zed/settings.json` can set the editor's settings, and the
-    /// menu must not say "local" of a sentence that may leave the machine.
+    /// The model is "local model", or the endpoint named when the settings allow it to be another
+    /// machine: a project's `.zed/settings.json` can set the editor's settings, and the menu must
+    /// not say "local" of text that may leave the machine.
     fn new(rewriter: Arc<dyn Rewriter>, endpoint: &Endpoint) -> Rewriting {
-        let title = if endpoint.allow_remote {
-            format!("Rewrite sentence (model at {})", endpoint.url)
+        let model = if endpoint.allow_remote {
+            format!("model at {}", endpoint.url)
         } else {
-            "Rewrite sentence (local model)".to_owned()
+            "local model".to_owned()
         };
-        Rewriting { rewriter, title }
+        Rewriting { rewriter, model }
+    }
+
+    /// "Rewrite sentence (local model)", or "Rewrite selection (...)".
+    fn title(&self, what: &str) -> String {
+        format!("Rewrite {what} ({})", self.model)
     }
 }
 
@@ -73,13 +81,10 @@ pub(crate) fn wanted(only: Option<&[CodeActionKind]>) -> bool {
     })
 }
 
-/// The action for the sentence at `position` in the open document `uri`, when a rewriter is
-/// connected and there is a sentence there.
-pub(crate) fn offer(
-    state: &mut State,
-    uri: &Uri,
-    position: Position,
-) -> Option<CodeActionOrCommand> {
+/// The action for what is selected in the open document `uri`, or for the sentence at the cursor
+/// when nothing is, when a rewriter is connected and the selection starts, or the cursor is, in
+/// text meant to be read.
+pub(crate) fn offer(state: &mut State, uri: &Uri, selected: Range) -> Option<CodeActionOrCommand> {
     let State {
         engine,
         documents,
@@ -87,20 +92,29 @@ pub(crate) fn offer(
         rewriting,
         ..
     } = state;
-    let title = rewriting.as_ref()?.title.clone();
+    let rewriting = rewriting.as_ref()?;
     let engine = engine.as_ref()?;
     let (document, parsed) = documents.parsed_for(uri)?;
     let text = &document.text;
     let index = LineIndex::new(text);
-    let at = lspkit_text::lsp::offset(&index, text, position, *encoding)?;
+    let at = lspkit_text::lsp::offset(&index, text, selected.start, *encoding)?;
+    let end = lspkit_text::lsp::offset(&index, text, selected.end, *encoding)?;
     let sentence = engine.sentence_at(&document.path, &document.language, text, at, parsed)?;
+    let (what, range) = if end > at && !text[usize::from(at)..usize::from(end)].trim().is_empty() {
+        ("selection", selected)
+    } else {
+        (
+            "sentence",
+            lspkit_text::lsp::range(&index, text, sentence, *encoding)?,
+        )
+    };
     let asked = Asked {
         uri: uri.clone(),
         version: document.version,
-        range: lspkit_text::lsp::range(&index, text, sentence, *encoding)?,
+        range,
     };
     Some(CodeActionOrCommand::CodeAction(CodeAction {
-        title,
+        title: rewriting.title(what),
         kind: Some(KIND),
         data: Some(asked.data()),
         ..CodeAction::default()

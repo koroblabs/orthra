@@ -420,3 +420,37 @@ async fn no_endpoint_no_rewrite_and_one_that_cannot_be_had_is_said() {
           said: window/showMessage: orthra: this orthra was built without `ml-http`, so there is no "Rewrite sentence" action"#]]
     .assert_eq(&got.join("\n"));
 }
+
+/// From `start` to `end` on one line.
+fn span(line: u32, start: u32, end: u32) -> Value {
+    json!({ "start": { "line": line, "character": start }, "end": { "line": line, "character": end } })
+}
+
+#[tokio::test]
+async fn what_is_selected_is_offered_and_rewritten_as_selected() {
+    let pretend = Pretend::answering(Answer::Fake);
+    let mut server = started(FILES, Arc::clone(&pretend), http()).await;
+    // `It are`, on the first line; then a selection of spaces; then one in the code block.
+    let selected = actions(&mut server, span(0, 16, 22), asked()).await;
+    let spaces = actions(&mut server, span(0, 15, 16), asked()).await;
+    let in_code = actions(&mut server, span(4, 0, 4), asked()).await;
+    let action = the_rewrite(&selected);
+    let resolved = server.request("codeAction/resolve", action).await;
+    let edit = &resolved["edit"]["changes"][server.uri("notes.md").as_str()][0];
+    expect![[r#"
+        selected: Rewrite selection (local model)
+        spaces: Rewrite sentence (local model)
+        in a code block: none
+        edit: "IT ARE" at {"end":{"character":22,"line":0},"start":{"character":16,"line":0}}
+        connect http://127.0.0.1:11434/v1 qwen3:4b allow_remote=false
+        rewrite en-US "It are""#]]
+    .assert_eq(&format!(
+        "selected: {}\nspaces: {}\nin a code block: {}\nedit: {} at {}\n{}",
+        titles(&selected),
+        titles(&spaces),
+        titles(&in_code),
+        edit["newText"],
+        edit["range"],
+        pretend.asked(),
+    ));
+}

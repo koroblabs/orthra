@@ -10,6 +10,8 @@ names the tag's version.
   Kotlin, Swift, C, C++ and Ruby; a property name in a stylesheet is held to known typos (`widht`);
 - leaves a template's code out of an HTML page (`{{ }}`, `{% %}`, `{# #}`, `<% %>`): Django's admin
   templates went from 268 findings to none;
+- rewrites the selection, not only the sentence at the cursor, with a model you run through a local
+  OpenAI-compatible endpoint, now described in the README;
 - reads a doc comment's markup as markup, whatever the language: `<pre>`, `<code>`, `{@code}`,
   `{@link}`, and a code block indented in Markdown's way;
 - English is either spelling until a setting names one: en-US and en-GB are built in, and
