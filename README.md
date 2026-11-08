@@ -94,6 +94,9 @@ Everything is optional.
   - `~/.config/orthra/words.txt` holds yours.
   - The _Add to words_ code action writes either.
 - **One file:** a comment `orthra: ignore word another` makes those words fine in that file.
+- **One line:** a comment `orthra: ignore-next-line` above a line makes every word of it fine.
+- **Code actions** on a finding: change it, or change every same finding in the file at once; add
+  the word to the project's words or yours; ignore it in the file, or ignore its line.
 - **Your machine:** `~/.config/orthra/config.toml` takes the same keys as `orthra.toml`.
 - **The editor:** in Zed's settings,
 

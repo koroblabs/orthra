@@ -115,6 +115,10 @@ pub(crate) fn local_declarations(
 /// file says it, so its findings stay a function of its text (`CLAUDE.md` §1.2).
 pub const IGNORE_DIRECTIVE: &str = "orthra: ignore";
 
+/// What follows [`IGNORE_DIRECTIVE`] in a directive that ignores every word of the line after it,
+/// whatever the words: `// orthra: ignore-next-line`.
+pub const NEXT_LINE: &str = "-next-line";
+
 /// A file's ignore directives: the words they list, and where they are written.
 #[derive(Default)]
 pub(crate) struct Directives {
@@ -133,6 +137,17 @@ impl Directives {
             let end = at + IGNORE_DIRECTIVE.len() + line.len();
             if let (Ok(start), Ok(end)) = (TextSize::try_from(at), TextSize::try_from(end)) {
                 directives.lines.push((start, end));
+            }
+            // `orthra: ignore-next-line`: the line after it is the directive's too, whole.
+            if line.starts_with(NEXT_LINE) {
+                let next = (end + 1).min(text.len());
+                let next_end = text[next..].find('\n').map_or(text.len(), |at| next + at);
+                if let (Ok(start), Ok(end)) =
+                    (TextSize::try_from(next), TextSize::try_from(next_end))
+                {
+                    directives.lines.push((start, end));
+                }
+                continue;
             }
             directives.words.extend(
                 line.split(|c: char| c.is_whitespace() || c == ',')

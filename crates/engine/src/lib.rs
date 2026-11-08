@@ -23,7 +23,7 @@ use orthra_segment::{Rules, Word};
 use orthra_text::{TextSize, script::Script};
 use rustc_hash::{FxHashMap, FxHashSet};
 
-pub use judge::{IGNORE_DIRECTIVE, Why};
+pub use judge::{IGNORE_DIRECTIVE, NEXT_LINE, Why};
 pub use kept::Parsed;
 pub use orthra_checks::unknown_word::Silenced;
 pub use orthra_checks::{CheckCode, Finding};

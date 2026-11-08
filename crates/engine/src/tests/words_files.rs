@@ -64,3 +64,26 @@ fn a_declared_known_typo_is_never_accepted() {
     "#]]
     .assert_eq(&Annotation::render(text, &annotations));
 }
+
+/// `orthra: ignore-next-line` ignores every word of the one line after it, known typos included;
+/// the line after that is checked again, and the directive's own line is not prose.
+#[test]
+fn a_directive_ignores_the_next_line() {
+    let text =
+        "// orthra: ignore-next-line\n// Teh qzxv recieved it.\n// Teh qzxv again.\nfn f() {}\n";
+    let mut engine = Engine::with_packs(packs());
+    let annotations: Vec<Annotation> = engine
+        .check("rust", text)
+        .iter()
+        .map(|finding| Annotation::new(finding.range, finding.code.0))
+        .collect();
+    expect![[r#"
+        > // orthra: ignore-next-line
+        > // Teh qzxv recieved it.
+        > // Teh qzxv again.
+             ^^^ known-typo
+                 ^^^^ unknown-word
+        > fn f() {}
+    "#]]
+    .assert_eq(&Annotation::render(text, &annotations));
+}

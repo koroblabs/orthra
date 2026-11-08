@@ -1,5 +1,5 @@
-//! What can be done about a finding: change the word, add it to the project's words or the user's,
-//! or ignore it in this file.
+//! What can be done about a finding: change the word, here or wherever the file has the same
+//! finding, add it to the project's words or the user's, or ignore it in this file or on its line.
 //!
 //! Suggestions are computed here, for the one word asked about, and never while diagnosing
 //! (`CLAUDE.md` §5). They cost half a millisecond at the 95th percentile, so the actions carry
@@ -16,7 +16,7 @@ use lspkit_runtime::protocol::ls_types::{
     TextEdit, Uri, WorkspaceEdit,
 };
 use orthra_engine::{
-    IGNORE_DIRECTIVE,
+    IGNORE_DIRECTIVE, NEXT_LINE,
     context::{self, Scorer, Window},
 };
 use orthra_project::config::{self, Config};
@@ -60,7 +60,11 @@ struct Planned {
     preferred: bool,
     /// Where an unknown word is, for the context tier to score its corrections in.
     window: Option<Window>,
+    /// Every place the file has the same finding, the same word under the same check, when there
+    /// is more than this one. Only a finding is ever changed: a use of a name is never one.
+    everywhere: Vec<Range>,
     ignore: Option<TextEdit>,
+    ignore_line: Option<TextEdit>,
 }
 
 /// The plan for the findings in `range` of the open document at `uri`; `None` with nothing open.
@@ -88,6 +92,12 @@ pub(crate) fn plan(state: &mut State, uri: &Uri, range: Range) -> Option<Plan> {
             continue;
         }
         let word = &text[finding.range];
+        let everywhere: Vec<Range> = findings
+            .iter()
+            .filter(|other| other.code == finding.code && text[other.range] == *word)
+            .filter_map(|other| convert::diagnostic(&index, &text, other, encoding, severity))
+            .map(|other| other.range)
+            .collect();
         let unknown = finding.fixes.is_empty() && finding.code.0 == "unknown-word";
         let fixes = if unknown {
             engine.suggest(word, SUGGESTIONS)
@@ -100,6 +110,14 @@ pub(crate) fn plan(state: &mut State, uri: &Uri, range: Range) -> Option<Plan> {
             preferred: matches!(finding.code.0, "known-typo" | "mixed-script"),
             ignore: comment
                 .and_then(|(open, close)| ignore_edit(&text, &index, encoding, word, open, close)),
+            ignore_line: comment.and_then(|(open, close)| {
+                next_line_edit(&text, &index, encoding, finding.range.start(), open, close)
+            }),
+            everywhere: if everywhere.len() > 1 {
+                everywhere
+            } else {
+                Vec::new()
+            },
             word: word.to_owned(),
             fixes,
             diagnostic,
@@ -130,6 +148,21 @@ impl Plan {
                 ));
             }
             let word = &planned.word;
+            if let Some(fix) = planned.fixes.first()
+                && !planned.everywhere.is_empty()
+            {
+                let edits = planned
+                    .everywhere
+                    .iter()
+                    .map(|&range| TextEdit::new(range, fix.clone()))
+                    .collect();
+                actions.push(quick_fix(
+                    format!("Change every `{word}` in this file to `{fix}`"),
+                    diagnostic,
+                    edit_of(uri, edits),
+                    false,
+                ));
+            }
             if self.has_project {
                 actions.push(add_word(word, "project", "the project's words", diagnostic));
             }
@@ -139,6 +172,14 @@ impl Plan {
             if let Some(edit) = planned.ignore {
                 actions.push(quick_fix(
                     format!("Ignore `{word}` in this file"),
+                    diagnostic,
+                    edit_of(uri, vec![edit]),
+                    false,
+                ));
+            }
+            if let Some(edit) = planned.ignore_line {
+                actions.push(quick_fix(
+                    "Ignore this line".to_owned(),
                     diagnostic,
                     edit_of(uri, vec![edit]),
                     false,
@@ -260,7 +301,12 @@ fn ignore_edit(
     let position = |at: usize| -> Option<Position> {
         lspkit_text::lsp::position(index, text, TextSize::try_from(at).ok()?, encoding)
     };
-    if let Some(at) = text.rfind(IGNORE_DIRECTIVE) {
+    // The last directive that lists words: an `ignore-next-line` lists none.
+    let last = text
+        .rmatch_indices(IGNORE_DIRECTIVE)
+        .map(|(at, _)| at)
+        .find(|&at| !text[at + IGNORE_DIRECTIVE.len()..].starts_with(NEXT_LINE));
+    if let Some(at) = last {
         let line_end = text[at..].find('\n').map_or(text.len(), |end| at + end);
         let line = &text[at..line_end];
         // Before the comment's close, when it has one on this line: `qzxv -->`.
@@ -285,5 +331,32 @@ fn ignore_edit(
     Some(TextEdit::new(
         Range::new(end, end),
         format!("{lead}{open} {IGNORE_DIRECTIVE} {word}{close}\n"),
+    ))
+}
+
+/// The edit that makes the line holding `at` ignored: a directive on a line of its own before it,
+/// indented as it is, in the file's comment syntax.
+fn next_line_edit(
+    text: &str,
+    index: &LineIndex,
+    encoding: Encoding,
+    at: TextSize,
+    open: &str,
+    close: &str,
+) -> Option<TextEdit> {
+    let at = usize::from(at);
+    let line_start = text[..at].rfind('\n').map_or(0, |newline| newline + 1);
+    let line = &text[line_start..];
+    let indent = &line[..line.len() - line.trim_start_matches([' ', '\t']).len()];
+    let here =
+        lspkit_text::lsp::position(index, text, TextSize::try_from(line_start).ok()?, encoding)?;
+    let close = if close.is_empty() {
+        String::new()
+    } else {
+        format!(" {close}")
+    };
+    Some(TextEdit::new(
+        Range::new(here, here),
+        format!("{indent}{open} {IGNORE_DIRECTIVE}{NEXT_LINE}{close}\n"),
     ))
 }

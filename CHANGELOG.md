@@ -16,6 +16,8 @@ names the tag's version.
 - **settings:** the built-in model is `context.rank` and a model you run is `context.rewrite`, each
   on its own. 0.1.0's `context.enabled` and `context.http` are no longer read, and the server says
   so;
+- offers to change every same finding in a file at once, and to ignore one line with an
+  `orthra: ignore-next-line` comment above it;
 - reads a doc comment's markup as markup, whatever the language: `<pre>`, `<code>`, `{@code}`,
   `{@link}`, and a code block indented in Markdown's way;
 - English is either spelling until a setting names one: en-US and en-GB are built in, and

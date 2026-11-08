@@ -210,7 +210,7 @@ async fn asked_the_sentence_at_the_cursor_is_offered_then_rewritten() {
         the cursor moved: none
         only quick fixes: none
         only refactors: Rewrite sentence (local model)
-        on a finding: Change to `leer`, Change to `letter`, Change to `lefter`, Change to `liter`, Change to `later`, Add `leter` to the project's words, Add `leter` to your words, Ignore `leter` in this file, Rewrite sentence (local model)
+        on a finding: Change to `leer`, Change to `letter`, Change to `lefter`, Change to `liter`, Change to `later`, Add `leter` to the project's words, Add `leter` to your words, Ignore `leter` in this file, Ignore this line, Rewrite sentence (local model)
         in a code block: none"#]]
     .assert_eq(
         &[
