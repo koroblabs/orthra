@@ -153,7 +153,7 @@ fn a_projects_text_files_are_claimed_by_name() {
         plain-text NOTICE
         plain-text CHANGELOG
         markdown   CHANGELOG.md
-        -          Makefile
+        makefile   Makefile
         -          LICENSES
     "#]]
     .assert_eq(&(claimed.join("\n") + "\n"));

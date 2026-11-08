@@ -713,6 +713,34 @@ const WRAPPINGS: &[Wrapping] = &[
         line: "",
         close: "#>\n",
     },
+    Wrapping {
+        language: "makefile",
+        name: "#",
+        open: "",
+        line: "# ",
+        close: "",
+    },
+    Wrapping {
+        language: "cmake",
+        name: "#",
+        open: "",
+        line: "# ",
+        close: "",
+    },
+    Wrapping {
+        language: "cmake",
+        name: "#[[ ]]",
+        open: "#[[\n",
+        line: "",
+        close: "]]\n",
+    },
+    Wrapping {
+        language: "dockerfile",
+        name: "#",
+        open: "",
+        line: "# ",
+        close: "",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.

@@ -12,10 +12,12 @@ use orthra_text::TextRange;
 use crate::parsed::Parsed;
 
 mod c;
+mod cmake;
 mod cpp;
 mod csharp;
 mod css;
 mod dart;
+mod dockerfile;
 mod elixir;
 mod elm;
 mod erlang;
@@ -32,6 +34,7 @@ mod julia;
 mod kotlin;
 mod less;
 mod lua;
+mod make;
 pub mod markdown;
 mod objc;
 mod ocaml;
@@ -198,6 +201,9 @@ impl Hosts {
                 Box::new(&r::HOST),
                 Box::new(&julia::HOST),
                 Box::new(&powershell::HOST),
+                Box::new(&make::HOST),
+                Box::new(&cmake::HOST),
+                Box::new(&dockerfile::HOST),
             ],
         }
     }

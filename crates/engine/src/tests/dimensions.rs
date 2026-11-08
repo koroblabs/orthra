@@ -1452,3 +1452,83 @@ fn powershell_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn makefile_through_every_dimension() {
+    check(
+        r#"
+        //- /Makefile
+        # Seperates teh greeting.
+        recieve := hello
+        $(info Hello world, occured)
+
+        all:
+        	@echo $(recieve)
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > recieve := hello
+              ^^^^^^^ known-typo -> receive
+            > $(info Hello world, occured)
+                                  ^^^^^^^ known-typo -> occurred
+            >
+            > all:
+            > 	@echo $(recieve)
+        "#]],
+    );
+}
+
+#[test]
+fn cmake_through_every_dimension() {
+    check(
+        r#"
+        //- /CMakeLists.txt
+        # Seperates teh greeting.
+        function(recieve person)
+          message(STATUS "Hello world, occured")
+          recieve(${person})
+        endfunction()
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > function(recieve person)
+                       ^^^^^^^ known-typo -> receive
+            >   message(STATUS "Hello world, occured")
+                                             ^^^^^^^ known-typo -> occurred
+            >   recieve(${person})
+            > endfunction()
+        "#]],
+    );
+}
+
+#[test]
+fn dockerfile_through_every_dimension() {
+    check(
+        r#"
+        //- /Dockerfile
+        # Seperates teh greeting.
+        ARG recieve=1
+        FROM alpine AS builder
+        LABEL description="Hello world, occured"
+        RUN echo ${recieve}
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > ARG recieve=1
+                  ^^^^^^^ known-typo -> receive
+            > FROM alpine AS builder
+            > LABEL description="Hello world, occured"
+                                              ^^^^^^^ known-typo -> occurred
+            > RUN echo ${recieve}
+        "#]],
+    );
+}

@@ -1,0 +1,5 @@
+# Words of the Dockerfile world that are words in a Dockerfile, whatever a dictionary says. A
+# dictionary word needs no line here. One word per line, sorted, so two additions merge without a
+# conflict.
+buildpack
+gosu

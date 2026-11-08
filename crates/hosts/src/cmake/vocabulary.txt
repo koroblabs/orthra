@@ -1,0 +1,8 @@
+# Words of CMake that are words in a CMake file, whatever a dictionary says: the reStructuredText
+# directives of its own modules' documentation, and command names. A dictionary word needs no line
+# here. One word per line, sorted, so two additions merge without a conflict.
+doxyfile
+ranlib
+strequal
+versionadded
+versionchanged
