@@ -790,3 +790,63 @@ fn swift_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn c_through_every_dimension() {
+    check(
+        r#"
+        //- /src/greet.c
+        /** Seperates teh greeting. */
+        #include <stdio.h>
+
+        int recieve(const char *person) {
+        	printf("Hello\n%s, occured", person);
+        	return recieve(person);
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > /** Seperates teh greeting. */
+                  ^^^^^^^^^ known-typo -> Separates
+                            ^^^ known-typo -> the
+            > #include <stdio.h>
+            >
+            > int recieve(const char *person) {
+                  ^^^^^^^ known-typo -> receive
+            > 	printf("Hello\n%s, occured", person);
+              	                   ^^^^^^^ known-typo -> occurred
+            > 	return recieve(person);
+            > }
+        "#]],
+    );
+}
+
+#[test]
+fn cpp_through_every_dimension() {
+    check(
+        r#"
+        //- /src/greet.cpp
+        /// Seperates teh greeting.
+        #include <string>
+
+        std::string recieve(const std::string &person) {
+        	auto note = R"(Hello occured)";
+        	return recieve(person) + note;
+        }
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > /// Seperates teh greeting.
+                  ^^^^^^^^^ known-typo -> Separates
+                            ^^^ known-typo -> the
+            > #include <string>
+            >
+            > std::string recieve(const std::string &person) {
+                          ^^^^^^^ known-typo -> receive
+            > 	auto note = R"(Hello occured)";
+              	                     ^^^^^^^ known-typo -> occurred
+            > 	return recieve(person) + note;
+            > }
+        "#]],
+    );
+}

@@ -1,0 +1,28 @@
+# Words of C and its ecosystem that are words in a C file, whatever a dictionary says: keywords,
+# the standard library, and the toolchain. A dictionary word needs no line here. One word per line,
+# sorted, so two additions merge without a conflict.
+cpy
+declspec
+destructors
+dlopen
+ecvt
+execv
+execve
+fcvt
+fdopen
+fegetround
+fesetround
+fsync
+getprogname
+inttypes
+longjmp
+madvise
+memmove
+mincore
+snprintf
+strtoll
+strtoul
+strtoull
+timegm
+tzset
+vsnprintf

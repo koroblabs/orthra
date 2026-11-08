@@ -1,0 +1,40 @@
+# Words of C++ and its ecosystem that are words in a C++ file, whatever a dictionary says: keywords,
+# the standard library, and the toolchain. A dictionary word needs no line here. One word per line,
+# sorted, so two additions merge without a conflict.
+addressof
+clzll
+codecvts
+cpy
+declval
+denormal
+destructors
+downcasting
+endrst
+fdopen
+formfeed
+hexfloat
+ifstream
+inserter
+istream
+lconv
+libstdc
+memmove
+metafunctions
+npos
+ostream
+setfill
+setw
+sfinae
+snprintf
+sputc
+sputn
+stoi
+streambuf
+streamsize
+strtod
+strtold
+strtoll
+strtoull
+subnormals
+valarray
+xsputn

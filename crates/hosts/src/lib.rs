@@ -11,6 +11,8 @@ use orthra_text::TextRange;
 
 use crate::parsed::Parsed;
 
+mod c;
+mod cpp;
 mod css;
 pub mod git_commit;
 mod go;
@@ -150,6 +152,8 @@ impl Hosts {
                 Box::new(&kotlin::HOST),
                 Box::new(&java::HOST),
                 Box::new(&swift::HOST),
+                Box::new(&c::HOST),
+                Box::new(&cpp::HOST),
             ],
         }
     }

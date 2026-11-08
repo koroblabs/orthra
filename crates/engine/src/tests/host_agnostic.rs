@@ -342,6 +342,62 @@ const WRAPPINGS: &[Wrapping] = &[
         line: " * ",
         close: " */\nstruct S {}\n",
     },
+    Wrapping {
+        language: "c",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: "",
+    },
+    Wrapping {
+        language: "c",
+        name: "/* */",
+        open: "/*\n",
+        line: " * ",
+        close: " */\n",
+    },
+    Wrapping {
+        language: "c",
+        name: "/** */",
+        open: "/**\n",
+        line: " * ",
+        close: " */\nint f(void);\n",
+    },
+    Wrapping {
+        language: "c",
+        name: "///",
+        open: "",
+        line: "/// ",
+        close: "int f(void);\n",
+    },
+    Wrapping {
+        language: "cpp",
+        name: "//",
+        open: "",
+        line: "// ",
+        close: "",
+    },
+    Wrapping {
+        language: "cpp",
+        name: "/* */",
+        open: "/*\n",
+        line: " * ",
+        close: " */\n",
+    },
+    Wrapping {
+        language: "cpp",
+        name: "/** */",
+        open: "/**\n",
+        line: " * ",
+        close: " */\nint f();\n",
+    },
+    Wrapping {
+        language: "cpp",
+        name: "///",
+        open: "",
+        line: "/// ",
+        close: "int f();\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.
