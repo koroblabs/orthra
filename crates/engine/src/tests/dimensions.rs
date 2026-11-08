@@ -1308,3 +1308,67 @@ fn elm_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn elixir_through_every_dimension() {
+    check(
+        r##"
+        //- /lib/greeter.ex
+        # Seperates teh greeting.
+        defmodule Greeter do
+          @doc "Seperates occured."
+          def recieve(person) do
+            message = "Hello\nworld, occured #{person}"
+            IO.puts(message)
+            recieve(person)
+          end
+        end
+        "##,
+        &[("teh", "the")],
+        expect![[r#"
+            > # Seperates teh greeting.
+                ^^^^^^^^^ known-typo -> Separates
+                          ^^^ known-typo -> the
+            > defmodule Greeter do
+            >   @doc "Seperates occured."
+                      ^^^^^^^^^ known-typo -> Separates
+                                ^^^^^^^ known-typo -> occurred
+            >   def recieve(person) do
+                    ^^^^^^^ known-typo -> receive
+            >     message = "Hello\nworld, occured #{person}"
+                                           ^^^^^^^ known-typo -> occurred
+            >     IO.puts(message)
+            >     recieve(person)
+            >   end
+            > end
+        "#]],
+    );
+}
+
+#[test]
+fn erlang_through_every_dimension() {
+    check(
+        r##"
+        //- /src/greeter.erl
+        %% Seperates teh greeting.
+        -module(greeter).
+        recieve(Person) ->
+            Message = "Hello\nworld, occured",
+            io:format("~s~n", [Message]),
+            recieve(Person).
+        "##,
+        &[("teh", "the")],
+        expect![[r#"
+            > %% Seperates teh greeting.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            > -module(greeter).
+            > recieve(Person) ->
+              ^^^^^^^ known-typo -> receive
+            >     Message = "Hello\nworld, occured",
+                                           ^^^^^^^ known-typo -> occurred
+            >     io:format("~s~n", [Message]),
+            >     recieve(Person).
+        "#]],
+    );
+}

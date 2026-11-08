@@ -161,6 +161,8 @@ fn every_builtin_host_loads() {
         "ocaml",
         "ocaml_interface",
         "elm",
+        "elixir",
+        "erlang",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }

@@ -1,0 +1,8 @@
+# Words of Erlang and its ecosystem that are words in an Erlang file, whatever a dictionary says.
+# A dictionary word needs no line here. One word per line, sorted, so two additions merge without a
+# conflict.
+badarg
+badmatch
+eunit
+keyfind
+proplist

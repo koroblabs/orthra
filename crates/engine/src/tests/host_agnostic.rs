@@ -650,6 +650,27 @@ const WRAPPINGS: &[Wrapping] = &[
         line: "",
         close: "-}\n",
     },
+    Wrapping {
+        language: "elixir",
+        name: "#",
+        open: "",
+        line: "# ",
+        close: "key = 1\n",
+    },
+    Wrapping {
+        language: "erlang",
+        name: "%",
+        open: "",
+        line: "% ",
+        close: "key() -> 1.\n",
+    },
+    Wrapping {
+        language: "erlang",
+        name: "%%",
+        open: "",
+        line: "%% ",
+        close: "key() -> 1.\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.

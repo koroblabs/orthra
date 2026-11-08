@@ -16,7 +16,9 @@ mod cpp;
 mod csharp;
 mod css;
 mod dart;
+mod elixir;
 mod elm;
+mod erlang;
 mod fsharp;
 pub mod git_commit;
 mod go;
@@ -188,6 +190,8 @@ impl Hosts {
                 Box::new(&ocaml::HOST),
                 Box::new(&ocaml::INTERFACE),
                 Box::new(&elm::HOST),
+                Box::new(&elixir::HOST),
+                Box::new(&erlang::HOST),
             ],
         }
     }
