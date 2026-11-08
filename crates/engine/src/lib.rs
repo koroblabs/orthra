@@ -13,7 +13,10 @@ use std::{borrow::Cow, fmt, sync::Arc};
 use judge::{Directives, Judge};
 use named_lines::NameLabels;
 use orthra_checks::{Check, DocFacts, Strings};
-use orthra_hosts::{Host, Hosts, Span, SpanKind, test_files::is_test_path};
+use orthra_hosts::{
+    Host, Hosts, Span, SpanKind,
+    test_files::{is_generated, is_test_path},
+};
 use orthra_lexicon::{Lexicon, Verdict};
 use orthra_packs::{Packs, locale_path};
 use orthra_segment::{Rules, Word};
@@ -193,6 +196,10 @@ impl Engine {
         else {
             return Vec::new();
         };
+        // An open minified bundle is a tool's output, as it is on disk.
+        if is_generated(host, path) {
+            return Vec::new();
+        }
         let (language, strings) = (host.language_ids()[0], self.strings(host, path));
         self.check_as(language, text, strings, Some(parsed))
     }

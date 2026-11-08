@@ -110,8 +110,10 @@ pub trait Host: Send + Sync + fmt::Debug {
         &[]
     }
 
-    /// File names this host's language uses for files a tool writes: `package-lock.json`. Nobody
-    /// fixes a typo in one, and a lock file's keys are other people's names, so no host claims it.
+    /// File names this host's language uses for files a tool writes, where `*` stands for any run
+    /// of characters: `package-lock.json`, `*.min.js`, `*.pb.go`. Nobody fixes a typo in one, and
+    /// its words are other people's names or a minifier's, so no host checks it. See
+    /// [`test_files::is_generated`].
     fn generated_files(&self) -> &'static [&'static str] {
         &[]
     }
@@ -188,6 +190,6 @@ impl Hosts {
                     .find(|host| host.extensions().contains(&extension))
             })
             .map(|host| &**host)
-            .filter(|host| !host.generated_files().contains(&name))
+            .filter(|host| !test_files::is_generated(*host, path))
     }
 }

@@ -34,7 +34,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     query: include_str!("spell.scm"),
     vocabulary: include_str!("vocabulary.txt"),
     test_files: &["*_test.rb", "*_spec.rb", "spec/"],
-    generated_files: &[],
+    generated_files: &["*_pb.rb", "*_services_pb.rb"],
     // YARD. `@param name [Type] text` and `@option opts [Type] :key text` carry a name, which the
     // reader skips as the one token after the tag, and then a type in brackets; `@return [Type]`
     // and `@raise [Error]` carry the type alone.

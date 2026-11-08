@@ -25,7 +25,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     vocabulary: include_str!("vocabulary.txt"),
     // Jest, Vitest and Mocha name their tests as TypeScript's do.
     test_files: crate::typescript::TEST_FILES,
-    generated_files: &[],
+    generated_files: &["*.min.js", "*.min.mjs", "*.min.cjs"],
     doc_tags: DocTags::NONE,
     one_token_strings_are_values: false,
 });

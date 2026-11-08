@@ -58,7 +58,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     query: include_str!("spell.scm"),
     vocabulary: include_str!("vocabulary.txt"),
     test_files: TEST_FILES,
-    generated_files: &[],
+    generated_files: &["lex.yy.c", "*.tab.c", "*.tab.h"],
     doc_tags: DOC_TAGS,
     one_token_strings_are_values: true,
 });

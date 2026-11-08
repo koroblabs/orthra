@@ -1,4 +1,5 @@
-//! Which files are tests. Their strings are test data, not text, and are left unchecked.
+//! Which files are tests, and which a tool writes. A test's strings are test data, not text, and
+//! are left unchecked; a generated file is not checked at all.
 //!
 //! Every language keeps tests in a `tests` or `test` directory. Beyond that each has its own
 //! conventions (`*_test.go`, `test_*.py`, `*Test.php`), and those are its host's data
@@ -20,6 +21,15 @@ pub fn is_test_path(host: &dyn Host, path: &str) -> bool {
             Some(directory) => directories.split('/').any(|part| part == directory),
             None => matches(pattern, name),
         })
+}
+
+/// Whether `path` is a file `host`'s language has a tool write: its name matches one of
+/// [`Host::generated_files`].
+pub fn is_generated(host: &dyn Host, path: &str) -> bool {
+    let name = path.rsplit(['/', '\\']).next().unwrap_or(path);
+    host.generated_files()
+        .iter()
+        .any(|pattern| matches(pattern, name))
 }
 
 /// Whether `name` matches `pattern`, where each `*` stands for any run of characters, empty

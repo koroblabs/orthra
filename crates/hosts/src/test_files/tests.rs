@@ -68,3 +68,52 @@ fn each_host_names_its_own_test_files() {
     "#]]
     .assert_eq(&rendered);
 }
+
+/// A file a tool writes is claimed by no host, by its name: a lock file, a minified bundle, a
+/// parser generator's output, protobuf's code.
+#[test]
+fn a_generated_file_is_claimed_by_no_host() {
+    let hosts = Hosts::builtin();
+    let paths = [
+        "web/package-lock.json",
+        "web/package.json",
+        "dist/axios.min.js",
+        "src/axios.js",
+        "public/css/site.min.css",
+        "public/css/site.css",
+        "src/lex.yy.c",
+        "src/parser.tab.c",
+        "src/parser.c",
+        "api/user.pb.go",
+        "api/user.go",
+        "proto/user_pb2.py",
+        "Sources/User.pb.swift",
+        "lib/user_pb.rb",
+    ];
+    let claimed: Vec<String> = paths
+        .iter()
+        .map(|path| {
+            format!(
+                "{:<11}{path}",
+                hosts.for_path(path).map_or("-", |host| host.id())
+            )
+        })
+        .collect();
+    expect![[r#"
+        -          web/package-lock.json
+        json       web/package.json
+        -          dist/axios.min.js
+        javascript src/axios.js
+        -          public/css/site.min.css
+        css        public/css/site.css
+        -          src/lex.yy.c
+        -          src/parser.tab.c
+        c          src/parser.c
+        -          api/user.pb.go
+        go         api/user.go
+        -          proto/user_pb2.py
+        -          Sources/User.pb.swift
+        -          lib/user_pb.rb
+    "#]]
+    .assert_eq(&(claimed.join("\n") + "\n"));
+}

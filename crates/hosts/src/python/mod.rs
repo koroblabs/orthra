@@ -24,7 +24,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     query: include_str!("spell.scm"),
     vocabulary: include_str!("vocabulary.txt"),
     test_files: &["test_*.py", "*_test.py", "conftest.py"],
-    generated_files: &[],
+    generated_files: &["*_pb2.py", "*_pb2_grpc.py", "*_pb2.pyi"],
     doc_tags: DocTags::NONE,
     one_token_strings_are_values: false,
 });

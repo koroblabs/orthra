@@ -1,5 +1,6 @@
 mod dimensions;
 mod explained;
+mod generated;
 mod host_agnostic;
 mod incumbent;
 mod lazy_packs;
