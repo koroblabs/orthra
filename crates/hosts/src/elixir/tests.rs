@@ -36,7 +36,6 @@ end
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ doccomment
             >
             >       iex> Foo.BarBaz.greet("x")
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ doccomment
             >   """
             >   # A comment.
                 ^^^^^^^^^^^^ comment
@@ -70,6 +69,53 @@ end
                                   ^^^ value
             >   @attr "value"
                        ^^^^^ string
+            > end
+        "#]],
+    );
+}
+
+/// An `@doc` heredoc has no comment marker, so its indented block is four spaces past the doc's
+/// own indentation. An `iex>` example and its result run to the next blank line.
+#[test]
+fn doctests_and_indented_blocks_in_a_doc_are_code() {
+    check(
+        "/lib/greet.ex",
+        r#"defmodule Greet do
+  @doc """
+  Greets a person.
+
+      iex> Greet.hello("boing")
+      "Hello, boing"
+
+  iex> Greet.hello("qzxv")
+  "Hello, qzxv"
+
+  Returns the greeting.
+  """
+  def hello(name), do: name
+end
+"#,
+        expect![[r#"
+            elixir
+            > defmodule Greet do
+                        ^^^^^ declaration
+            >   @doc """
+            >   Greets a person.
+                ^^^^^^^^^^^^^^^^ doccomment
+            >
+            >       iex> Greet.hello("boing")
+            >       "Hello, boing"
+            >
+            >   iex> Greet.hello("qzxv")
+            >   "Hello, qzxv"
+            >
+            >   Returns the greeting.
+                ^^^^^^^^^^^^^^^^^^^^^ doccomment
+            >   """
+            >   def hello(name), do: name
+                    ^^^^^ declaration
+                          ^^^^ declaration
+                                 ^^^ value
             > end
         "#]],
     );

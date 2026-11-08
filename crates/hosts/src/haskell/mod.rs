@@ -28,12 +28,12 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     vocabulary: include_str!("vocabulary.txt"),
     test_files: &["test/", "tests/", "*Spec.hs", "*Test.hs", "*Tests.hs"],
     generated_files: &[],
-    // Haddock has `@since` and nothing else at the start of a line.
+    // Haddock has `@since` and nothing else at the start of a line, and its code is a `>` bird
+    // track, which runs to the next blank line.
     doc_tags: DocTags {
-        prefixes: &[],
-        code: &[],
-        typed: &[],
+        code_lines: &[">"],
         unread: &["since"],
+        ..DocTags::NONE
     },
     one_token_strings_are_values: true,
 });

@@ -29,8 +29,6 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     test_files: &["*Test.java", "*Tests.java", "*IT.java", "src/test/"],
     generated_files: &[],
     doc_tags: DocTags {
-        prefixes: &[],
-        code: &[],
         // `@param name`, `@throws Type`: the first token is a name or a type, then prose.
         typed: &["exception", "param", "throws"],
         // Names, references and versions.
@@ -43,6 +41,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
             "since",
             "version",
         ],
+        ..DocTags::NONE
     },
     // `"jdk.httpclient.allowRestrictedHeaders"`, `"dd'T'HH"`: a string of one token is a key, a
     // pattern or a table entry far more often than a word. A known typo in it is still reported.

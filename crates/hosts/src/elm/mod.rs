@@ -26,11 +26,11 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     test_files: &["tests/", "*Test.elm", "*Tests.elm"],
     generated_files: &[],
     // `@docs view, update` lists names, and is the one tag a module's doc comment has.
+    // elm-format writes a doc's prose at the start of the line, and its examples four spaces in.
     doc_tags: DocTags {
-        prefixes: &[],
-        code: &[],
-        typed: &[],
+        indent: Some(0),
         unread: &["docs"],
+        ..DocTags::NONE
     },
     one_token_strings_are_values: false,
 });

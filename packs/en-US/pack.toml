@@ -23,7 +23,7 @@ word-internal = ["'", "’"]
 normalize = { "’" = "'" }
 # A comment line that starts with one of these and a colon names people, not prose:
 # `# Author: Jens Getreu <...>`.
-name-labels = ["author", "authors", "contributor", "contributors", "credits", "maintainer", "maintainers", "original author"]
+name-labels = ["author", "authors", "contributor", "contributors", "credits", "maintainer", "maintainers", "original author", "written by"]
 # A comment line that starts with one of these, colon or not, names people too: `Copyright (c)
-# 2009 Salvatore Sanfilippo`.
-name-lines = ["copyright"]
+# 2009 Salvatore Sanfilippo`, and Xcode's `Created by Olivier Poitrey on 9/21/09.`
+name-lines = ["copyright", "created by"]

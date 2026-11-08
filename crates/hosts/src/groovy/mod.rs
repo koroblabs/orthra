@@ -39,10 +39,9 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::cutting(
         generated_files: &[],
         // Groovydoc is Javadoc: `@param name text`, `@throws Type text`.
         doc_tags: DocTags {
-            prefixes: &[],
-            code: &[],
             typed: &["exception", "param", "throws"],
             unread: &["author", "see", "since", "version"],
+            ..DocTags::NONE
         },
         // A Gradle build script is coordinates and plugin ids: `'com.squareup.okio:okio:3.0.0'`,
         // `'java-library'`. A known typo is still reported.

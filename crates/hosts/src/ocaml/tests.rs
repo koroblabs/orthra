@@ -170,3 +170,49 @@ class point : int -> object method get_x : int end
         "#]],
     );
 }
+
+/// odoc's references, `{!Arg.argterms}` and `{{!page-cli.envlookup}the lookup}`, are names, but
+/// the text of a reference is prose.
+#[test]
+fn odoc_references_are_not_prose() {
+    check(
+        "/src/cli.ml",
+        r#"(** Parses with {!Arg.argterms}; see {{!page-cli.envlookup}the lookup}. *)
+let parse x = x
+"#,
+        expect![[r#"
+            ocaml
+            > (** Parses with {!Arg.argterms}; see {{!page-cli.envlookup}the lookup}. *)
+              ^^^^^^^^^^^^^^^ doccomment
+                                             ^^^^^^^ doccomment
+                                                                         ^^^^^^^^^^^^^^^ doccomment
+            > let parse x = x
+                  ^^^^^ declaration
+                        ^ declaration
+        "#]],
+    );
+}
+
+/// odoc aligns a doc's lines under the text after `(** `, four spaces in: that is prose, not an
+/// indented block.
+#[test]
+fn ocamldoc_lines_aligned_under_the_text_are_prose() {
+    check(
+        "/src/cmd.mli",
+        r#"(** Commands.
+
+    Command line syntaxes are defined by terms. *)
+val name : string
+"#,
+        expect![[r#"
+            ocaml_interface
+            > (** Commands.
+              ^^^^^^^^^^^^^ doccomment
+            >
+            >     Command line syntaxes are defined by terms. *)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ doccomment
+            > val name : string
+                  ^^^^ declaration
+        "#]],
+    );
+}

@@ -20,10 +20,9 @@ const CONVENTIONS: Conventions = Conventions {
 /// ocamldoc's tags: `@param name text`, `@raise Exn text`; a name, a version or a reference is not
 /// prose.
 const DOC_TAGS: DocTags = DocTags {
-    prefixes: &[],
-    code: &[],
     typed: &["param", "raise"],
     unread: &["author", "before", "see", "since", "version"],
+    ..DocTags::NONE
 };
 
 pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {

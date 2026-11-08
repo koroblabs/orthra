@@ -101,3 +101,40 @@ main = do
         "#]],
     );
 }
+
+/// Haddock's code is a `>` bird track and a `>>>` example with its result, each running to the
+/// next blank line: `xxxa` and `cdab` there are code. The prose after the blank line is read.
+#[test]
+fn haddock_bird_tracks_and_examples_are_code() {
+    check(
+        "/src/Seq.hs",
+        r#"-- | Reverses a sequence.
+--
+-- > reverse (fromList "xxxa") == fromList "axxx"
+--
+-- >>> toList (reverse (fromList "cdab"))
+-- "badc"
+--
+-- Runs in linear time.
+reverse :: Seq a -> Seq a
+reverse s = s
+"#,
+        expect![[r#"
+            haskell
+            > -- | Reverses a sequence.
+                 ^^^^^^^^^^^^^^^^^^^^^^ doccomment
+            > --
+            > -- > reverse (fromList "xxxa") == fromList "axxx"
+            > --
+            > -- >>> toList (reverse (fromList "cdab"))
+            > -- "badc"
+            > --
+            > -- Runs in linear time.
+                 ^^^^^^^^^^^^^^^^^^^^ doccomment
+            > reverse :: Seq a -> Seq a
+            > reverse s = s
+              ^^^^^^^ declaration
+                      ^ declaration
+        "#]],
+    );
+}

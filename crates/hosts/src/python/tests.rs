@@ -63,3 +63,47 @@ class Greeter:
         "#]],
     );
 }
+
+/// A docstring's doctest, `>>>` and its output up to a blank line, is code, and so is a block
+/// indented four spaces past the docstring's own indentation, as `cleandoc` reads it.
+#[test]
+fn doctests_and_indented_blocks_in_a_docstring_are_code() {
+    check(
+        "/src/greet.py",
+        r#"def greet(name):
+    """Greets a person.
+
+    >>> greet("qzxv")
+    'Hello, qzxv'
+
+    An example::
+
+        greet(wrtyp)
+
+    Returns the greeting.
+    """
+    return name
+"#,
+        expect![[r#"
+            python
+            > def greet(name):
+                  ^^^^^ declaration
+                        ^^^^ declaration
+            >     """Greets a person.
+                     ^^^^^^^^^^^^^^^^ doccomment
+            >
+            >     >>> greet("qzxv")
+            >     'Hello, qzxv'
+            >
+            >     An example::
+                  ^^^^^^^^^^^^ doccomment
+            >
+            >         greet(wrtyp)
+            >
+            >     Returns the greeting.
+                  ^^^^^^^^^^^^^^^^^^^^^ doccomment
+            >     """
+            >     return name
+        "#]],
+    );
+}

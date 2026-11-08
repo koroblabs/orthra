@@ -4,6 +4,10 @@
 //! colon, `Copyright`), because `Author` is English. A line of a few words and an email in angle
 //! brackets is a name whatever the language: ` *  arcizan <ghostrevery@gmail.com>`. On redis,
 //! copyright lines' names were a fifth of what was reported (2026-11-08).
+//!
+//! A handle in a code comment's conventions is a name too: `TODO(nweiz)`, and the code review
+//! comments of OCaml's shops, `CR rgrinberg:` and `CR-someday amokhov:`. On dune they were 114 of
+//! 347 findings, and `TODO(username)` is Dart's and Go's style (2026-11-09).
 
 use orthra_hosts::SpanKind;
 use orthra_segment::Word;
@@ -15,7 +19,7 @@ mod tests;
 #[derive(Debug, Clone, Default)]
 pub(crate) struct NameLabels {
     labels: Vec<Box<str>>,
-    /// Words that start a line of names without a colon: `copyright`.
+    /// Words that start a line of names without a colon: `copyright`, `created by`.
     lines: Vec<Box<str>>,
     /// The first word of each label: a line can only be labeled if its first word is one.
     firsts: Vec<Box<str>>,
@@ -57,16 +61,19 @@ impl NameLabels {
             let gap = &text[previous_end..start];
             previous_end = usize::from(word.range.end());
             let named = start < named_until
+                || matches!(place, SpanKind::Comment | SpanKind::DocComment)
+                    && Self::is_handle(text, words, i, gap)
                 || matches!(
                     place,
                     SpanKind::Comment | SpanKind::DocComment | SpanKind::Prose
-                ) && Self::first_on_line(gap, i)
+                ) && (Self::first_on_line(gap, i) || Self::after_copyright_sign(gap, i))
                     && {
                         let line_end = text[start..].find('\n').map_or(text.len(), |at| start + at);
                         let line = &text[start..line_end];
                         let first = &text[word.range];
-                        let names = self.begins_a_label(first) && self.labeled(line)
-                            || Self::is_one_of(first, &self.lines)
+                        let names = Self::after_copyright_sign(gap, i)
+                            || self.begins_a_label(first) && self.labeled(line)
+                            || self.begins_a_name_line(first, line)
                             || Self::name_and_email(line);
                         if names {
                             named_until = line_end;
@@ -94,9 +101,82 @@ impl NameLabels {
 
     /// Whether `word` is one of `words`, lower-cased, ignoring its case.
     fn is_one_of(word: &str, words: &[Box<str>]) -> bool {
-        words.iter().any(|one| {
-            one.len() == word.len() && word.chars().flat_map(char::to_lowercase).eq(one.chars())
+        words.iter().any(|one| Self::same(word, one))
+    }
+
+    /// Whether `word` is `lowered`, ignoring its case.
+    fn same(word: &str, lowered: &str) -> bool {
+        word.chars()
+            .flat_map(char::to_lowercase)
+            .eq(lowered.chars())
+    }
+
+    /// Whether `line`, whose first word is `first`, starts with the words of a name line:
+    /// `Copyright (c) 2009`, `Created by Olivier Poitrey on 9/21/09.` The first word is the
+    /// segmenter's, so a colon or a bracket after it does not matter; the rest are read word by
+    /// word.
+    fn begins_a_name_line(&self, first: &str, line: &str) -> bool {
+        self.lines.iter().any(|entry| {
+            let mut wanted = entry.split(' ');
+            let mut written = line.split_whitespace().skip(1);
+            wanted.next().is_some_and(|word| Self::same(first, word))
+                && wanted.all(|word| written.next().is_some_and(|w| Self::same(w, word)))
         })
+    }
+
+    /// Whether word `i`, after `gap`, the text since the word before it, is a handle: `nweiz` in
+    /// `TODO(nweiz)`, `rgrinberg` in `CR rgrinberg:` and `amokhov` in `CR-someday amokhov:`. The
+    /// markers are acronyms, which the segmenter makes no word of, so they are read in the gap.
+    fn is_handle(text: &str, words: &[Word], i: usize, gap: &str) -> bool {
+        const MARKERS: &[&str] = &["TODO", "FIXME", "XXX", "HACK", "NOTE", "BUG"];
+        const REVIEWS: &[&str] = &["CR", "XCR"];
+        // Whether `before` ends with one of `marks`, as a whole word.
+        let ends_with = |before: &str, marks: &[&str]| {
+            marks.iter().any(|mark| {
+                before.strip_suffix(mark).is_some_and(|head| {
+                    head.chars()
+                        .next_back()
+                        .is_none_or(|c| !c.is_alphanumeric())
+                })
+            })
+        };
+        let after = &text[usize::from(words[i].range.end())..];
+        if let Some(before) = gap.strip_suffix('(') {
+            return ends_with(before, MARKERS) && after.starts_with(')');
+        }
+        if !after.starts_with(':') {
+            return false;
+        }
+        if gap
+            .strip_suffix(' ')
+            .is_some_and(|before| ends_with(before, REVIEWS))
+        {
+            return true;
+        }
+        // `CR-someday amokhov:`: the word before is the review's kind, after `CR-`.
+        gap == " " && i > 0 && {
+            let kind_start = usize::from(words[i - 1].range.start());
+            let since = i
+                .checked_sub(2)
+                .map_or(0, |at| usize::from(words[at].range.end()));
+            text[since..kind_start]
+                .strip_suffix('-')
+                .is_some_and(|before| ends_with(before, REVIEWS))
+        }
+    }
+
+    /// Whether the line so far, given the text since the word before, is markers and a copyright
+    /// sign, `(c)` or `©`, which says what follows is the holders' names in every language:
+    /// ` * (c) Olivier Poitrey <rs@dailymotion.com>`. `i` is the word's index: the first word's gap
+    /// is the line so far even with no line break in it.
+    fn after_copyright_sign(gap: &str, i: usize) -> bool {
+        let head = match gap.rfind('\n') {
+            Some(at) => &gap[at..],
+            None if i == 0 => gap,
+            None => return false,
+        };
+        let signless = head.replace("(c)", "").replace("(C)", "").replace('©', "");
+        signless.len() < head.len() && !signless.chars().any(char::is_alphanumeric)
     }
 
     /// Whether `line`, from its first word on, is one to four words of a name and an email in

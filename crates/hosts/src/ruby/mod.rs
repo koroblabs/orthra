@@ -40,8 +40,6 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // reader skips as the one token after the tag, and then a type in brackets; `@return [Type]`
     // and `@raise [Error]` carry the type alone.
     doc_tags: DocTags {
-        prefixes: &[],
-        code: &[],
         typed: &[
             "option",
             "param",
@@ -52,6 +50,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
             "yieldreturn",
         ],
         unread: &["api", "author", "since", "see", "version"],
+        ..DocTags::NONE
     },
     // `"Content-Type"`, `"HTTP_HOST"`, `"rack.input"`: a string of one token in Ruby is a key, a
     // header or a name. A message has spaces.

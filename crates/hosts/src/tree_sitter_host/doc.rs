@@ -15,6 +15,15 @@ pub(crate) struct DocTags {
     /// Tags whose section is code, up to the next tag: roxygen's `@examples`. The lines after one
     /// are not prose, and the next line that starts with a tag of any other name is.
     pub(crate) code: &'static [&'static str],
+    /// What starts a line of code that runs to the next blank line, beside the doctest prompts
+    /// every host knows ([`PROMPTS`]): Haddock's `>` bird tracks, which would be a quote in
+    /// Markdown.
+    pub(crate) code_lines: &'static [&'static str],
+    /// The indentation of the prose in a doc whose lines have no marker, when the language's
+    /// formatter fixes it: elm-format writes it at the start of the line, so an example indented
+    /// four spaces is code even in a doc that holds nothing else after its first line. `None` reads
+    /// it from the doc's lines.
+    pub(crate) indent: Option<usize>,
     /// Tags followed by a type, which is code, and then perhaps a `$name`:
     /// `@param array{id: int, name: string} $user The user to greet.` A type's brackets can run
     /// over several lines, and every line they hold is code.
@@ -27,10 +36,19 @@ impl DocTags {
     pub(crate) const NONE: DocTags = DocTags {
         prefixes: &[],
         code: &[],
+        code_lines: &[],
+        indent: None,
         typed: &[],
         unread: &[],
     };
 }
+
+/// A doctest's prompts: Python's and Haskell's `>>>`, IEx's `iex>` and `iex(1)>`, the Scala REPL's
+/// `scala>`. The line is code, and so is the output after it, up to a blank line.
+const PROMPTS: &[&str] = &[">>>", "iex>", "iex(", "scala>"];
+
+/// What a line of a doc comment starts with before its text: `///`, ` * `, `--`, `#'`.
+const MARKERS: [char; 6] = ['/', '*', '!', '-', '#', '\''];
 
 /// Where a type that a tag carries has got to, from one line of a doc comment to the next.
 #[derive(Default)]
@@ -56,23 +74,52 @@ impl Loaded {
     ) {
         let mut scan = TypeScan::default();
         let mut in_pre = false;
+        let mut in_example = false;
+        let base = self
+            .doc_tags
+            .indent
+            .or_else(|| Self::base_indent(&text[range]));
         let mut at = usize::from(range.start());
-        for line in text[range].split_inclusive('\n') {
+        for (number, line) in text[range].split_inclusive('\n').enumerate() {
             let line_start = at;
             at += line.len();
             // A line comment's marker is `//`, `#` or `--` (Ruby's YARD tags follow `#`).
-            let marked = line
-                .trim_start()
-                .trim_start_matches(['/', '*', '!', '-', '#', '\'']);
+            let unindented = line.trim_start();
+            let marked = unindented.trim_start_matches(MARKERS);
             let content = marked.trim_start();
-            // An indented code block: four spaces past the one that follows the marker. Markdown
-            // wants a blank line before it, which is not carried here: a list item's continuation
-            // indented that far goes unchecked, and none is misread as a word.
-            if scan.depth == 0 && marked.starts_with("     ") && !content.is_empty() {
+            // A doctest, or a line of code the host names, and what follows it up to a blank line.
+            if in_example {
+                in_example = !content.is_empty();
+                continue;
+            }
+            if scan.depth == 0
+                && !*in_fence
+                && (PROMPTS.iter().chain(self.doc_tags.code_lines))
+                    .any(|prompt| content.starts_with(prompt))
+            {
+                in_example = true;
+                continue;
+            }
+            // An indented code block: four spaces past the one that follows the marker, or, in a
+            // doc with no markers (a heredoc, Elm's `{-|`, a Julia docstring), four past the
+            // doc's own indentation. Markdown wants a blank line before it, which is not carried
+            // here: a list item's continuation indented that far goes unchecked, and none is
+            // misread as a word.
+            let indented = if marked.len() < unindented.len() {
+                marked.starts_with("     ")
+            } else {
+                number > 0 && base.is_some_and(|base| line.len() - unindented.len() >= base + 4)
+            };
+            if scan.depth == 0 && indented && !content.is_empty() {
                 continue;
             }
             if scan.depth == 0 && content.starts_with("```") {
                 *in_fence = !*in_fence;
+                continue;
+            }
+            // Scaladoc's code blocks: `{{{` to `}}}`.
+            if scan.depth == 0 && (content.starts_with("{{{") || content.starts_with("}}}")) {
+                *in_fence = content.starts_with("{{{");
                 continue;
             }
             // Doxygen's code blocks: `\code` or `@code` to `\endcode`, and `\verbatim`.
@@ -111,6 +158,22 @@ impl Loaded {
         }
     }
 
+    /// The indentation of a doc's lines that have no marker, after its first, which starts where
+    /// the comment or the string opened: the least of them, in bytes, as Python's `cleandoc` reads
+    /// a docstring. The line the doc opens on does not count: odoc aligns the lines after it under
+    /// the text that follows `(** `, four spaces in. `None` when every line has a marker or is
+    /// blank.
+    fn base_indent(doc: &str) -> Option<usize> {
+        doc.split_inclusive('\n')
+            .skip(1)
+            .filter_map(|line| {
+                let unindented = line.trim_start();
+                let unmarked = unindented.trim_start_matches(MARKERS).len() == unindented.len();
+                (unmarked && !unindented.is_empty()).then(|| line.len() - unindented.len())
+            })
+            .min()
+    }
+
     /// Whether a doc line's `content` is one of Doxygen's `commands`, written `\name` or `@name`
     /// and ending there or at a space.
     fn command(content: &str, commands: &[&str]) -> bool {
@@ -130,7 +193,8 @@ impl Loaded {
     /// several lines and is carried in `in_pre`; not `<code>...</code>`; and not an inline tag,
     /// `{@code max}` or `{@link List#of}`, whose content is code or a reference. Javadoc's
     /// examples are written so, and `abcxyz` in `StringUtils.replaceChars("abcba", ...)` is not a
-    /// word of the doc. An opening with no end on its line is left as prose.
+    /// word of the doc. odoc's references, `{!List.map}`, are skipped the same way. An opening
+    /// with no end on its line is left as prose.
     fn outside_markup(line: &str, in_pre: &mut bool) -> Vec<std::ops::Range<usize>> {
         let bytes = line.as_bytes();
         let starts = |at: usize, tag: &str| {
@@ -162,7 +226,7 @@ impl Loaded {
                     .to_ascii_lowercase()
                     .find("</code>")
                     .map(|end| end + "</code>".len())
-            } else if starts(at, "{@") {
+            } else if starts(at, "{@") || starts(at, "{!") {
                 Self::braced(&line[at..])
             } else {
                 None

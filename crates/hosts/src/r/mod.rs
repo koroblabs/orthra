@@ -29,7 +29,6 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // roxygen2: `#' @param name Description`. `@param` is followed by the name it documents, which
     // a typed tag skips. Every tag below `unread` holds names, topics or code.
     doc_tags: DocTags {
-        prefixes: &[],
         code: &["examples", "examplesIf", "example", "usage", "rawRd"],
         typed: &["param", "field", "slot"],
         unread: &[
@@ -66,6 +65,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
             "templateVar",
             "useDynLib",
         ],
+        ..DocTags::NONE
     },
     // `"mpg"`, `"%Y-%m-%d"`, `"data.frame"`: a string of one token is a column, a format or a class.
     one_token_strings_are_values: true,

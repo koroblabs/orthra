@@ -28,8 +28,6 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     generated_files: &[],
     // LuaLS annotations: `---@param name type description`, `---@return type name description`.
     doc_tags: DocTags {
-        prefixes: &[],
-        code: &[],
         typed: &[
             "param", "return", "type", "field", "alias", "class", "generic", "cast", "overload",
             "operator", "vararg",
@@ -49,6 +47,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
             "public",
             "enum",
         ],
+        ..DocTags::NONE
     },
     one_token_strings_are_values: true,
 });

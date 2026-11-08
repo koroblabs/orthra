@@ -38,10 +38,9 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     // the way a type is in the other languages' doc tags; `@see` and `@author` hold a reference or a
     // name.
     doc_tags: DocTags {
-        prefixes: &[],
-        code: &[],
         typed: &["param", "property", "throws", "exception"],
         unread: &["author", "sample", "see", "since", "suppress", "version"],
+        ..DocTags::NONE
     },
     one_token_strings_are_values: true,
 });

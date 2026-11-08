@@ -30,7 +30,6 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     generated_files: &[],
     doc_tags: DocTags {
         prefixes: &["phpstan-", "psalm-", "phan-"],
-        code: &[],
         typed: &[
             "assert",
             "assert-if-false",
@@ -84,6 +83,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
             "uses",
             "version",
         ],
+        ..DocTags::NONE
     },
     one_token_strings_are_values: false,
 });

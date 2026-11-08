@@ -12,8 +12,6 @@ mod tests;
 /// the name of what they describe, which the reader treats as a type and skips. `@see`, `@ref` and
 /// the file-level tags hold a reference, a name or a date, not prose.
 pub(crate) const DOC_TAGS: DocTags = DocTags {
-    prefixes: &[],
-    code: &[],
     typed: &["param", "tparam", "throws", "throw", "exception", "retval"],
     unread: &[
         "author",
@@ -28,6 +26,7 @@ pub(crate) const DOC_TAGS: DocTags = DocTags {
         "since",
         "version",
     ],
+    ..DocTags::NONE
 };
 
 /// The files a C or C++ project keeps its tests in: `foo_test.c`, `foo_unittest.cc`, `test/`.

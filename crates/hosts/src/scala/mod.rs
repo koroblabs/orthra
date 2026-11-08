@@ -40,8 +40,6 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::cutting(
         // Scaladoc: `@param name text`, `@tparam T text`, `@throws Type text`. A name or a type is
         // code. `@example` holds code, and the rest hold references and versions.
         doc_tags: DocTags {
-            prefixes: &[],
-            code: &[],
             typed: &["param", "tparam", "throws", "constructor"],
             unread: &[
                 "author",
@@ -57,6 +55,7 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::cutting(
                 "usecase",
                 "version",
             ],
+            ..DocTags::NONE
         },
         // `"org.typelevel"`, `"-Xfatal-warnings"`, `"2.13.12"`: a string of one token is a
         // coordinate, a flag or a key far more often than a word. A known typo is still reported.

@@ -89,3 +89,38 @@ fn a_license_files_copyright_line_is_names() {
         "#]],
     );
 }
+
+/// A handle in a comment's conventions is a name: `TODO(qzxv)`, and a code review's `CR qzxva:`
+/// and `CR-someday qzxvb:`. Xcode's header names its author after `Created by`, and a copyright
+/// sign is followed by the holders' names. A word after
+/// `TODO:` or in a sentence that starts with `Created` is still prose.
+#[test]
+fn a_handle_and_a_created_by_line_are_names() {
+    check(
+        "/src/main.c",
+        r#"//  Created by Qzxvc Wrtyp on 9/21/09.
+//  (c) Qzxvh Wrtypb
+// Written by: Qzxvd Wrtypa
+// TODO(qzxv): split this.
+// CR qzxva: rename it.
+// CR-someday qzxvb: and this.
+// TODO: qzxve is a finding, and so is (qzxvf).
+// Created qzxvg here.
+int main(void) { return 0; }
+"#,
+        expect![[r#"
+            > //  Created by Qzxvc Wrtyp on 9/21/09.
+            > //  (c) Qzxvh Wrtypb
+            > // Written by: Qzxvd Wrtypa
+            > // TODO(qzxv): split this.
+            > // CR qzxva: rename it.
+            > // CR-someday qzxvb: and this.
+            > // TODO: qzxve is a finding, and so is (qzxvf).
+                       ^^^^^ unknown-word
+                                                      ^^^^^ unknown-word
+            > // Created qzxvg here.
+                         ^^^^^ unknown-word
+            > int main(void) { return 0; }
+        "#]],
+    );
+}

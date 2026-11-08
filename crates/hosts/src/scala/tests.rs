@@ -104,3 +104,44 @@ given intOrd: Ordering[Int] = ???
         "#]],
     );
 }
+
+/// Scaladoc's code is between `{{{` and `}}}`, and a REPL session's `scala>` line and its result
+/// run to the next blank line.
+#[test]
+fn scaladoc_code_blocks_and_repl_lines_are_code() {
+    check(
+        "/src/main/scala/Greet.scala",
+        r#"/** Greets a person.
+  *
+  * {{{
+  * val qzxv = greet("wrtyp")
+  * }}}
+  *
+  * scala> greet("zyxw")
+  * res0: String = Hello, zyxw
+  *
+  * Returns the greeting.
+  */
+def greet(name: String): String = name
+"#,
+        expect![[r#"
+            scala
+            > /** Greets a person.
+                  ^^^^^^^^^^^^^^^^ doccomment
+            >   *
+            >   * {{{
+            >   * val qzxv = greet("wrtyp")
+            >   * }}}
+            >   *
+            >   * scala> greet("zyxw")
+            >   * res0: String = Hello, zyxw
+            >   *
+            >   * Returns the greeting.
+                  ^^^^^^^^^^^^^^^^^^^^^ doccomment
+            >   */
+            > def greet(name: String): String = name
+                  ^^^^^ declaration
+                        ^^^^ declaration
+        "#]],
+    );
+}
