@@ -300,9 +300,7 @@ questions at different speeds, and each has its own key: either, both or neither
 } } }
 ```
 
-- **0.1.0's keys** (`enabled`, `model`, `idleUnload`, `http`) are not read, and the server says so
-  once at `initialize`: a setting quietly ignored leaves somebody wondering why their model never
-  answers.
+- **0.1.0's keys** (`enabled`, `model`, `idleUnload`, `http`) are not read.
 - **The rewrite actions** need only `rewrite`. Rephrasing is offered for a selection only, since a
   rephrasing nobody selected would be one more entry in every menu.
 - **An API key** is never written to a log: an endpoint prints it as `<api key>`.

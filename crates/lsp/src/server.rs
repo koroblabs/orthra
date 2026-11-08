@@ -241,11 +241,6 @@ fn path_of(uri: &Uri) -> String {
 impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> jsonrpc::Result<InitializeResult> {
         let (languages, severity) = options(params.initialization_options.as_ref());
-        if let Some(outdated) = context::outdated(params.initialization_options.as_ref()) {
-            self.client
-                .show_message(MessageType::WARNING, outdated)
-                .await;
-        }
         let wanted = context::wanted(params.initialization_options.as_ref());
         // Connected now, so that an endpoint that cannot be had is said once, at the start. Nothing
         // is sent until somebody chooses the action.

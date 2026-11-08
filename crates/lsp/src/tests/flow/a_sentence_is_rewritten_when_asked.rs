@@ -386,8 +386,6 @@ async fn no_endpoint_no_rewrite_and_one_that_cannot_be_had_is_said() {
     let options = [
         json!({ "context": { "rank": true } }),
         json!({ "context": { "rewrite": { "endpoint": "http://127.0.0.1:11434/v1" } } }),
-        // 0.1.0's keys, which no longer do anything, and say so.
-        json!({ "context": { "enabled": true, "http": { "model": "qwen3:4b" } } }),
     ];
     let mut got = Vec::new();
     for options in options {
@@ -415,10 +413,6 @@ async fn no_endpoint_no_rewrite_and_one_that_cannot_be_had_is_said() {
           actions: none
           asked: none
           said: window/showMessage: orthra: `context.rewrite` names no `model` to run, so there is no rewrite action
-        {"context":{"enabled":true,"http":{"model":"qwen3:4b"}}}
-          actions: none
-          asked: none
-          said: window/showMessage: orthra: `context.enabled` and `context.http` are no longer read: the built-in model is `context.rank`, and a model you run is `context.rewrite` (see orthra's README)
         without ml-http
           said: window/showMessage: orthra: this orthra was built without `ml-http`, so there is no rewrite action"#]]
     .assert_eq(&got.join("\n"));

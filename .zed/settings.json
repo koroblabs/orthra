@@ -42,8 +42,7 @@
       "initialization_options": {
         "languages": ["en-US"],
         "context": {
-          "enabled": true,
-          "model": "small"
+          "rank": true
         }
       }
     }

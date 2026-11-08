@@ -110,25 +110,6 @@ pub(crate) fn rewrite_endpoint(options: Option<&Value>) -> Result<Option<Endpoin
     }))
 }
 
-/// What to say when the settings still use 0.1.0's keys, which no longer do anything: a setting
-/// quietly ignored would leave somebody wondering why their model never answers.
-pub(crate) fn outdated(options: Option<&Value>) -> Option<String> {
-    let context = options?.get("context")?;
-    let old: Vec<&str> = ["enabled", "model", "idleUnload", "http"]
-        .into_iter()
-        .filter(|key| context.get(key).is_some())
-        .collect();
-    (!old.is_empty()).then(|| {
-        let keys: Vec<String> = old.iter().map(|key| format!("`context.{key}`")).collect();
-        let verb = if keys.len() == 1 { "is" } else { "are" };
-        format!(
-            "orthra: {} {verb} no longer read: the built-in model is `context.rank`, and a model \
-             you run is `context.rewrite` (see orthra's README)",
-            keys.join(" and ")
-        )
-    })
-}
-
 /// Installs and loads models: a runtime and the sources a model's definition pins, or a test's.
 pub(crate) trait Models: Send + Sync {
     /// The installed file of model `name` under `models`, if it is installed.

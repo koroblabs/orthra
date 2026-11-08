@@ -17,8 +17,7 @@ names the tag's version.
   run through a local OpenAI-compatible endpoint, now described in the README; the prompts can be
   your own, and an API key is sent to a server that asks for one;
 - **settings:** the built-in model is `context.rank` and a model you run is `context.rewrite`, each
-  on its own. 0.1.0's `context.enabled` and `context.http` are no longer read, and the server says
-  so;
+  on its own. 0.1.0's `context.enabled` and `context.http` are no longer read;
 - offers to change every same finding in a file at once, and to ignore one line with an
   `orthra: ignore-next-line` comment above it;
 - applies every exact fix in a file at once, a known typo's only correction or a word in one script,

@@ -169,8 +169,7 @@ instead of saying "local model".
 
 The two models are independent: `rank` is the built-in one, which orders a word's corrections in 13
 ms and cannot write; `rewrite` is the one you run, which writes and takes seconds. Either, both or
-neither may be on. 0.1.0's `context.enabled` and `context.http` are no longer read, and the server
-says so.
+neither may be on.
 
 ## Command line
 
