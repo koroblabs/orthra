@@ -1,0 +1,35 @@
+# Words of Lua and its ecosystem that are words in a Lua file, whatever a dictionary says:
+# keywords, the standard library, LuaLS annotations and the most-used tools. A dictionary word needs
+# no line here. One word per line, sorted, so two additions merge without a conflict.
+arshift
+foreachi
+getfenv
+getn
+loadstring
+lrotate
+lshift
+luacheck
+luacheckrc
+luaexpat
+luaopen
+luasocket
+luassert
+maxn
+metamethod
+metamethods
+metatable
+metatables
+moonscript
+nils
+rockspec
+rockspecs
+rrotate
+rshift
+selene
+setcstacklimit
+setfenv
+setn
+tobit
+tohex
+upvalue
+upvalues

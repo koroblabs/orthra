@@ -57,7 +57,7 @@ impl Loaded {
             at += line.len();
             let content = line
                 .trim_start()
-                .trim_start_matches(['/', '*', '!'])
+                .trim_start_matches(['/', '*', '!', '-'])
                 .trim_start();
             if scan.depth == 0 && content.starts_with("```") {
                 *in_fence = !*in_fence;

@@ -17,6 +17,7 @@ mod go;
 mod html;
 mod javascript;
 mod json;
+mod lua;
 pub mod markdown;
 pub mod parsed;
 mod php;
@@ -138,6 +139,7 @@ impl Hosts {
                 Box::new(&typescript::HOST),
                 Box::new(&tsx::HOST),
                 Box::new(&javascript::HOST),
+                Box::new(&lua::HOST),
             ],
         }
     }

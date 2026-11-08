@@ -560,3 +560,31 @@ fn shell_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn lua_through_every_dimension() {
+    check(
+        r#"
+        //- /lua/greet.lua
+        --- Seperates teh greeting.
+        ---@param person string
+        local function recieve(person)
+          local message = "Hello\nworld, occured"
+          return recieve(message)
+        end
+        "#,
+        &[("teh", "the")],
+        expect![[r#"
+            > --- Seperates teh greeting.
+                  ^^^^^^^^^ known-typo -> Separates
+                            ^^^ known-typo -> the
+            > ---@param person string
+            > local function recieve(person)
+                             ^^^^^^^ known-typo -> receive
+            >   local message = "Hello\nworld, occured"
+                                               ^^^^^^^ known-typo -> occurred
+            >   return recieve(message)
+            > end
+        "#]],
+    );
+}

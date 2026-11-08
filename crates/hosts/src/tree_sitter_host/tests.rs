@@ -138,6 +138,7 @@ fn every_builtin_host_loads() {
         "sql",
         "json",
         "jsonc",
+        "lua",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }

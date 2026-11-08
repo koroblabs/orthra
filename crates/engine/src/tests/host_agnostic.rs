@@ -230,6 +230,27 @@ const WRAPPINGS: &[Wrapping] = &[
         line: "",
         close: "",
     },
+    Wrapping {
+        language: "lua",
+        name: "--",
+        open: "",
+        line: "-- ",
+        close: "",
+    },
+    Wrapping {
+        language: "lua",
+        name: "---",
+        open: "",
+        line: "--- ",
+        close: "",
+    },
+    Wrapping {
+        language: "lua",
+        name: "--[[ ]]",
+        open: "--[[\n",
+        line: "",
+        close: "]]\n",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.
