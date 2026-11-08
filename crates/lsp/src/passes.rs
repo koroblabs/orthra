@@ -314,6 +314,10 @@ impl Passes {
         for (uri, found) in closed {
             self.client.publish_diagnostics(uri, found, None).await;
         }
+        // The pass parsed every file and dropped each tree, and the engine before this one is
+        // gone: glibc keeps what tree-sitter freed until it is asked to give it back. On ripgrep,
+        // helix and phrost that was 8 to 12 MB of the 26 to 31 MB a process held (2026-11-09).
+        let _ = tokio::task::spawn_blocking(lspkit_heap::release_freed).await;
         self.done.send_modify(|done| *done += 1);
     }
 }

@@ -431,6 +431,9 @@ impl LanguageServer for Backend {
             found
         };
         self.client.publish_diagnostics(uri, found, None).await;
+        // Its tree and its words are freed: given back, off the server's thread, since it walks
+        // the allocator's arenas and costs milliseconds (`passes.rs`).
+        tokio::task::spawn_blocking(lspkit_heap::release_freed);
     }
 
     async fn did_change_watched_files(&self, _: DidChangeWatchedFilesParams) {

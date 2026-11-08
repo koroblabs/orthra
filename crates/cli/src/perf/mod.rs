@@ -39,6 +39,8 @@ pub(crate) fn run(args: &[String]) -> ExitCode {
     // once, so the row is what a first check pays for them.
     engine.load_packs();
     let load = ms(started);
+    let rss_packs = rss::current().map(rss::megabytes);
+    let heap_packs = heap_megabytes();
 
     let roots: Vec<PathBuf> = args.iter().map(PathBuf::from).collect();
     // Paths only: a server holds the documents that are open, not the project, so neither does
@@ -53,14 +55,24 @@ pub(crate) fn run(args: &[String]) -> ExitCode {
     let mut languages: Vec<&str> = documents.iter().map(|(_, language)| *language).collect();
     languages.sort_unstable();
     languages.dedup();
-    let grammar = languages
+    let mut loads: Vec<(f64, &str)> = languages
         .iter()
         .map(|language| {
             let started = Instant::now();
             engine.check(language, "");
-            ms(started)
+            (ms(started), *language)
         })
-        .fold(0.0, f64::max);
+        .collect();
+    loads.sort_unstable_by(|a, b| b.0.total_cmp(&a.0));
+    let grammar = loads.first().map_or(0.0, |slowest| slowest.0);
+    let slowest = loads
+        .iter()
+        .take(3)
+        .map(|(taken, language)| format!("{language} {taken:.1} ms"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let rss_grammars = rss::current().map(rss::megabytes);
+    let heap_grammars = heap_megabytes();
     let read = |name: &str| fs::read_to_string(name).unwrap_or_default();
     let mut lines = 0;
     let mut cold = 0.0;
@@ -118,8 +130,23 @@ pub(crate) fn run(args: &[String]) -> ExitCode {
         Some(per(cold)),
         in_ms(keystrokes.percentile(95)),
         in_ms(suggest.percentile(95)),
-        rss::current().map(rss::megabytes),
+        {
+            // Each document's keystroke was its own, and was dropped after it as a closed
+            // document is: the server gives the memory freed then back, and so does this before
+            // it measures (`orthra-lsp`'s `did_close` and its passes).
+            lspkit_heap::release_freed();
+            rss::current().map(rss::megabytes)
+        },
     ];
+    // Where the memory went: the packs, then every language's grammar and query, then the checks.
+    println!(
+        "orthra perf: {} languages, the slowest to load {slowest}; RSS (live heap) {:.1} ({heap_packs:.1}) MB after the packs, {:.1} ({heap_grammars:.1}) after the grammars, {:.1} ({:.1}) after the run",
+        languages.len(),
+        rss_packs.unwrap_or(f64::NAN),
+        rss_grammars.unwrap_or(f64::NAN),
+        rss::current().map(rss::megabytes).unwrap_or(f64::NAN),
+        heap_megabytes(),
+    );
     println!(
         "orthra perf: a keystroke in each file: p50 {:.2} ms, max {:.2} ms{}; {:.2} ms per 2 000 lines",
         in_ms(keystrokes.percentile(50)).unwrap_or_default(),
@@ -171,6 +198,13 @@ fn middle_letter(text: &str) -> Option<usize> {
         .iter()
         .position(u8::is_ascii_alphabetic)
         .map(|offset| middle + offset)
+}
+
+/// What the process holds through the global allocator, in MB: RSS without the binary's pages, the
+/// grammars' tables among them, and without what the allocator freed and has not given back.
+fn heap_megabytes() -> f64 {
+    let stats = lspkit_heap::stats();
+    (stats.small + stats.large) as f64 / (1024.0 * 1024.0)
 }
 
 fn ms(since: Instant) -> f64 {
