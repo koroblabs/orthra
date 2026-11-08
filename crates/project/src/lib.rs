@@ -20,6 +20,9 @@ mod walk;
 
 pub use config::Config;
 
+#[cfg(test)]
+mod tests;
+
 /// How many threads read a project's files, to learn it and to check it. Measured on phrost's
 /// 1 395 files with one open, as the time to its diagnostics and the server's RSS (2026-11-05): one
 /// thread 0.93–1.37 s at 28 MB, two 0.47–0.62 s, four 0.31 s at 29.5 MB, eight 0.20–0.23 s at 31
@@ -42,7 +45,7 @@ impl Project {
     pub fn discover(paths: &[PathBuf], engine: &Engine, config: &Config) -> Project {
         let mut files = Vec::new();
         for path in paths {
-            walk::files(path, config.ignore(), &mut files);
+            Project::walk(path, config, &mut files);
         }
         let mut documents = Vec::new();
         let mut unclaimed = 0;
@@ -78,6 +81,25 @@ impl Project {
             .or_else(|| holding(&["Cargo.toml", "package.json", "composer.json"]))
             .unwrap_or(dir)
             .to_path_buf()
+    }
+
+    /// Every file under `path` that `config` does not ignore, written as `path` is. The walk goes
+    /// from `path` made absolute, since the ignore patterns are rooted at the project's root, which
+    /// is: from `orthra check orthra` one directory up, `crates/hosts/src/*/vocabulary.txt` met
+    /// `orthra/crates/...` and ignored nothing.
+    fn walk(path: &Path, config: &Config, out: &mut Vec<PathBuf>) {
+        let absolute = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+        let from = out.len();
+        walk::files(&absolute, config.ignore(), out);
+        for file in &mut out[from..] {
+            if let Ok(rest) = file.strip_prefix(&absolute) {
+                *file = if rest.as_os_str().is_empty() {
+                    path.to_path_buf()
+                } else {
+                    path.join(rest)
+                };
+            }
+        }
     }
 
     /// The files a host claims, with the language each is read as.

@@ -55,7 +55,11 @@ pub(crate) fn run(args: &[String]) -> ExitCode {
         println!("{file}: no host claims this file, so nothing in it is checked");
         return ExitCode::SUCCESS;
     }
-    if config.is_ignored(Path::new(file)) {
+    // Absolute, as the ignore patterns are rooted at the project's root.
+    let absolute = Path::new(file)
+        .canonicalize()
+        .unwrap_or_else(|_| Path::new(file).to_path_buf());
+    if config.is_ignored(&absolute) {
         println!(
             "{file}: the project's orthra.toml ignores this file, so nothing in it is checked"
         );
