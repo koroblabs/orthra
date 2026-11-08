@@ -762,6 +762,20 @@ const WRAPPINGS: &[Wrapping] = &[
         line: "# ",
         close: "type M { a: Int }\n",
     },
+    Wrapping {
+        language: "xml",
+        name: "<!-- -->",
+        open: "<a>\n<!--\n",
+        line: "  ",
+        close: "-->\n</a>\n",
+    },
+    Wrapping {
+        language: "restructuredtext",
+        name: "..",
+        open: "..\n",
+        line: "   ",
+        close: "",
+    },
 ];
 
 /// What `language` finds in `text`: each finding's words and check, in order.

@@ -171,6 +171,8 @@ fn every_builtin_host_loads() {
         "dockerfile",
         "graphql",
         "proto",
+        "xml",
+        "restructuredtext",
     ] {
         assert!(hosts.for_language(language).is_some(), "no {language} host");
     }

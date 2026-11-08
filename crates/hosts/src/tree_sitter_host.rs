@@ -86,6 +86,9 @@ pub(crate) struct TreeSitterHost {
     /// Delimiters of what a span's text holds that is not the host's language: a template's
     /// `{{ … }}` and `{% … %}` in a page. See [`TreeSitterHost::cutting`].
     cut: &'static [(&'static str, &'static str)],
+    /// Whether every keystroke parses the whole document again: a grammar whose parse of an edited
+    /// tree differs from a fresh parse of the same text. See [`TreeSitterHost::parsed_whole`].
+    whole: bool,
     loaded: OnceLock<Result<Loaded, String>>,
 }
 
@@ -106,8 +109,19 @@ impl TreeSitterHost {
         TreeSitterHost {
             grammar,
             cut: delimiters,
+            whole: false,
             loaded: OnceLock::new(),
         }
+    }
+
+    /// The host, parsing every version of a document whole, never from the tree of the version
+    /// before: for a grammar whose incremental parse is not the parse of the text. Findings are a
+    /// function of the text (`CLAUDE.md` §1.2), and tree-sitter-rst parsed 9 to 18 % of single
+    /// edits differently from the edited text parsed alone (2026-11-09). It costs a whole parse a
+    /// keystroke, about 10 ms for an 836-line page on the slow VM.
+    pub(crate) const fn parsed_whole(mut self) -> TreeSitterHost {
+        self.whole = true;
+        self
     }
 
     fn loaded(&self) -> Result<&Loaded, &str> {
@@ -223,6 +237,9 @@ impl Host for &'static TreeSitterHost {
         // tree with an old node's id is then that same node, shared, and never a stranger at a
         // freed address.
         let old = parsed.take(self.grammar.id, text.len());
+        if self.whole {
+            return self.spans(text, out);
+        }
         let Ok(loaded) = self.loaded() else {
             return;
         };

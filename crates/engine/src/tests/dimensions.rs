@@ -1611,3 +1611,82 @@ fn graphql_through_every_dimension() {
         "#]],
     );
 }
+
+#[test]
+fn xml_through_every_dimension() {
+    check(
+        r#"
+        //- /res/layout/main.xml
+        <!-- Seperates teh header. -->
+        <layout>
+          <TextView android:id="@+id/recieve" android:text="Hello occured" />
+          <description>Welcome&amp;Seperates teh link</description>
+          <version>recieve</version>
+          <script><![CDATA[ var recieve = 1; ]]></script>
+        </layout>
+        "#,
+        &[("teh link", "the link")],
+        expect![[r#"
+            > <!-- Seperates teh header. -->
+                   ^^^^^^^^^ known-typo -> Separates
+                             ^^^ known-typo -> the
+            > <layout>
+            >   <TextView android:id="@+id/recieve" android:text="Hello occured" />
+                                                                        ^^^^^^^ known-typo -> occurred
+            >   <description>Welcome&amp;Seperates teh link</description>
+                                         ^^^^^^^^^ known-typo -> Separates
+                                                   ^^^ known-typo -> the
+            >   <version>recieve</version>
+                         ^^^^^^^ known-typo -> receive
+            >   <script><![CDATA[ var recieve = 1; ]]></script>
+            > </layout>
+        "#]],
+    );
+}
+
+/// tree-sitter-rst parses 9 to 18 % of single edits differently from a fresh parse of the result
+/// (2026-11-09, fuzzing a tree and its edit against the same text parsed alone, on this fixture and
+/// on Flask's quickstart; tree-sitter-rst-next 0.3.1 as well). The host parses every version
+/// whole (`TreeSitterHost::parsed_whole`), and `incremental == from-scratch` holds.
+#[test]
+fn restructuredtext_through_every_dimension() {
+    check(
+        r#"
+        //- /docs/index.rst
+        .. Seperates teh header.
+
+        Welcome to the Seperates
+        ========================
+
+        A paragraph with ``recieve()`` and :func:`os.occured` and teh link.
+
+        Run it::
+
+            recieve --occured
+
+        .. note:: Seperates this teh note
+        "#,
+        &[("teh link", "the link")],
+        expect![[r#"
+            > .. Seperates teh header.
+                 ^^^^^^^^^ known-typo -> Separates
+                           ^^^ known-typo -> the
+            >
+            > Welcome to the Seperates
+                             ^^^^^^^^^ known-typo -> Separates
+            > ========================
+            >
+            > A paragraph with ``recieve()`` and :func:`os.occured` and teh link.
+                                                           ^^^^^^^ known-typo -> occurred
+                                                                        ^^^ known-typo -> the
+            >
+            > Run it::
+            >
+            >     recieve --occured
+            >
+            > .. note:: Seperates this teh note
+                        ^^^^^^^^^ known-typo -> Separates
+                                       ^^^ known-typo -> the
+        "#]],
+    );
+}

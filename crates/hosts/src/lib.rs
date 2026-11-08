@@ -46,6 +46,7 @@ mod powershell;
 mod proto;
 mod python;
 mod r;
+mod rst;
 mod ruby;
 mod rust;
 mod scala;
@@ -60,6 +61,7 @@ mod tree_sitter_host;
 mod tsx;
 mod typescript;
 mod vue;
+mod xml;
 mod yaml;
 mod zig;
 
@@ -208,6 +210,8 @@ impl Hosts {
                 Box::new(&dockerfile::HOST),
                 Box::new(&graphql::HOST),
                 Box::new(&proto::HOST),
+                Box::new(&xml::HOST),
+                Box::new(&rst::HOST),
             ],
         }
     }
