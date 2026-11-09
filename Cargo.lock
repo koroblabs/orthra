@@ -985,24 +985,24 @@ dependencies = [
 
 [[package]]
 name = "lspkit-arch"
-version = "0.1.0"
-source = "git+https://github.com/koroblabs/lspkit.git?rev=3a459fca59123c837185428da51665ffb023ca35#3a459fca59123c837185428da51665ffb023ca35"
+version = "0.1.1"
+source = "git+https://github.com/koroblabs/lspkit.git?rev=4e8e5b30cb6f4c3857a8eaab2159fc5c466777df#4e8e5b30cb6f4c3857a8eaab2159fc5c466777df"
 dependencies = [
  "toml",
 ]
 
 [[package]]
 name = "lspkit-fixture"
-version = "0.1.0"
-source = "git+https://github.com/koroblabs/lspkit.git?rev=3a459fca59123c837185428da51665ffb023ca35#3a459fca59123c837185428da51665ffb023ca35"
+version = "0.1.1"
+source = "git+https://github.com/koroblabs/lspkit.git?rev=4e8e5b30cb6f4c3857a8eaab2159fc5c466777df#4e8e5b30cb6f4c3857a8eaab2159fc5c466777df"
 dependencies = [
  "text-size",
 ]
 
 [[package]]
 name = "lspkit-flow"
-version = "0.1.0"
-source = "git+https://github.com/koroblabs/lspkit.git?rev=3a459fca59123c837185428da51665ffb023ca35#3a459fca59123c837185428da51665ffb023ca35"
+version = "0.1.1"
+source = "git+https://github.com/koroblabs/lspkit.git?rev=4e8e5b30cb6f4c3857a8eaab2159fc5c466777df#4e8e5b30cb6f4c3857a8eaab2159fc5c466777df"
 dependencies = [
  "futures-util",
  "lspkit-runtime",
@@ -1012,34 +1012,34 @@ dependencies = [
 
 [[package]]
 name = "lspkit-fuzz"
-version = "0.1.0"
-source = "git+https://github.com/koroblabs/lspkit.git?rev=3a459fca59123c837185428da51665ffb023ca35#3a459fca59123c837185428da51665ffb023ca35"
+version = "0.1.1"
+source = "git+https://github.com/koroblabs/lspkit.git?rev=4e8e5b30cb6f4c3857a8eaab2159fc5c466777df#4e8e5b30cb6f4c3857a8eaab2159fc5c466777df"
 dependencies = [
  "text-size",
 ]
 
 [[package]]
 name = "lspkit-heap"
-version = "0.1.0"
-source = "git+https://github.com/koroblabs/lspkit.git?rev=3a459fca59123c837185428da51665ffb023ca35#3a459fca59123c837185428da51665ffb023ca35"
+version = "0.1.1"
+source = "git+https://github.com/koroblabs/lspkit.git?rev=4e8e5b30cb6f4c3857a8eaab2159fc5c466777df#4e8e5b30cb6f4c3857a8eaab2159fc5c466777df"
 
 [[package]]
 name = "lspkit-perf"
-version = "0.1.0"
-source = "git+https://github.com/koroblabs/lspkit.git?rev=3a459fca59123c837185428da51665ffb023ca35#3a459fca59123c837185428da51665ffb023ca35"
+version = "0.1.1"
+source = "git+https://github.com/koroblabs/lspkit.git?rev=4e8e5b30cb6f4c3857a8eaab2159fc5c466777df#4e8e5b30cb6f4c3857a8eaab2159fc5c466777df"
 
 [[package]]
 name = "lspkit-ratchet"
-version = "0.1.0"
-source = "git+https://github.com/koroblabs/lspkit.git?rev=3a459fca59123c837185428da51665ffb023ca35#3a459fca59123c837185428da51665ffb023ca35"
+version = "0.1.1"
+source = "git+https://github.com/koroblabs/lspkit.git?rev=4e8e5b30cb6f4c3857a8eaab2159fc5c466777df#4e8e5b30cb6f4c3857a8eaab2159fc5c466777df"
 dependencies = [
  "toml",
 ]
 
 [[package]]
 name = "lspkit-runtime"
-version = "0.1.0"
-source = "git+https://github.com/koroblabs/lspkit.git?rev=3a459fca59123c837185428da51665ffb023ca35#3a459fca59123c837185428da51665ffb023ca35"
+version = "0.1.1"
+source = "git+https://github.com/koroblabs/lspkit.git?rev=4e8e5b30cb6f4c3857a8eaab2159fc5c466777df#4e8e5b30cb6f4c3857a8eaab2159fc5c466777df"
 dependencies = [
  "futures-util",
  "ls-types",
@@ -1050,8 +1050,8 @@ dependencies = [
 
 [[package]]
 name = "lspkit-text"
-version = "0.1.0"
-source = "git+https://github.com/koroblabs/lspkit.git?rev=3a459fca59123c837185428da51665ffb023ca35#3a459fca59123c837185428da51665ffb023ca35"
+version = "0.1.1"
+source = "git+https://github.com/koroblabs/lspkit.git?rev=4e8e5b30cb6f4c3857a8eaab2159fc5c466777df#4e8e5b30cb6f4c3857a8eaab2159fc5c466777df"
 dependencies = [
  "ls-types",
  "memchr",
@@ -1060,8 +1060,8 @@ dependencies = [
 
 [[package]]
 name = "lspkit-walk"
-version = "0.1.0"
-source = "git+https://github.com/koroblabs/lspkit.git?rev=3a459fca59123c837185428da51665ffb023ca35#3a459fca59123c837185428da51665ffb023ca35"
+version = "0.1.1"
+source = "git+https://github.com/koroblabs/lspkit.git?rev=4e8e5b30cb6f4c3857a8eaab2159fc5c466777df#4e8e5b30cb6f4c3857a8eaab2159fc5c466777df"
 dependencies = [
  "ignore",
 ]

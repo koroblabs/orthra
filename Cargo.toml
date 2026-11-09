@@ -57,16 +57,16 @@ orthra-text = { path = "crates/text" }
 
 # Shared with phrost: what a language server needs that is not about its language. Pinned to a
 # revision, so this build never changes because lspkit moved; see lspkit's CLAUDE.md §2.
-lspkit-arch = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
-lspkit-fixture = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
-lspkit-fuzz = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
-lspkit-heap = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
-lspkit-flow = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
-lspkit-perf = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
-lspkit-ratchet = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
-lspkit-runtime = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
-lspkit-walk = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
-lspkit-text = { git = "https://github.com/koroblabs/lspkit.git", rev = "3a459fca59123c837185428da51665ffb023ca35" }
+lspkit-arch = { git = "https://github.com/koroblabs/lspkit.git", rev = "4e8e5b30cb6f4c3857a8eaab2159fc5c466777df" }
+lspkit-fixture = { git = "https://github.com/koroblabs/lspkit.git", rev = "4e8e5b30cb6f4c3857a8eaab2159fc5c466777df" }
+lspkit-fuzz = { git = "https://github.com/koroblabs/lspkit.git", rev = "4e8e5b30cb6f4c3857a8eaab2159fc5c466777df" }
+lspkit-heap = { git = "https://github.com/koroblabs/lspkit.git", rev = "4e8e5b30cb6f4c3857a8eaab2159fc5c466777df" }
+lspkit-flow = { git = "https://github.com/koroblabs/lspkit.git", rev = "4e8e5b30cb6f4c3857a8eaab2159fc5c466777df" }
+lspkit-perf = { git = "https://github.com/koroblabs/lspkit.git", rev = "4e8e5b30cb6f4c3857a8eaab2159fc5c466777df" }
+lspkit-ratchet = { git = "https://github.com/koroblabs/lspkit.git", rev = "4e8e5b30cb6f4c3857a8eaab2159fc5c466777df" }
+lspkit-runtime = { git = "https://github.com/koroblabs/lspkit.git", rev = "4e8e5b30cb6f4c3857a8eaab2159fc5c466777df" }
+lspkit-walk = { git = "https://github.com/koroblabs/lspkit.git", rev = "4e8e5b30cb6f4c3857a8eaab2159fc5c466777df" }
+lspkit-text = { git = "https://github.com/koroblabs/lspkit.git", rev = "4e8e5b30cb6f4c3857a8eaab2159fc5c466777df" }
 
 # Third-party
 expect-test = "1.5.1"
