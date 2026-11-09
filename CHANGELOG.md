@@ -7,7 +7,18 @@ names the tag's version.
 
 - accepts a word a words file or an `orthra: ignore` directive lists in every part orthra cuts it
   into, and before a possessive: `TruStage` in `.orthra/words.txt` no longer has its first part
-  reported as a typo of `true`, in `TruStage` or in `TruStage's`.
+  reported as a typo of `true`, in `TruStage` or in `TruStage's`;
+- on such a part, _Add to words_ and _Ignore in this file_ list the whole word, `TruStage`, rather
+  than the part, which would accept a typo everywhere;
+- matches a listed word whichever apostrophe it was written with, in the list or in the text:
+  `O'Reilly` accepts `O’Reilly`, and `кв'язок` accepts `кв’язок` and `квʼязок`;
+- reads a words file an editor saved with a byte-order mark, which lost its first word, and adds a
+  word to it once, whatever comment follows the same word already there;
+- takes a Cargo target's name and an npm command's as words the project declares: a binary
+  `foundryd` is no finding in the project that builds it;
+- takes after a backslash only the letters its escape takes: `\Generator` in a Python raw string is
+  `Generator`, no longer a typo of `generator` with its first letter cut off;
+- accepts `dialogs`, `lossy`, `natively`, `browseable`, `exportfs` and `unparseable`.
 
 ## 0.2.0
 
