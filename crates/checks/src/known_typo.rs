@@ -29,6 +29,7 @@ impl Check for KnownTypo {
             };
             out.push(Finding {
                 range: word.range,
+                run: word.run,
                 code: self.code(),
                 fixes: fixes
                     .iter()

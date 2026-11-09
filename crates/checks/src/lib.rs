@@ -30,6 +30,9 @@ pub struct Finding {
     /// The exact fixes, best first, when the finding knows them. Suggestions are not this: they are
     /// computed for one word, on request (`docs/01-architecture.md` §8).
     pub fixes: Vec<String>,
+    /// The run the finding's word was cut from: what a words file or a directive lists to accept
+    /// it, `TruStage` for its first part. Equal to `range` for a word not cut from one.
+    pub run: TextRange,
 }
 
 /// What a check may read about one document.

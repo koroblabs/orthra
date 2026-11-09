@@ -100,6 +100,7 @@ impl Check for MixedScript {
         {
             out.push(Finding {
                 range: word.range,
+                run: word.run,
                 code: self.code(),
                 fixes: unmixed(&facts.text[word.range], facts.packs),
             });

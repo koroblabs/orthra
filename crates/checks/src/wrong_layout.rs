@@ -208,6 +208,7 @@ impl WrongLayout {
             match typed {
                 Some((range, fix)) => found.push(Finding {
                     range,
+                    run: range,
                     code: self.code(),
                     fixes: vec![fix],
                 }),

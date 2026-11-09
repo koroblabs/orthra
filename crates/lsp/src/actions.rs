@@ -63,6 +63,9 @@ pub(crate) struct Plan {
 struct Planned {
     diagnostic: Diagnostic,
     word: String,
+    /// What a words file or a directive lists to accept the finding: the run its word was cut
+    /// from. Adding `Tru` cut from `TruStage` would accept a typo of `true` everywhere.
+    listed: String,
     fixes: Vec<String>,
     /// The first fix is the fix, and the client may apply it on its own: a known typo's, and a mixed
     /// word's in one script.
@@ -111,6 +114,7 @@ pub(crate) fn plan(state: &mut State, uri: &Uri, range: Range) -> Option<Plan> {
             continue;
         }
         let word = &text[finding.range];
+        let listed = &text[finding.run];
         let everywhere: Vec<Range> = findings
             .iter()
             .filter(|other| other.code == finding.code && text[other.range] == *word)
@@ -127,8 +131,9 @@ pub(crate) fn plan(state: &mut State, uri: &Uri, range: Range) -> Option<Plan> {
             window: (unknown && fixes.len() > 1).then(|| Window::around(&text, finding.range)),
             // A known typo's fix, and a mixed word in one script, are the fix: nothing to choose.
             preferred: matches!(finding.code.0, "known-typo" | "mixed-script"),
-            ignore: comment
-                .and_then(|(open, close)| ignore_edit(&text, &index, encoding, word, open, close)),
+            ignore: comment.and_then(|(open, close)| {
+                ignore_edit(&text, &index, encoding, listed, open, close)
+            }),
             ignore_line: comment.and_then(|(open, close)| {
                 next_line_edit(&text, &index, encoding, finding.range.start(), open, close)
             }),
@@ -138,6 +143,7 @@ pub(crate) fn plan(state: &mut State, uri: &Uri, range: Range) -> Option<Plan> {
                 Vec::new()
             },
             word: word.to_owned(),
+            listed: listed.to_owned(),
             fixes,
             diagnostic,
         });
@@ -207,7 +213,7 @@ impl Plan {
                     i == 0 && planned.preferred,
                 ));
             }
-            let word = &planned.word;
+            let (word, listed) = (&planned.word, &planned.listed);
             if let Some(fix) = planned.fixes.first()
                 && !planned.everywhere.is_empty()
             {
@@ -224,14 +230,19 @@ impl Plan {
                 ));
             }
             if self.has_project {
-                actions.push(add_word(word, "project", "the project's words", diagnostic));
+                actions.push(add_word(
+                    listed,
+                    "project",
+                    "the project's words",
+                    diagnostic,
+                ));
             }
             if self.has_user {
-                actions.push(add_word(word, "user", "your words", diagnostic));
+                actions.push(add_word(listed, "user", "your words", diagnostic));
             }
             if let Some(edit) = planned.ignore {
                 actions.push(quick_fix(
-                    format!("Ignore `{word}` in this file"),
+                    format!("Ignore `{listed}` in this file"),
                     diagnostic,
                     edit_of(uri, vec![edit]),
                     false,

@@ -191,3 +191,27 @@ async fn every_exact_fix_in_the_file_is_applied_at_once() {
         titles(&unknown)
     ));
 }
+
+/// A word cut from a longer one is listed as the longer one: adding `TruStage`'s first part to the
+/// words would accept a typo of `true` everywhere, and `TruStage` is what a words file can name.
+#[tokio::test(start_paused = true)]
+async fn a_part_of_a_word_is_listed_as_the_whole() {
+    let mut server = Fixture::new(&[("notes.md", "We use TruStage.\n")]);
+    server.initialize(zed_client()).await;
+    server.initialized().await;
+    server.open("notes.md").await;
+    let actions = server
+        .actions(
+            "notes.md",
+            json!({ "start": { "line": 0, "character": 8 }, "end": { "line": 0, "character": 8 } }),
+        )
+        .await;
+    expect![[r#"
+        Change to `Thru` -> 0:7 "Thru"
+        Change to `True` -> 0:7 "True"
+        Add `TruStage` to the project's words -> orthra.addWord [{"scope":"project","word":"TruStage"}]
+        Add `TruStage` to your words -> orthra.addWord [{"scope":"user","word":"TruStage"}]
+        Ignore `TruStage` in this file -> 1:0 "<!-- orthra: ignore TruStage -->\n"
+        Ignore this line -> 0:0 "<!-- orthra: ignore-next-line -->\n"
+    "#]].assert_eq(&render(&actions));
+}

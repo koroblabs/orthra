@@ -69,6 +69,7 @@ impl Check for UnknownWord {
             {
                 out.push(Finding {
                     range: word.range,
+                    run: word.run,
                     code: self.code(),
                     fixes: Vec::new(),
                 });
