@@ -30,6 +30,16 @@ names the tag's version.
 - stops reporting on a document whose change it could not apply, a column inside a character, until
   the editor sends it whole: what it had published would have been at the wrong places, and a fix
   applied there would have edited somewhere else.
+- reads two of the commonest words joined as one where code joins words, in a string, a value or a
+  name: `statuscode`, `sectionmissing`. Prose and comments keep the space, so `everytime` is still
+  reported, and so is `feedbacks`;
+- reads `tests/data/` as test data, as `fixtures/` and `testdata/` are, and a glob whose class opens
+  it as a glob, `[Mm]akefile`;
+- accepts `lib` as a prefix, `libmagic`, and the names of languages, editor themes and tools
+  software writes: Starlark, Verilog, Catppuccin, Dracula, Solarized, gdbserver. A vocabulary word
+  no longer takes `s` where English writes `es`: `autofocuss` is reported;
+- on the zero corpus, unknown words fell from 234 to 108 in ripgrep, 139 to 103 in composer and 421
+  to 311 in helix since 0.2.0, and the typo sample's recall did not fall.
 
 ## 0.2.0
 

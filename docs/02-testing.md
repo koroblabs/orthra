@@ -537,6 +537,28 @@ which is not. A planted rise fails it; a planted slack is lowered and written ba
     whatever their case. The terms that are words in lower case too (`changelist`, `fastpath`,
     Blade's `endunless`, Perforce's `modtime`) went into `vocabulary.orthra.txt`.
 
+  **What code and tools write** (2026-11-09, on the VM). A sweep of the projects beside orthra and
+  of the zero corpus by class rather than by word: test data under `tests/data/` (ripgrep's Sherlock
+  Holmes story, 93 findings); two of the commonest words joined, where code joins words
+  (`statuscode` in a string; prose and comments keep the space, `everytime`); `lib` as a prefix
+  (`libmagic`); `'d`, `'ed` and `'ing` on a vocabulary word (`chmod'd`); a glob whose class opens it
+  (`[Mm]akefile`); a Rust `cfg` predicate's strings; and the names of languages, editor themes and
+  tools any project writes (Starlark, Catppuccin, gdbserver). `just zero`'s `unknown-word` counts,
+  phrost's at its HEAD, since its pinned commit was not on the machine:
+
+  |                   | before | after |
+  | ----------------- | -----: | ----: |
+  | phrost (HEAD)     |    420 |   390 |
+  | ripgrep           |    234 |   108 |
+  | composer          |    139 |   103 |
+  | helix             |    421 |   311 |
+  | starter workflows |    119 |   118 |
+
+  The typo sample's recall and top-1 did not fall: code 82.2 → 82.3 % flagged, 72.0 → 72.2 % top-1;
+  prose 80.4 % and 71.2 % throughout. Asked everywhere, the joined words would have taken 136
+  findings and hidden 5 of the 1 111 typos caught; asked where code joins words, they took 59 and
+  hid none.
+
 - **GitHub Typo Corpus.** Real typo fixes from commits: code, comments and docs. `just typo-eval`
   reports recall (did we flag the typo?), suggestion top-1 and top-5 (was the fix our first, or in
   our first five?), and false positives on the corrected side of each edit.
