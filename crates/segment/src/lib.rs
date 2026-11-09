@@ -112,31 +112,44 @@ pub fn words(
         }
         let mut from = 0;
         let mut search = 0;
-        // A pair of backticks on one line holds code, not prose: `qzxRender()`.
+        // Backticks around text on one line hold code, not prose: `qzxRender()`, and
+        // reStructuredText's ``literal`` in a docstring or a comment. A run of backticks is closed
+        // by a run as long, as in Markdown: a pair read singly made ``QZXVDIR`` two empty spans
+        // with prose between them, which was 232 of CMake's module docs' findings.
         while let Some(open) = slice[search..].find('`').map(|i| search + i) {
-            let line_end = slice[open..].find('\n').map_or(slice.len(), |i| open + i);
-            match slice[open + 1..line_end].find('`') {
+            let ticks = slice[open..].bytes().take_while(|&b| b == b'`').count();
+            let inner = open + ticks;
+            let line_end = slice[inner..].find('\n').map_or(slice.len(), |i| inner + i);
+            match closing_ticks(&slice[inner..line_end], ticks) {
                 Some(close) => {
                     scratch.chunks(&slice[from..open], base + from, rules, out);
-                    // Code between a pair of backticks is segmented, and marked as code.
+                    // Code between backticks is segmented, and marked as code.
                     let first = out.len();
-                    scratch.chunks(
-                        &slice[open + 1..open + 1 + close],
-                        base + open + 1,
-                        rules,
-                        out,
-                    );
+                    scratch.chunks(&slice[inner..inner + close], base + inner, rules, out);
                     for word in &mut out[first..] {
                         word.code = true;
                     }
-                    from = open + 1 + close + 1;
+                    from = inner + close + ticks;
                     search = from;
                 }
-                None => search = open + 1,
+                None => search = inner,
             }
         }
         scratch.chunks(&slice[from..], base + from, rules, out);
     }
+}
+
+/// Where a run of exactly `ticks` backticks starts in `text`, the run that closes one as long.
+fn closing_ticks(text: &str, ticks: usize) -> Option<usize> {
+    let mut search = 0;
+    while let Some(at) = text[search..].find('`').map(|i| search + i) {
+        let run = text[at..].bytes().take_while(|&b| b == b'`').count();
+        if run == ticks {
+            return Some(at);
+        }
+        search = at + run;
+    }
+    None
 }
 
 /// Buffers every chunk of a document shares.

@@ -465,3 +465,24 @@ fn a_class_that_opens_a_glob_is_a_glob() {
         "#]],
     );
 }
+
+/// A run of backticks is closed by a run as long: reStructuredText's ``literal`` is code, as a
+/// single pair is, and so is a literal holding a backtick. A run that nothing closes holds no code.
+#[test]
+fn backticks_close_a_run_as_long() {
+    check(
+        "Set ``QZXVDIR`` and ``a `qzxvtick` b``, or `qzxvone`; then `` open qzxvleft\n",
+        false,
+        expect![[r#"
+            > Set ``QZXVDIR`` and ``a `qzxvtick` b``, or `qzxvone`; then `` open qzxvleft
+              ^^^ title
+                    ^^^^^^^ upper code
+                              ^^^ lower
+                                       ^^^^^^^^ lower code
+                                                          ^^^^^^^ lower code
+                                                                    ^^^^ lower
+                                                                            ^^^^ lower
+                                                                                 ^^^^^^^^ lower
+        "#]],
+    );
+}
