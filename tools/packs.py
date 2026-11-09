@@ -221,8 +221,8 @@ frequency = "../en-US/frequency.txt"
 # rare word is: `unconfigured`, `refetched`, `subpool`, `multihost`.
 prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
 # A vocabulary word, which no dictionary inflects, with one of these after it is accepted the same
-# way: `datagrams`, `demuxes`.
-vocabulary-suffixes = ["s", "es"]
+# way: `datagrams`, `demuxes`, and software English's `mmap'd`, `malloc'ed`, `realloc'ing`.
+vocabulary-suffixes = ["s", "es", "'d", "'ed", "'ing"]
 vocabulary = ["../en-US/vocabulary.txt", "../en-US/vocabulary.orthra.txt", "../en-US/vocabulary.code.txt"]
 # The names of commands, accepted as rare words are and never offered: en-US's, shared.
 rare-words = ["../en-US/commands.txt"]
@@ -264,8 +264,8 @@ rare-words = ["en_US-huge.txt", "commands.txt"]
 # rare words are: `unconfigured`, `refetched`, `subpool`, `multihost`.
 prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
 # A vocabulary word, which no dictionary inflects, with one of these after it is accepted the same
-# way: `datagrams`, `demuxes`.
-vocabulary-suffixes = ["s", "es"]
+# way: `datagrams`, `demuxes`, and software English's `mmap'd`, `malloc'ed`, `realloc'ing`.
+vocabulary-suffixes = ["s", "es", "'d", "'ed", "'ing"]
 typos = "typos.tsv"
 # How often words are written, by SCOWL's sizes: among corrections as near, a common word first
 # (`leter` gets `letter` before `leper`).

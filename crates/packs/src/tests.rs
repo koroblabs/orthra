@@ -156,6 +156,10 @@ fn en_us_accepts_derived_words_as_rare_words() {
         "multihost",
         "datagrams",
         "demuxes",
+        "mmap'd",
+        "malloc’ed",
+        "realloc'ing",
+        "qzxv'd",
         "recod",
         "reson",
         "informations",
@@ -186,6 +190,10 @@ fn en_us_accepts_derived_words_as_rare_words() {
         multihost    accepted=false rare=true  known-typo=[]
         datagrams    accepted=false rare=true  known-typo=[]
         demuxes      accepted=false rare=true  known-typo=[]
+        mmap'd       accepted=false rare=true  known-typo=[]
+        malloc’ed    accepted=false rare=true  known-typo=[]
+        realloc'ing  accepted=false rare=true  known-typo=[]
+        qzxv'd       accepted=false rare=false known-typo=[]
         recod        accepted=false rare=false known-typo=[record]
         reson        accepted=false rare=false known-typo=[reason]
         informations accepted=false rare=false known-typo=[information]
