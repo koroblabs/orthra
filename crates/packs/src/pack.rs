@@ -575,7 +575,7 @@ impl Pack {
         Ok(())
     }
 
-    fn normalized<'w>(&self, word: &'w str) -> Cow<'w, str> {
+    pub(crate) fn normalized<'w>(&self, word: &'w str) -> Cow<'w, str> {
         if !word
             .chars()
             .any(|c| self.normalize.iter().any(|(from, _)| *from == c))

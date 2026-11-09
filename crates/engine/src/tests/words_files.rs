@@ -126,3 +126,25 @@ fn a_directive_word_is_a_word_in_every_part() {
     "#]]
     .assert_eq(&Annotation::render(text, &annotations));
 }
+
+/// A listed word matches whichever apostrophe it was written with, in the list or in the text, as
+/// a pack's own words do.
+#[test]
+fn a_listed_word_matches_either_apostrophe() {
+    let text =
+        "<!-- orthra: ignore O’Qzxva -->\nO’Qzxvz is listed nowhere.\nO’Qzxvy and O'Qzxva are.\n";
+    let mut engine = Engine::with_packs(packs());
+    engine.set_words(["O'Qzxvy"]);
+    let annotations: Vec<Annotation> = engine
+        .check("markdown", text)
+        .iter()
+        .map(|finding| Annotation::new(finding.range, finding.code.0))
+        .collect();
+    expect![[r#"
+        > <!-- orthra: ignore O’Qzxva -->
+        > O’Qzxvz is listed nowhere.
+          ^^^^^^^ unknown-word
+        > O’Qzxvy and O'Qzxva are.
+    "#]]
+    .assert_eq(&Annotation::render(text, &annotations));
+}

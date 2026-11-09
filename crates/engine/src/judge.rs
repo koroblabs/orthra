@@ -63,15 +63,17 @@ impl Judge<'_> {
         // word in every part of a run it names whole: `TruStage` is cut in two, its first part
         // alone is a known typo of `true`, and a list can only name what it was written as.
         // The run is lower-cased only for a word cut from one that a list does not name itself.
+        // Both are compared in the form the packs check a word in, whatever its apostrophe.
+        let form = self.packs.normalized(word.script, &lower);
         let run = OnceCell::new();
         let listed = |list: &FxHashSet<Box<str>>| {
-            list.contains(&*lower)
+            list.contains(&*form)
                 || word.run != word.range
                     && !list.is_empty()
-                    && list.contains(
-                        run.get_or_init(|| unescaped(&text[word.run]).to_lowercase())
-                            .as_str(),
-                    )
+                    && list.contains(&**run.get_or_init(|| {
+                        let lower = unescaped(&text[word.run]).to_lowercase();
+                        self.packs.normalized(word.script, &lower).into_owned()
+                    }))
         };
         if listed(self.words_files) {
             return (Verdict::Correct, Why::WordsFile);
@@ -140,8 +142,17 @@ pub(crate) struct Directives {
     lines: Vec<(TextSize, TextSize)>,
 }
 
+/// A listed word as it is looked up: lower-cased, in the form the packs for its script check it in.
+pub(crate) fn listed_form(packs: &Packs, word: &str) -> Box<str> {
+    let lower = word.to_lowercase();
+    packs
+        .normalized(Script::of(&lower), &lower)
+        .into_owned()
+        .into_boxed_str()
+}
+
 impl Directives {
-    pub(crate) fn read(text: &str) -> Directives {
+    pub(crate) fn read(text: &str, packs: &Packs) -> Directives {
         let mut directives = Directives::default();
         // Most files have none, and are read past with one search.
         for (at, _) in text.match_indices(IGNORE_DIRECTIVE) {
@@ -166,7 +177,7 @@ impl Directives {
                 line.split(|c: char| c.is_whitespace() || c == ',')
                     .map(|word| word.trim_matches(|c: char| !c.is_alphanumeric()))
                     .filter(|word| word.chars().any(char::is_alphabetic))
-                    .map(|word| word.to_lowercase().into_boxed_str()),
+                    .map(|word| listed_form(packs, word)),
             );
         }
         directives

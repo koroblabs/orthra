@@ -129,9 +129,10 @@ impl Engine {
     /// The words files' words, in place of any given before: a words file that changed is read
     /// again whole. They are checked before the verdict cache, so nothing cached goes stale.
     pub fn set_words<'w>(&mut self, words: impl IntoIterator<Item = &'w str>) {
+        let packs = &self.packs;
         self.words = words
             .into_iter()
-            .map(|word| word.to_lowercase().into_boxed_str())
+            .map(|word| judge::listed_form(packs, word))
             .collect();
     }
 
@@ -273,7 +274,7 @@ impl Engine {
             return Vec::new();
         };
         let local = judge::local_declarations(text, &words, &places);
-        let directives = Directives::read(text);
+        let directives = Directives::read(text, &self.packs);
         let judge = Judge {
             packs: &self.packs,
             words_files: &self.words,
@@ -451,7 +452,7 @@ impl Engine {
             })
             .collect();
         let local = judge::local_declarations(text, &words, &places);
-        let directives = Directives::read(text);
+        let directives = Directives::read(text, &self.packs);
         let (verdict, why) = Judge {
             packs: &self.packs,
             words_files: &self.words,

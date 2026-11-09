@@ -11,7 +11,7 @@ pub mod typos;
 mod vocabulary;
 mod word_list;
 
-use std::path::Path;
+use std::{borrow::Cow, path::Path};
 
 use orthra_text::script::Script;
 
@@ -65,6 +65,23 @@ impl Packs {
         self.packs
             .iter()
             .filter(move |pack| pack.script() == script)
+    }
+
+    /// `word` in the one form the packs for `script` check it in: `м’ята` and `мʼята` as `м'ята`
+    /// where a pack says so. A words file's word and a directive's are compared in this form, or one
+    /// typed with another apostrophe than the text's matched nothing.
+    pub fn normalized<'w>(&self, script: Script, word: &'w str) -> Cow<'w, str> {
+        // What packs normalize is never ASCII, and nearly every word is.
+        if word.is_ascii() {
+            return Cow::Borrowed(word);
+        }
+        let mut word = Cow::Borrowed(word);
+        for pack in self.for_script(script) {
+            if let Cow::Owned(changed) = pack.normalized(&word) {
+                word = Cow::Owned(changed);
+            }
+        }
+        word
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &Pack> {

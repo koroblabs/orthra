@@ -5,6 +5,8 @@ use std::fmt::Write as _;
 
 use expect_test::expect;
 
+use orthra_text::script::Script;
+
 use crate::Packs;
 
 #[test]
@@ -193,4 +195,26 @@ fn en_us_accepts_derived_words_as_rare_words() {
         unqzxv       accepted=false rare=false known-typo=[]
     "#]]
     .assert_eq(&out);
+}
+
+/// A word in the form its script's packs check it in: English writes its apostrophe two ways, and
+/// a word no English pack checks is left as it is.
+#[test]
+fn a_word_is_normalized_by_the_packs_for_its_script() {
+    let packs = Packs::builtin(&["en-US"]).unwrap();
+    let shown: Vec<String> = [
+        (Script::Latin, "o’qzxv"),
+        (Script::Latin, "o'qzxv"),
+        (Script::Latin, "oʼqzxv"),
+        (Script::Cyrillic, "м’ята"),
+    ]
+    .iter()
+    .map(|(script, word)| format!("{word} -> {}", packs.normalized(*script, word)))
+    .collect();
+    expect![[r#"
+        o’qzxv -> o'qzxv
+        o'qzxv -> o'qzxv
+        oʼqzxv -> oʼqzxv
+        м’ята -> м’ята"#]]
+    .assert_eq(&shown.join("\n"));
 }
