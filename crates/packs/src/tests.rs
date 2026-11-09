@@ -160,6 +160,8 @@ fn en_us_accepts_derived_words_as_rare_words() {
         "malloc’ed",
         "realloc'ing",
         "qzxv'd",
+        "autofocuss",
+        "autofocuses",
         "recod",
         "reson",
         "informations",
@@ -194,6 +196,8 @@ fn en_us_accepts_derived_words_as_rare_words() {
         malloc’ed    accepted=false rare=true  known-typo=[]
         realloc'ing  accepted=false rare=true  known-typo=[]
         qzxv'd       accepted=false rare=false known-typo=[]
+        autofocuss   accepted=false rare=false known-typo=[]
+        autofocuses  accepted=false rare=true  known-typo=[]
         recod        accepted=false rare=false known-typo=[record]
         reson        accepted=false rare=false known-typo=[reason]
         informations accepted=false rare=false known-typo=[information]

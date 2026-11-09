@@ -62,6 +62,9 @@ pub struct Pack {
     /// Endings a vocabulary word may take and stay a word, accepted as the rare words are: `s`
     /// makes `datagrams` of `datagram`. Only the vocabulary's: no dictionary inflects it.
     vocabulary_suffixes: Vec<Box<str>>,
+    /// The endings each vocabulary suffix does not follow, in lower case: English's `s` does not
+    /// follow `s`, `x`, `z`, `ch` or `sh`, which take `es`, so `autofocuss` is no word.
+    suffix_not_after: Vec<(Box<str>, Vec<Box<str>>)>,
     /// What two of the pack's most written words joined must be to make one word where code joins
     /// words: `statuscode`, `sectionmissing`. See [`Pack::compound`].
     compounds: Option<Compounds>,
@@ -317,6 +320,28 @@ impl Pack {
         };
         let prefixes = lowered("prefixes")?;
         let vocabulary_suffixes = lowered("vocabulary-suffixes")?;
+        let suffix_not_after = table
+            .get("suffix-not-after")
+            .and_then(toml::Value::as_table)
+            .into_iter()
+            .flatten()
+            .map(|(suffix, endings)| {
+                let endings = endings
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .map(|ending| {
+                        ending
+                            .as_str()
+                            .map(|e| e.to_lowercase().into_boxed_str())
+                            .ok_or_else(|| {
+                                PackError(format!("`suffix-not-after.{suffix}` lists a non-string"))
+                            })
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok((suffix.to_lowercase().into_boxed_str(), endings))
+            })
+            .collect::<Result<_, PackError>>()?;
         let compounds = match table.get("compounds") {
             None => None,
             Some(_) if frequency.is_none() => {
@@ -374,6 +399,7 @@ impl Pack {
             rare_words,
             prefixes,
             vocabulary_suffixes,
+            suffix_not_after,
             compounds,
             word_internal,
             normalize,
@@ -456,6 +482,9 @@ impl Pack {
                 };
                 let (base, tail) = word.split_at(at);
                 tail.chars().flat_map(char::to_lowercase).eq(suffix.chars())
+                    && !self.suffix_not_after.iter().any(|(not, endings)| {
+                        not == suffix && endings.iter().any(|ending| ends_with(base, ending))
+                    })
                     && long_enough(base)
                     && self.vocabulary.accepts(base)
                     && !self.dictionaries.get().main.check(base)
@@ -706,6 +735,20 @@ impl Fsts {
             .map(|dictionary| Box::new(dictionary) as Box<dyn Dictionary>)
             .map_err(|err| err.0)
     }
+}
+
+/// Whether `word` ends with `ending`, which is in lower case, whatever `word`'s case.
+fn ends_with(word: &str, ending: &str) -> bool {
+    let count = ending.chars().count();
+    word.char_indices()
+        .rev()
+        .nth(count.saturating_sub(1))
+        .is_some_and(|(at, _)| {
+            word[at..]
+                .chars()
+                .flat_map(char::to_lowercase)
+                .eq(ending.chars())
+        })
 }
 
 /// What two words joined must be to make one word: `compounds = { letters = 4, ranks = 2 }`.

@@ -15,6 +15,9 @@ prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
 # A vocabulary word, which no dictionary inflects, with one of these after it is accepted the same
 # way: `datagrams`, `demuxes`, and software English's `mmap'd`, `malloc'ed`, `realloc'ing`.
 vocabulary-suffixes = ["s", "es", "'d", "'ed", "'ing"]
+# Endings a suffix does not follow: a word ending in one of these takes `es`, so `autofocuss` and
+# `regexs` are no words.
+suffix-not-after = { s = ["s", "x", "z", "ch", "sh"] }
 # Two words written with no space between are accepted the same way when each has four letters or
 # more and is among the words written most, SCOWL's two commonest sizes: `statuscode`, joined as
 # code joins words. A typo seldom splits into two such words, and a known typo is answered first.
