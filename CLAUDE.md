@@ -342,8 +342,11 @@ HCL, INI, XML, Protocol Buffers, GraphQL, Make. Over a budget, and measured agai
   p95 against 2, 60 ms at worst in containers' 5 000-line `Data/Sequence/Internal.hs`. CMake's
   `#[=[ ]=]` docs are one node each, 17 ms p95. PowerShell's parse puts it at 5 ms.
 - **A query's load:** Julia's at 92 to 105 ms after it was cut from 404, Elixir's at 78 (a pattern
-  under its `arguments` node costs about 30 ms of tree-sitter's analysis), Dart's grammar at 25 to
-  97 and C#'s at 57 to 64, against 50.
+  under its `arguments` node costs about 30 ms of tree-sitter's analysis; split into its five
+  alternatives it cost more), and Dart's grammar at 25 to 97, against 50. On 2026-11-09 a
+  declaration's child written `(_)` and kept when it is a plain name, rather than `(identifier)`,
+  took Objective-C from 104 to 52 ms, Scala from 70 to 44 and C# from 57 to 34: the analysis of a
+  named node type the grammar reaches from many states is what costs.
 - **reStructuredText parses whole on every keystroke** (`TreeSitterHost::parsed_whole`, §8.1): about
   10 ms for an 836-line page.
 
