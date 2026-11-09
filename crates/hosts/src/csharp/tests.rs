@@ -147,3 +147,22 @@ public string Greeting = "Hello world";
         "#]],
     );
 }
+
+/// A lambda's parameters are declared there, written alone or in a list.
+#[test]
+fn csharp_lambda_parameters_are_declared() {
+    check(
+        "/src/Lambdas.cs",
+        "var twice = qzxvarg => qzxvarg * 2;\nvar add = (int qzxvleft, int qzxvright) => qzxvleft + qzxvright;\n",
+        expect![[r#"
+            csharp
+            > var twice = qzxvarg => qzxvarg * 2;
+                  ^^^^^ declaration
+                          ^^^^^^^ declaration
+            > var add = (int qzxvleft, int qzxvright) => qzxvleft + qzxvright;
+                  ^^^ declaration
+                             ^^^^^^^^ declaration
+                                           ^^^^^^^^^ declaration
+        "#]],
+    );
+}

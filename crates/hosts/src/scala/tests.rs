@@ -145,3 +145,33 @@ def greet(name: String): String = name
         "#]],
     );
 }
+
+/// What the first test does not write: an enum's full cases, abstract members, a lambda's typed
+/// parameter.
+#[test]
+fn scala_declares_cases_members_and_parameters() {
+    crate::tests::check(
+        "/src/Shapes.scala",
+        r#"enum QzxvShape { case QzxvCircle(qzxvradius: Double); case QzxvSquare(qzxvside: Double) }
+trait QzxvSized { val qzxvsize: Int; var qzxvlabel: String; def qzxvarea(qzxvscale: Int): Int }
+val qzxvdouble = (qzxvn: Int) => qzxvn * 2
+"#,
+        expect_test::expect![[r#"
+            scala
+            > enum QzxvShape { case QzxvCircle(qzxvradius: Double); case QzxvSquare(qzxvside: Double) }
+                   ^^^^^^^^^ declaration
+                                    ^^^^^^^^^^ declaration
+                                               ^^^^^^^^^^ declaration
+                                                                         ^^^^^^^^^^ declaration
+                                                                                    ^^^^^^^^ declaration
+            > trait QzxvSized { val qzxvsize: Int; var qzxvlabel: String; def qzxvarea(qzxvscale: Int): Int }
+                    ^^^^^^^^^ declaration
+                                    ^^^^^^^^ declaration
+                                                       ^^^^^^^^^ declaration
+                                                                              ^^^^^^^^ declaration
+                                                                                       ^^^^^^^^^ declaration
+            > val qzxvdouble = (qzxvn: Int) => qzxvn * 2
+                  ^^^^^^^^^^ declaration
+        "#]],
+    );
+}

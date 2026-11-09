@@ -143,3 +143,49 @@ fn a_header_path_stays_with_c_and_a_dot_m_is_objective_c() {
     assert_eq!(id("/Sources/Greeter.m"), Some("objective-c"));
     assert_eq!(id("/Sources/Greeter.mm"), None);
 }
+
+/// C's declarations, which Objective-C keeps: each kind of declarator, and what a macro, a struct,
+/// a union and an enum name.
+#[test]
+fn objc_declares_what_c_does() {
+    crate::tests::check(
+        "/src/shapes.m",
+        r#"#define QZXV_AREA(qzxvw, qzxvh) ((qzxvw) * (qzxvh))
+typedef struct qzxvpoint { int qzxvx; int qzxvy : 4; } QzxvPoint;
+union qzxvbits { int qzxvword; char qzxvbytes[4]; };
+enum qzxvcolor { QzxvRed, QzxvGreen = 2 };
+static int qzxvcount = 0, *qzxvptr, (*qzxvfn)(int qzxvarg), qzxvgrid[2][2];
+int qzxvarea(int qzxvwidth, const char *qzxvlabel);
+"#,
+        expect_test::expect![[r#"
+            objective-c
+            > #define QZXV_AREA(qzxvw, qzxvh) ((qzxvw) * (qzxvh))
+                      ^^^^^^^^^ declaration
+                                ^^^^^ declaration
+                                       ^^^^^ declaration
+            > typedef struct qzxvpoint { int qzxvx; int qzxvy : 4; } QzxvPoint;
+                             ^^^^^^^^^ declaration
+                                             ^^^^^ declaration
+                                                        ^^^^^ declaration
+                                                                     ^^^^^^^^^ declaration
+            > union qzxvbits { int qzxvword; char qzxvbytes[4]; };
+                    ^^^^^^^^ declaration
+                                   ^^^^^^^^ declaration
+                                                  ^^^^^^^^^ declaration
+            > enum qzxvcolor { QzxvRed, QzxvGreen = 2 };
+                   ^^^^^^^^^ declaration
+                               ^^^^^^^ declaration
+                                        ^^^^^^^^^ declaration
+            > static int qzxvcount = 0, *qzxvptr, (*qzxvfn)(int qzxvarg), qzxvgrid[2][2];
+                         ^^^^^^^^^ declaration
+                                         ^^^^^^^ declaration
+                                                    ^^^^^^ declaration
+                                                                ^^^^^^^ declaration
+                                                                          ^^^^^^^^ declaration
+            > int qzxvarea(int qzxvwidth, const char *qzxvlabel);
+                  ^^^^^^^^ declaration
+                               ^^^^^^^^^ declaration
+                                                      ^^^^^^^^^ declaration
+        "#]],
+    );
+}
