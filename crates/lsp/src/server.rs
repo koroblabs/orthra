@@ -359,6 +359,7 @@ impl LanguageServer for Backend {
                     language: document.language_id,
                     text: document.text,
                     version: document.version,
+                    diverged: false,
                 },
             );
             // Its findings as a closed file are replaced by the ones published now, which are
@@ -380,7 +381,8 @@ impl LanguageServer for Backend {
         };
         match refused {
             Ok(()) => self.publish_when_quiet(uri, version),
-            Err(Refused::NotOpen) => {}
+            // Said once, when it diverged.
+            Err(Refused::NotOpen | Refused::Diverged) => {}
             Err(why) => {
                 // Said, not swallowed: every answer after it would be about the wrong text.
                 self.client
@@ -389,6 +391,10 @@ impl LanguageServer for Backend {
                         format!("orthra ignored a change to {}: {why:?}", uri.as_str()),
                     )
                     .await;
+                // And what was published is about that text too: cleared, if it diverged.
+                if why == Refused::OutOfRange {
+                    self.publish(&uri).await;
+                }
             }
         }
     }
@@ -404,6 +410,10 @@ impl LanguageServer for Backend {
         else {
             return;
         };
+        // What it declares is read from the text it has, which a diverged one does not.
+        if document.diverged {
+            return;
+        }
         if let Some(language) = engine.language_for_path(&document.path) {
             engine.learn(language, &document.text);
         }

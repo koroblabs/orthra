@@ -118,7 +118,8 @@ impl State {
         let ignored = config
             .as_ref()
             .is_some_and(|config| config.is_ignored(Path::new(&document.path)));
-        let findings = if ignored {
+        // A diverged document is silent, like an ignored one: its ranges are not the client's.
+        let findings = if ignored || document.diverged {
             Vec::new()
         } else {
             engine.check_document(&document.path, &document.language, &document.text, parsed)

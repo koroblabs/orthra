@@ -16,6 +16,10 @@ pub(crate) struct Document {
     pub(crate) language: String,
     pub(crate) text: String,
     pub(crate) version: i32,
+    /// A change could not be applied, so the text is no longer the client's: nothing is reported
+    /// about it and no fix is offered, since a range in it would land elsewhere in the client's,
+    /// until the client sends the text whole.
+    pub(crate) diverged: bool,
 }
 
 #[derive(Debug, Default)]
@@ -36,8 +40,11 @@ pub(crate) enum Refused {
     /// The client sent a version older than the one held: it and this server disagree about the
     /// order of edits, and applying it would describe the wrong text.
     Stale { held: i32 },
-    /// A range that is not in the text. The document keeps the edits before it.
+    /// A range that is not in the text, such as one inside a character. The document keeps the
+    /// edits before it, and is [`Document::diverged`] from then on.
     OutOfRange,
+    /// The document diverged at a change refused before, and the client has not sent it whole.
+    Diverged,
 }
 
 impl Documents {
@@ -92,6 +99,16 @@ impl Documents {
             });
         }
         document.version = version;
+        // A diverged document takes a whole new text, and the changes after it, and nothing less.
+        let changes = if document.diverged {
+            let Some(whole) = changes.iter().rposition(|change| change.range.is_none()) else {
+                return Err(Refused::Diverged);
+            };
+            document.diverged = false;
+            changes.into_iter().skip(whole).collect()
+        } else {
+            changes
+        };
         let mut parsed = match &mut self.parsed {
             Some((kept, parsed)) if kept == uri => Some(parsed),
             _ => None,
@@ -109,6 +126,9 @@ impl Documents {
                 Edit::Whole => parsed.clear(),
             }
         })
-        .map_err(|_| Refused::OutOfRange)
+        .map_err(|_| {
+            document.diverged = true;
+            Refused::OutOfRange
+        })
     }
 }

@@ -98,6 +98,10 @@ fn offered(state: &mut State, uri: &Uri, selected: Range) -> Option<Vec<CodeActi
     let rewriting = rewriting.as_ref()?;
     let engine = engine.as_ref()?;
     let (document, parsed) = documents.parsed_for(uri)?;
+    // A diverged document's sentence is not the one the client shows there.
+    if document.diverged {
+        return None;
+    }
     let text = &document.text;
     let index = LineIndex::new(text);
     let at = lspkit_text::lsp::offset(&index, text, selected.start, *encoding)?;
