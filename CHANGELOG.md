@@ -32,7 +32,7 @@ names the tag's version.
   start, and corrections ranked by how common a word is, so `leter` gets `later` and `letter` before
   `leer` and `lefter`; the right correction comes first a point more often on real typos; how common
   each word is is compiled too, so the first correction asked for comes as fast as the next;
-- gives back on macOS what its parsers free, with mimalloc as the process's allocator there: 7 to 10
+- gives back on macOS what its parsers free, with mimalloc as the process's allocator there: 6 to 9
   MB after checking a large project;
 - English is either spelling until a setting names one: en-US and en-GB are built in, and
   `languages = ["en-US"]` makes a project American only;

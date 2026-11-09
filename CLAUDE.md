@@ -272,10 +272,12 @@ name, and en-GB names en-US's known typos and vocabulary. Before they shared the
   a close); macOS 26's allocator gives back nothing, which is why the compiled dictionaries mattered
   there. On macOS, mimalloc is the process's `malloc` (`lspkit-heap`'s `override`, lspkit 0.1.1),
   and `release_freed` gives back what tree-sitter frees. `just perf` on the Mac (2026-11-09) puts
-  the footprint after the run at 7 to 10 MB on every project of the zero corpus: 9.7 on helix, 9.1
-  on ripgrep, 9.9 on phrost, 8.2 on composer and 7.4 on starter workflows. Every budget was met but
-  one, on one of two runs: Ruby's query loaded in 53 ms against 50, where the other run took 25. Not
-  on Linux, where glibc already gives it back and mimalloc's defaults held 4.5 MB more.
+  the footprint after the run at 6 to 9 MB on every project of the zero corpus: 8.6 on helix, 8.4 on
+  ripgrep, 8.7 on phrost, 7.2 on composer and 6.1 on starter workflows, with the frequencies
+  compiled; the slowest correction is 2.4 to 3.1 ms, where it was 16 to 18 before they were. Every
+  budget was met; on one run of an earlier build, Ruby's query loaded in 53 ms against 50, where
+  every other run took 25. Not on Linux, where glibc already gives it back and mimalloc's defaults
+  held 4.5 MB more.
 
 - **The known typos are read where they are embedded,** as an offset per entry, and never copied. As
   a hash map of owned strings, en-US's 96 000 entries were 9 MB of heap in 288 000 allocations, and
