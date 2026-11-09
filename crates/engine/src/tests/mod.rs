@@ -1,5 +1,6 @@
 mod compounds;
 mod dimensions;
+mod escapes;
 mod explained;
 mod generated;
 mod host_agnostic;

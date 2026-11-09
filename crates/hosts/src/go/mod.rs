@@ -13,9 +13,12 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     language_ids: &["go"],
     file_names: &[],
     extensions: &["go"],
-    // The query cuts escape sequences out of interpreted strings, and raw strings have none.
+    // The query cuts escape sequences out of interpreted strings. A comment and a raw string write
+    // them out as text, `"\ngoroutine"` and `` `\ufffd` ``: read as escapes, they glued a letter
+    // to a word (11 findings in the standard library, 2026-11-09). An escape takes only its own
+    // letters, so a raw string's `\d` and a path's `\Users` keep theirs.
     conventions: Conventions {
-        backslash_escapes: false,
+        backslash_escapes: true,
         doubled_escapes: false,
         line_comment: Some("//"),
         block_comment: None,

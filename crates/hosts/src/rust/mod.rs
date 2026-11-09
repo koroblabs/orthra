@@ -13,8 +13,9 @@ pub(crate) static HOST: TreeSitterHost = TreeSitterHost::new(Grammar {
     language_ids: &["rust"],
     file_names: &[],
     extensions: &["rs"],
-    // The query cuts escape sequences out of string spans, and raw strings and comments have none:
-    // `r"C:\Users"` is not `\U` followed by `sers`.
+    // The query cuts escape sequences out of string spans, and raw strings and comments are read
+    // as written: ripgrep's man page writes roff's `\fBauto\fP` in raw strings, where `\f` read
+    // as an escape made `Bauto` a word, 113 of them (2026-11-09).
     conventions: Conventions {
         backslash_escapes: false,
         doubled_escapes: false,
