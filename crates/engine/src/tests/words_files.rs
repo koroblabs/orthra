@@ -87,3 +87,42 @@ fn a_directive_ignores_the_next_line() {
     "#]]
     .assert_eq(&Annotation::render(text, &annotations));
 }
+
+/// A listed word is a word in every part of a run it names whole: `TruStage` is cut into `Stage`
+/// and `Tru`, and the list can only name it as written. `Tru` alone is still a typo.
+#[test]
+fn a_words_file_word_is_a_word_in_every_part() {
+    let text = "Tru alone is a typo.\nTruStage's rates, from TruStage.\n";
+    let mut engine = Engine::with_packs(packs());
+    engine.set_words(["TruStage"]);
+    let annotations: Vec<Annotation> = engine
+        .check("markdown", text)
+        .iter()
+        .map(|finding| Annotation::new(finding.range, finding.code.0))
+        .collect();
+    expect![[r#"
+        > Tru alone is a typo.
+          ^^^ known-typo
+        > TruStage's rates, from TruStage.
+    "#]]
+    .assert_eq(&Annotation::render(text, &annotations));
+}
+
+/// So is a word a file says to ignore.
+#[test]
+fn a_directive_word_is_a_word_in_every_part() {
+    let text = "<!-- orthra: ignore TruStage -->\nTru alone is a typo.\nTruStage's rates, from TruStage.\n";
+    let mut engine = Engine::with_packs(packs());
+    let annotations: Vec<Annotation> = engine
+        .check("markdown", text)
+        .iter()
+        .map(|finding| Annotation::new(finding.range, finding.code.0))
+        .collect();
+    expect![[r#"
+        > <!-- orthra: ignore TruStage -->
+        > Tru alone is a typo.
+          ^^^ known-typo
+        > TruStage's rates, from TruStage.
+    "#]]
+    .assert_eq(&Annotation::render(text, &annotations));
+}

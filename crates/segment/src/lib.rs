@@ -30,8 +30,9 @@ pub struct Word {
     /// (`docs/03-roadmap.md` open question 7): an unknown word in code is usually a name somebody
     /// chose, and a known typo is a typo wherever it is written.
     pub code: bool,
-    /// The run of letters the word was cut from: `PostgreSQL` for `Postgre`. Equal to `range` when
-    /// nothing was cut. A run a pack accepts whole is accepted in all its parts.
+    /// The run of letters the word was cut from, without a possessive: `PostgreSQL` for `Postgre`,
+    /// and for `SQL` in `PostgreSQL's`. Equal to `range` when nothing was cut. A run a pack accepts
+    /// whole is accepted in all its parts, and so is one a words file or a directive lists.
     pub run: TextRange,
 }
 
@@ -358,6 +359,10 @@ impl Splitter<'_, '_, '_, '_> {
             let at_sign =
                 (i >= 1 && chars[i - 1].1 == '@') || chars.get(j).is_some_and(|(_, c)| *c == '@');
             if !extension && !at_sign && !run.bytes().any(|b| b.is_ascii_digit()) {
+                // A possessive is no part of the run: `TruStage's` was cut from `TruStage`, which
+                // a pack or a words file can name.
+                let run = without_possessive(run);
+                let end = start + run.len();
                 let mut cuts = std::mem::take(&mut self.scratch.cuts);
                 camel_cuts(run, &mut cuts);
                 let code = identifier || cuts.len() > 2;
@@ -372,12 +377,8 @@ impl Splitter<'_, '_, '_, '_> {
     }
 
     fn push(&mut self, from: usize, to: usize, run: (usize, usize), code: bool) {
-        let mut word = &self.text[from..to];
-        for possessive in ["\\'s", "\\’s", "'s", "’s", "'S"] {
-            if let Some(base) = word.strip_suffix(possessive) {
-                word = base;
-            }
-        }
+        // A part inside a run can still end in one: `user'sGuide`.
+        let word = without_possessive(&self.text[from..to]);
         let shape = Shape::of(word);
         let letters = word.chars().filter(|c| c.is_alphabetic()).count();
         let acronym = matches!(shape, Shape::Upper) && letters <= 5
@@ -397,6 +398,15 @@ impl Splitter<'_, '_, '_, '_> {
             run: TextRange::new(size(run.0), size(run.1)),
         });
     }
+}
+
+/// `word` without a possessive or a contracted `is`: `user` for `user's`, and for `user\'s` in a
+/// single-quoted string.
+fn without_possessive(word: &str) -> &str {
+    ["\\'s", "\\’s", "'s", "’s", "'S"]
+        .iter()
+        .find_map(|possessive| word.strip_suffix(possessive))
+        .unwrap_or(word)
 }
 
 /// Where a camelCase or PascalCase run is cut, as byte offsets from 0 to its length; the parts are

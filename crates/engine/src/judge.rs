@@ -3,7 +3,7 @@
 //! The same function answers a check and `orthra explain`, so what explain says decided a word is
 //! what decided it.
 
-use std::borrow::Cow;
+use std::{borrow::Cow, cell::OnceCell};
 
 use orthra_hosts::SpanKind;
 use orthra_lexicon::{Lexicon, Verdict};
@@ -59,11 +59,24 @@ impl Judge<'_> {
             Cow::Borrowed(&*written)
         };
         // A words file's words, the file's own `orthra: ignore` list, and the host's words are
-        // words wherever they are written. So is the directive itself.
-        if self.words_files.contains(&*lower) {
+        // words wherever they are written. So is the directive itself. What a person listed is a
+        // word in every part of a run it names whole: `TruStage` is cut into `Stage` and `Tru`,
+        // which alone is a known typo of `true`, and a list can only name what it was written as.
+        // The run is lower-cased only for a word cut from one that a list does not name itself.
+        let run = OnceCell::new();
+        let listed = |list: &FxHashSet<Box<str>>| {
+            list.contains(&*lower)
+                || word.run != word.range
+                    && !list.is_empty()
+                    && list.contains(
+                        run.get_or_init(|| unescaped(&text[word.run]).to_lowercase())
+                            .as_str(),
+                    )
+        };
+        if listed(self.words_files) {
             return (Verdict::Correct, Why::WordsFile);
         }
-        if self.directives.accepts(&lower, word.range) {
+        if listed(&self.directives.words) || self.directives.covers(word.range) {
             return (Verdict::Correct, Why::Directive);
         }
         if self.host_words.is_some_and(|words| words.contains(&*lower)) {
@@ -159,12 +172,11 @@ impl Directives {
         directives
     }
 
-    fn accepts(&self, lower: &str, range: TextRange) -> bool {
-        self.words.contains(lower)
-            || self
-                .lines
-                .iter()
-                .any(|(start, end)| *start <= range.start() && range.end() <= *end)
+    /// Whether `range` is inside a directive, or the line after an `ignore-next-line`.
+    fn covers(&self, range: TextRange) -> bool {
+        self.lines
+            .iter()
+            .any(|(start, end)| *start <= range.start() && range.end() <= *end)
     }
 }
 

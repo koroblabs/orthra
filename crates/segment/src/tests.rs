@@ -394,3 +394,33 @@ fn a_qualified_name_is_never_words() {
         "#]],
     );
 }
+
+/// The run a word was cut from ends before a possessive: `TruStage's` was cut from `TruStage`,
+/// which a words file can name whole.
+#[test]
+fn a_run_ends_before_a_possessive() {
+    let text = "The user's rate, TruStage's.";
+    let rules = Rules {
+        word_internal: &[('\'', Script::Latin), ('’', Script::Latin)],
+        backslash_escapes: false,
+        doubled_escapes: false,
+    };
+    let mut out = Vec::new();
+    words(
+        text,
+        [TextRange::up_to(TextSize::of(text))],
+        &rules,
+        &mut out,
+    );
+    let shown: Vec<String> = out
+        .iter()
+        .map(|word| format!("{} in {}", &text[word.range], &text[word.run]))
+        .collect();
+    expect![[r#"
+        The in The
+        user in user
+        rate in rate
+        Tru in TruStage
+        Stage in TruStage"#]]
+    .assert_eq(&shown.join("\n"));
+}
