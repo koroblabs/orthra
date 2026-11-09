@@ -370,8 +370,8 @@ async fn watch_idle(client: Client, tier: Arc<Tier>, wanted: Wanted) {
         let scorer = tier.scorer.write().ok().and_then(|mut held| held.take());
         let freed = scorer.as_ref().map_or(0, |scorer| scorer.bytes());
         drop(scorer);
-        tier.phase.send_replace(Phase::Unloaded);
-        let _ = tokio::task::spawn_blocking(lspkit_heap::release_freed).await;
+        // Said before the phase changes and the memory is given back, which can take a while: a
+        // code action asked once it has changed loads the model again and says so, after this.
         client
             .log_message(
                 MessageType::INFO,
@@ -383,6 +383,8 @@ async fn watch_idle(client: Client, tier: Arc<Tier>, wanted: Wanted) {
                 ),
             )
             .await;
+        tier.phase.send_replace(Phase::Unloaded);
+        let _ = tokio::task::spawn_blocking(lspkit_heap::release_freed).await;
         return;
     }
 }
