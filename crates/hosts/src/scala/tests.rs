@@ -175,3 +175,25 @@ val qzxvdouble = (qzxvn: Int) => qzxvn * 2
         "#]],
     );
 }
+
+/// A name in any script is declared, as a plain ASCII one is.
+#[test]
+fn scala_declares_names_in_any_script() {
+    crate::tests::check(
+        "/src/Names.scala",
+        "object Привіт {\n  val résumé = 1\n  def наЗміну(значення: Int): Int = значення\n  val подвоїти = (θ: Int) => θ * 2\n}\n",
+        expect_test::expect![[r#"
+            scala
+            > object Привіт {
+                     ^^^^^^ declaration
+            >   val résumé = 1
+                    ^^^^^^ declaration
+            >   def наЗміну(значення: Int): Int = значення
+                    ^^^^^^^ declaration
+                            ^^^^^^^^ declaration
+            >   val подвоїти = (θ: Int) => θ * 2
+                    ^^^^^^^^ declaration
+            > }
+        "#]],
+    );
+}

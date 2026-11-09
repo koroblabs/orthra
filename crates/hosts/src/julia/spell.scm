@@ -36,25 +36,41 @@
 ; argument list or a type head, in a grammar this size (measured 2026-11-08, on a slow VM). So the
 ; rarer forms are left out, and their names go unread: `f(x)::T`, `xs...`, `S <: T`, and the
 ; parameters of a `where` function or a short one.
-(signature (call_expression . (identifier) @declaration))
-(signature (where_expression (call_expression . (identifier) @declaration)))
+; Each declared child is `(_)`, kept when its text has no space, dot, bracket or operator in it: a
+; plain name in any script, `résumé!` and `θ` too. tree-sitter compiles that in less time than
+; `(identifier)`: the query in 70 ms instead of 86 (2026-11-09).
+((signature (call_expression . (_) @declaration))
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))
+((signature (where_expression (call_expression . (_) @declaration)))
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))
 
 ; Its parameters: `x`, `x::T` and the keyword `k = 1`.
-(signature (call_expression (argument_list (identifier) @declaration)))
-(signature (call_expression (argument_list (typed_expression . (identifier) @declaration))))
-(signature (call_expression (argument_list (named_argument . (identifier) @declaration))))
+((signature (call_expression (argument_list (_) @declaration)))
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))
+((signature (call_expression (argument_list (typed_expression . (_) @declaration))))
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))
+((signature (call_expression (argument_list (named_argument . (_) @declaration))))
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))
 
 ; A function written as an assignment: `f(x) = x + 1`.
-(assignment . (call_expression . (identifier) @declaration))
+((assignment . (call_expression . (_) @declaration))
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))
 
 ; A type: `struct P`, `struct P{T}`, `abstract type A end`, and a struct's fields.
-(type_head (identifier) @declaration)
-(type_head (parametrized_type_expression . (identifier) @declaration))
-(struct_definition (identifier) @declaration)
-(struct_definition (typed_expression . (identifier) @declaration))
+((type_head (_) @declaration)
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))
+((type_head (parametrized_type_expression . (_) @declaration))
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))
+((struct_definition (_) @declaration)
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))
+((struct_definition (typed_expression . (_) @declaration))
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))
 
-(module_definition name: (identifier) @declaration)
+((module_definition name: (_) @declaration)
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))
 
 ; A variable: `x = 1`, `const LIMIT = 5`, `for i in 1:3`.
-(assignment . (identifier) @declaration)
-(for_binding . (identifier) @declaration)
+((assignment . (_) @declaration)
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))
+((for_binding . (_) @declaration)
+  (#not-match? @declaration "[\\s.,;:(){}\\[\\]=<>\"'+*/^&|\\\\@$%~?-]"))

@@ -166,3 +166,18 @@ fn csharp_lambda_parameters_are_declared() {
         "#]],
     );
 }
+
+/// A lambda's parameter in any script is declared.
+#[test]
+fn csharp_lambda_parameters_in_any_script_are_declared() {
+    check(
+        "/src/Names.cs",
+        "var twice = résumé => résumé * 2;\n",
+        expect![[r#"
+            csharp
+            > var twice = résumé => résumé * 2;
+                  ^^^^^ declaration
+                          ^^^^^^ declaration
+        "#]],
+    );
+}

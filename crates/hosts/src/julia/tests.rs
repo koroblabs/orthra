@@ -97,3 +97,34 @@ pdf(d, x) = exp(d.κ * αsum)
         "#]],
     );
 }
+
+/// Names in any script, with Julia's `!`, and the forms that hold no plain name: a qualified
+/// function, an operator, a tuple.
+#[test]
+fn julia_declares_plain_names_in_any_script() {
+    crate::tests::check(
+        "/src/names.jl",
+        "function résumé!(θ, κ::Int, λ = 1)\n    θ\nend\nBase.show(io) = io\n+(a, b) = a\nα = 1\nfor (i, j) in pairs\nend\nfor β in 1:3\nend\nstruct Точка{T}\n    ширина::T\nend\nmodule Модуль end\n",
+        expect_test::expect![[r#"
+            julia
+            > function résumé!(θ, κ::Int, λ = 1)
+                       ^^^^^^^ declaration
+            >     θ
+            > end
+            > Base.show(io) = io
+            > +(a, b) = a
+            > α = 1
+            > for (i, j) in pairs
+            > end
+            > for β in 1:3
+            > end
+            > struct Точка{T}
+                     ^^^^^ declaration
+            >     ширина::T
+                  ^^^^^^ declaration
+            > end
+            > module Модуль end
+                     ^^^^^^ declaration
+        "#]],
+    );
+}

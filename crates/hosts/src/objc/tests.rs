@@ -189,3 +189,20 @@ int qzxvarea(int qzxvwidth, const char *qzxvlabel);
         "#]],
     );
 }
+
+/// A name in any script, where the grammar reads one, is declared as a plain ASCII one is.
+#[test]
+fn objc_declares_names_in_any_script() {
+    crate::tests::check(
+        "/src/names.m",
+        "int résumé = 1;\nstruct точка { int ширина; };\n",
+        expect_test::expect![[r#"
+            objective-c
+            > int résumé = 1;
+                  ^^^^^^ declaration
+            > struct точка { int ширина; };
+                     ^^^^^ declaration
+                                 ^^^^^^ declaration
+        "#]],
+    );
+}
