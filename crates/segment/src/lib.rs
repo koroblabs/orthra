@@ -240,9 +240,44 @@ fn never_a_word(chunk: &str) -> bool {
         || chunk.contains(":\\")
         || locale(chunk)
         || chunk.starts_with('-') && chunk.len() > 1
+        || assignment(chunk)
         || chunk.starts_with('#') && hex(&chunk[1..])
         || chunk.len() >= 7 && hex(chunk) && chunk.chars().any(|c| c.is_ascii_digit())
         || chunk.split('-').all(hex) && chunk.matches('-').count() == 4
+}
+
+/// Whether the run starting at `chars[i]` names a variable or a substitution: right after `$`,
+/// `${` or `$(`, as the shell, Make and PHP write one, or in the braces after one, CMake's
+/// `$ENV{NAME}`. A name, not prose; only the name, so `$this->option('queu')` still reads `queu`.
+/// In comments and strings they were a CMake module's `${reldata}` and a shell script's
+/// `$pkgauxdir` (2026-11-09).
+fn variable(chars: &[(usize, char)], i: usize) -> bool {
+    let before = |k: usize| i.checked_sub(k).map(|at| chars[at].1);
+    match (before(1), before(2)) {
+        (Some('$'), _) => true,
+        (Some('{' | '('), Some('$')) => true,
+        (Some('{'), Some(c)) if c.is_alphanumeric() => {
+            let mut k = i - 2;
+            while k > 0 && chars[k].1.is_alphanumeric() {
+                k -= 1;
+            }
+            chars[k].1 == '$'
+        }
+        _ => false,
+    }
+}
+
+/// A setting written out, `NAME=value`, as a comment quotes an environment or a configuration:
+/// `RESTRICT=binchecks`, `FEATURES=noauto`. Only a name in capitals: code's `help="..."`,
+/// `max_records=Maxiumum` and JSX's `text='Cluser Overview'` hold typos, 8 of the typo sample's.
+fn assignment(chunk: &str) -> bool {
+    chunk.split_once('=').is_some_and(|(name, value)| {
+        !value.is_empty()
+            && name.starts_with(|c: char| c.is_ascii_uppercase())
+            && name
+                .chars()
+                .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+    })
 }
 
 /// A name qualified by its module, package or type, which refers to code and is not prose: three or
@@ -386,7 +421,11 @@ impl Splitter<'_, '_, '_, '_> {
             // `@Override`, the `fi@name@rst` of a test fixture.
             let at_sign =
                 (i >= 1 && chars[i - 1].1 == '@') || chars.get(j).is_some_and(|(_, c)| *c == '@');
-            if !extension && !at_sign && !run.bytes().any(|b| b.is_ascii_digit()) {
+            if !extension
+                && !at_sign
+                && !variable(&chars, i)
+                && !run.bytes().any(|b| b.is_ascii_digit())
+            {
                 // A possessive is no part of the run: `TruStage's` was cut from `TruStage`, which
                 // a pack or a words file can name.
                 let run = without_possessive(run);

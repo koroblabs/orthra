@@ -486,3 +486,30 @@ fn backticks_close_a_run_as_long() {
         "#]],
     );
 }
+
+/// A variable's name, a substitution's and a setting written out are never words, and only the name
+/// is the variable's: what follows it is read. A price is not a variable, and a format's verb glued
+/// to a word is left to the word, since `%package%` and RPM's `%postun` read the same way.
+#[test]
+fn variables_settings_and_format_verbs_are_not_words() {
+    check(
+        "Set $qzxvdir, ${qzxvbraced}, $(qzxvcmd) and $ENV{QZXVENV}; FOO=qzxvvalue, foo=qzxvlower; $this->option('qzxvkey'); \"%snil\" and %vqzxvval; 100%sure, 50%off, cost $5 now.",
+        false,
+        expect![[r#"
+            > Set $qzxvdir, ${qzxvbraced}, $(qzxvcmd) and $ENV{QZXVENV}; FOO=qzxvvalue, foo=qzxvlower; $this->option('qzxvkey'); "%snil" and %vqzxvval; 100%sure, 50%off, cost $5 now.
+              ^^^ title
+                                                      ^^^ lower
+                                                                                        ^^^ lower
+                                                                                            ^^^^^^^^^ lower
+                                                                                                              ^^^^^^ lower
+                                                                                                                      ^^^^^^^ lower
+                                                                                                                                   ^^^^ lower
+                                                                                                                                         ^^^ lower
+                                                                                                                                              ^^^^^^^^ lower
+                                                                                                                                                            ^^^^ lower
+                                                                                                                                                                     ^^^ lower
+                                                                                                                                                                          ^^^^ lower
+                                                                                                                                                                                  ^^^ lower
+        "#]],
+    );
+}
