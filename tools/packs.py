@@ -218,8 +218,8 @@ dictionary = { compiled = "en_GB" }
 typos = "../en-US/typos.tsv"
 frequency = "../en-US/frequency.txt"
 # A word the pack accepts, of four letters or more, with one of these before it is accepted as a
-# rare word is: `unconfigured`, `refetched`, `subpool`, `multihost`.
-prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
+# rare word is: `unconfigured`, `refetched`, `subpool`, `multihost`, `libmagic`.
+prefixes = ["auto", "lib", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
 # A vocabulary word, which no dictionary inflects, with one of these after it is accepted the same
 # way: `datagrams`, `demuxes`, and software English's `mmap'd`, `malloc'ed`, `realloc'ing`.
 vocabulary-suffixes = ["s", "es", "'d", "'ed", "'ing"]
@@ -268,8 +268,8 @@ dictionary = { compiled = "en_US", rare = "en_US-rare" }
 # names of commands, which as corrections were noise (`kubctl` got `busctl` and `keyctl`).
 rare-words = ["en_US-huge.txt", "commands.txt"]
 # A word the pack accepts, of four letters or more, with one of these before it is accepted as the
-# rare words are: `unconfigured`, `refetched`, `subpool`, `multihost`.
-prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
+# rare words are: `unconfigured`, `refetched`, `subpool`, `multihost`, `libmagic`.
+prefixes = ["auto", "lib", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
 # A vocabulary word, which no dictionary inflects, with one of these after it is accepted the same
 # way: `datagrams`, `demuxes`, and software English's `mmap'd`, `malloc'ed`, `realloc'ing`.
 vocabulary-suffixes = ["s", "es", "'d", "'ed", "'ing"]

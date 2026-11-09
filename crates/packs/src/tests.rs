@@ -154,6 +154,9 @@ fn en_us_accepts_derived_words_as_rare_words() {
         "REFETCHED",
         "subpool",
         "multihost",
+        "libmagic",
+        "libmemcached",
+        "libary",
         "datagrams",
         "demuxes",
         "mmap'd",
@@ -190,6 +193,9 @@ fn en_us_accepts_derived_words_as_rare_words() {
         REFETCHED    accepted=false rare=true  known-typo=[]
         subpool      accepted=false rare=true  known-typo=[]
         multihost    accepted=false rare=true  known-typo=[]
+        libmagic     accepted=false rare=true  known-typo=[]
+        libmemcached accepted=false rare=true  known-typo=[]
+        libary       accepted=false rare=false known-typo=[library]
         datagrams    accepted=false rare=true  known-typo=[]
         demuxes      accepted=false rare=true  known-typo=[]
         mmap'd       accepted=false rare=true  known-typo=[]
