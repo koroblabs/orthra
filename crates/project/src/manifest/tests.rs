@@ -29,6 +29,46 @@ authors = ["Grace Hopper"]
     );
 }
 
+/// A target is named apart from its package, and a binary is the name people type.
+#[test]
+fn cargo_declares_the_names_of_its_targets() {
+    check(
+        "Cargo.toml",
+        r#"
+[package]
+name = "greeter-daemon"
+
+[lib]
+name = "greetlib"
+
+[[bin]]
+name = "greetd"
+path = "src/main.rs"
+
+[[example]]
+name = "greetdemo"
+"#,
+        expect![[r#"
+            greeter-daemon
+            greetd
+            greetdemo
+            greetlib"#]],
+    );
+}
+
+/// npm's commands are named apart from the package too.
+#[test]
+fn npm_declares_its_commands() {
+    check(
+        "package.json",
+        r#"{ "name": "greeter", "bin": { "greetd": "cli.js", "greetctl": "ctl.js" } }"#,
+        expect![[r#"
+            greeter
+            greetctl
+            greetd"#]],
+    );
+}
+
 #[test]
 fn npm_declares_its_author_as_a_string_or_an_object() {
     check(

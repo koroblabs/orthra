@@ -69,6 +69,18 @@ fn read(kind: &str, text: &str) -> Vec<String> {
         {
             names.push(name.to_owned());
         }
+        // The targets it builds, under names of their own: `foundryd` is `foundry-daemon`'s
+        // binary. On the projects beside orthra, it was 80 findings in the one that builds it.
+        let targets = ["bin", "example", "test", "bench"]
+            .iter()
+            .filter_map(|kind| table.get(*kind)?.as_array())
+            .flatten()
+            .chain(table.get("lib"));
+        names.extend(
+            targets
+                .filter_map(|target| target.get("name")?.as_str())
+                .map(str::to_owned),
+        );
         // `authors = ["Name <email>"]`, in the package or shared by the workspace.
         let shared = table.get("workspace").and_then(|w| w.get("package"));
         for authors in [package, shared]
@@ -105,6 +117,11 @@ fn read(kind: &str, text: &str) -> Vec<String> {
         if let Some(deps) = json.get(section).and_then(serde_json::Value::as_object) {
             names.extend(deps.keys().cloned());
         }
+    }
+    // npm's `bin`, when it names its commands: `{ "greet": "cli.js" }`. A string is one command,
+    // under the package's name.
+    if let Some(commands) = json.get("bin").and_then(serde_json::Value::as_object) {
+        names.extend(commands.keys().cloned());
     }
     // npm's `author` and `contributors` are each a string, `Name <email> (url)`, or an object
     // with a `name`; composer's `authors` are objects.
