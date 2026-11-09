@@ -71,7 +71,8 @@ pub struct Rules<'a> {
     /// Characters that stay inside a word when letters of the script beside each stand on both
     /// sides: apostrophes, and a hyphen in Ukrainian.
     pub word_internal: &'a [(char, Script)],
-    /// Whether `\n`, `\t` and `\u{e9}` are escapes in this span.
+    /// Whether `\n`, `\t` and `\u{e9}` are escapes in this span. A letter is the escape's only when the
+    /// escape takes it: `\Generator` is the word `Generator`.
     pub backslash_escapes: bool,
     /// Whether `\\n` is an escape as well as `\n`: the host's strings are read twice, by the shell
     /// and then by printf.
@@ -295,14 +296,18 @@ impl Splitter<'_, '_, '_, '_> {
         while i < chars.len() {
             let (start, c) = chars[i];
             if c == '\\' && self.rules.backslash_escapes {
-                // The escape's letter is part of the escape: skip it with the backslash, and with
-                // the doubled backslash before it where the host's strings are read twice.
+                // An escape is skipped whole: with the doubled backslash before it where the host's
+                // strings are read twice. A letter no escape takes is the next word's own, and any
+                // other character after a backslash is escaped by it: `\\`, `\"`.
+                let rest = &chars[i + 1..];
                 let doubled = self.rules.doubled_escapes
-                    && chars.get(i + 1).is_some_and(|(_, next)| *next == '\\')
-                    && chars
-                        .get(i + 2)
-                        .is_some_and(|(_, letter)| letter.is_alphabetic());
-                i += if doubled { 3 } else { 2 };
+                    && rest.first().is_some_and(|(_, next)| *next == '\\')
+                    && escape_len(&rest[1..]) > 0;
+                i += match rest.first() {
+                    _ if doubled => 2 + escape_len(&rest[1..]),
+                    Some((_, letter)) if letter.is_alphabetic() => 1 + escape_len(rest),
+                    _ => 2,
+                };
                 continue;
             }
             if !c.is_alphanumeric() {
@@ -397,6 +402,31 @@ impl Splitter<'_, '_, '_, '_> {
             code,
             run: TextRange::new(size(run.0), size(run.1)),
         });
+    }
+}
+
+/// How many characters after a backslash its escape takes: the letter of a C-style escape, `\n`,
+/// and a hex escape's digits with it, `\xff`, `\u00e9`, `\u{feff}`, `\U0001f600`. None for any other
+/// letter, which is the next word's: `\Generator` in a raw string, or in Python and the shell,
+/// which keep an unknown escape's letter. Taking every letter cut the first letter off PHP's
+/// `\Generator` and `\Iterator` in a Python raw string: 16 known typos in phrost.
+fn escape_len(rest: &[(usize, char)]) -> usize {
+    let hex = |digits: usize| {
+        rest.get(1..=digits)
+            .is_some_and(|digits| digits.iter().all(|(_, c)| c.is_ascii_hexdigit()))
+    };
+    match rest.first().map(|(_, c)| *c) {
+        Some('a' | 'b' | 'f' | 'n' | 'r' | 't' | 'v') => 1,
+        Some('x') if hex(2) => 3,
+        Some('u') if hex(4) => 5,
+        Some('U') if hex(8) => 9,
+        // `\u{e9}`, to its brace.
+        Some('u') if rest.get(1).is_some_and(|(_, c)| *c == '{') => rest
+            .iter()
+            .take(10)
+            .position(|(_, c)| *c == '}')
+            .map_or(1, |close| close + 1),
+        _ => 0,
     }
 }
 

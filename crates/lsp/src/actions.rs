@@ -64,7 +64,7 @@ struct Planned {
     diagnostic: Diagnostic,
     word: String,
     /// What a words file or a directive lists to accept the finding: the run its word was cut
-    /// from. Adding `Tru` cut from `TruStage` would accept a typo of `true` everywhere.
+    /// from. Adding the first part of `TruStage` would accept a typo of `true` everywhere.
     listed: String,
     fixes: Vec<String>,
     /// The first fix is the fix, and the client may apply it on its own: a known typo's, and a mixed

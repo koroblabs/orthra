@@ -424,3 +424,24 @@ fn a_run_ends_before_a_possessive() {
         Stage in TruStage"#]]
     .assert_eq(&shown.join("\n"));
 }
+
+/// A backslash takes only the letters its escape does: a C-style escape's letter, and a hex
+/// escape's digits with it. Any other letter after it starts a word.
+#[test]
+fn a_backslash_takes_only_the_letters_of_its_escape() {
+    check(
+        r"Hello\nworld \bword\b \xff\uabcd\u{feff}\U0001F600 then \Debug and \Generator<int>",
+        true,
+        expect![[r#"
+            > Hello\nworld \bword\b \xff\uabcd\u{feff}\U0001F600 then \Debug and \Generator<int>
+              ^^^^^ title
+                     ^^^^^ lower
+                             ^^^^ lower
+                                                                 ^^^^ lower
+                                                                       ^^^^^ title
+                                                                             ^^^ lower
+                                                                                  ^^^^^^^^^ title
+                                                                                            ^^^ lower
+        "#]],
+    );
+}
