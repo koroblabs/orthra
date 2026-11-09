@@ -37,6 +37,7 @@ mod named_lines;
 mod passage;
 #[cfg(test)]
 mod tests;
+mod tool_output;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EngineError(pub String);
@@ -372,6 +373,9 @@ impl Engine {
         parsed: Option<&mut Parsed>,
     ) -> Option<(&'static str, Vec<Word>, Vec<SpanKind>)> {
         let host = self.hosts.for_language(language_id)?;
+        if tool_output::written_by_a_tool(text) {
+            return None;
+        }
         let mut spans = Vec::new();
         let rules = Rules {
             word_internal: &self.word_internal,
@@ -530,6 +534,9 @@ impl Engine {
             .hosts
             .for_language(language_id)
             .or_else(|| self.hosts.for_path(path))?;
+        if tool_output::written_by_a_tool(text) {
+            return None;
+        }
         let mut spans = Vec::new();
         host.spans_reusing(text, &mut parsed.host, &mut spans);
         let passage = passage::around(text, &spans, at)?;
