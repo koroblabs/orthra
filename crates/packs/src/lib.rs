@@ -84,6 +84,12 @@ impl Packs {
         word
     }
 
+    /// Whether a pack for `script` reads `word` as two of its commonest words joined: see
+    /// [`Pack::compound`].
+    pub fn compound(&self, script: Script, word: &str) -> bool {
+        self.for_script(script).any(|pack| pack.compound(word))
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = &Pack> {
         self.packs.iter()
     }

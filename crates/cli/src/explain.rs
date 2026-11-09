@@ -139,6 +139,7 @@ pub(crate) fn run(args: &[String]) -> ExitCode {
             Why::Directive => ": this file's `orthra: ignore` lists it",
             Why::HostVocabulary => ": it is a word of the file's language",
             Why::WholeRun => ": the whole run it was cut from is a word",
+            Why::Compound => ": two common words joined, where code joins words",
             Why::DeclaredHere => ": this file declares it, and this is not the declaration",
             Why::DeclaredByProject =>
                 ": the project declares it, in a manifest or another file, and this is not the declaration",

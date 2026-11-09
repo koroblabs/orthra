@@ -23,6 +23,8 @@ pub enum Why {
     HostVocabulary,
     /// The run it was cut from is a word: `Postgre` out of `PostgreSQL`.
     WholeRun,
+    /// Two common words joined, where code joins words: `statuscode` in a string or a name.
+    Compound,
     /// This file declares it, and this is not the declaration.
     DeclaredHere,
     /// The project declares it, in a manifest or another file, and this is not the declaration.
@@ -107,6 +109,14 @@ impl Judge<'_> {
             if self.declared.contains(&*lower) {
                 return (Verdict::Correct, Why::DeclaredByProject);
             }
+        }
+        // Two common words joined, where code joins words: a name's part, code between backticks, a
+        // string or a value. Prose and comments write `everytime` for `every time`.
+        if verdict == Verdict::Unknown
+            && (word.code || matches!(place, SpanKind::String | SpanKind::Value))
+            && self.packs.compound(word.script, &lower)
+        {
+            return (Verdict::Correct, Why::Compound);
         }
         (verdict, Why::Packs)
     }

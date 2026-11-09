@@ -226,3 +226,33 @@ fn a_word_is_normalized_by_the_packs_for_its_script() {
         м’ята -> м’ята"#]]
     .assert_eq(&shown.join("\n"));
 }
+
+/// Two of English's commonest words joined, as code joins them, each of four letters or more: not a
+/// word with a typo in it, nor two rarer words, nor a word inflected as the dictionary refuses.
+#[test]
+fn en_us_reads_two_common_words_joined() {
+    let packs = Packs::builtin(&["en-US"]).unwrap();
+    let shown: Vec<String> = [
+        "statuscode",
+        "sectionmissing",
+        "Accesstoken",
+        "sectionmisssing",
+        "intergrate",
+        "feedbacks",
+        "keybinds",
+        "everytime",
+    ]
+    .iter()
+    .map(|word| format!("{word:<16} {}", packs.compound(Script::Latin, word)))
+    .collect();
+    expect![[r#"
+        statuscode       true
+        sectionmissing   true
+        Accesstoken      true
+        sectionmisssing  false
+        intergrate       false
+        feedbacks        false
+        keybinds         false
+        everytime        true"#]]
+    .assert_eq(&shown.join("\n"));
+}

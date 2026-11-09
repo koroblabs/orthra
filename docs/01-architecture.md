@@ -360,6 +360,14 @@ names, which belong in their words files:
   `recod` of `cod`, and the known typos keep `untill` and `uncorrect` reported.
 - `vocabulary-suffixes`: `s` and `es` on a word the vocabulary has and the dictionary does not
   (`datagrams`, `demuxes`). On a dictionary word, `informations` and `feedbacks` would be words.
+  `'d`, `'ed` and `'ing` too: `mmap'd`, `malloc'ed`.
+- `compounds = { letters = 4, ranks = 2 }`: two words joined, each of four letters or more and in
+  the frequency table's two commonest ranks (`statuscode`, `sectionmissing`), are a word where code
+  joins words: a name's part, code between backticks, a string or a value. Prose and comments are
+  held to the space, since `everytime` is the commonest such mistake on GitHub (47 of 259 716 typos
+  fixed); and a dictionary word with an ending it does not take is not two words (`feedbacks`). On
+  2026-11-09 it took the zero corpus from 1 455 findings to 1 396, and the typo sample's recall and
+  top-1 did not move. Asked everywhere, it took 136 and hid 5 of the 1 111 typos caught.
 
 |                                    |        before |         after |
 | ---------------------------------- | ------------: | ------------: |

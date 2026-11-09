@@ -62,6 +62,9 @@ pub struct Pack {
     /// Endings a vocabulary word may take and stay a word, accepted as the rare words are: `s`
     /// makes `datagrams` of `datagram`. Only the vocabulary's: no dictionary inflects it.
     vocabulary_suffixes: Vec<Box<str>>,
+    /// What two of the pack's most written words joined must be to make one word where code joins
+    /// words: `statuscode`, `sectionmissing`. See [`Pack::compound`].
+    compounds: Option<Compounds>,
     word_internal: Vec<char>,
     /// Each character on the left is checked as the one on the right; the finding keeps the original.
     normalize: Vec<(char, char)>,
@@ -314,6 +317,27 @@ impl Pack {
         };
         let prefixes = lowered("prefixes")?;
         let vocabulary_suffixes = lowered("vocabulary-suffixes")?;
+        let compounds = match table.get("compounds") {
+            None => None,
+            Some(_) if frequency.is_none() => {
+                return Err(PackError(
+                    "`compounds` needs a `frequency` table to rank its words by".to_owned(),
+                ));
+            }
+            Some(value) => {
+                let count = |key: &str| {
+                    value
+                        .get(key)
+                        .and_then(toml::Value::as_integer)
+                        .and_then(|count| u32::try_from(count).ok())
+                        .ok_or_else(|| PackError(format!("`compounds.{key}` is not a count")))
+                };
+                Some(Compounds {
+                    letters: count("letters")?,
+                    ranks: count("ranks")?,
+                })
+            }
+        };
         let word_internal = table
             .get("word-internal")
             .and_then(toml::Value::as_array)
@@ -350,6 +374,7 @@ impl Pack {
             rare_words,
             prefixes,
             vocabulary_suffixes,
+            compounds,
             word_internal,
             normalize,
             name_labels,
@@ -435,6 +460,44 @@ impl Pack {
                     && self.vocabulary.accepts(base)
                     && !self.dictionaries.get().main.check(base)
             })
+    }
+
+    /// Whether `word`, after normalization, is two words joined, each of [`Compounds::letters`] or
+    /// more and among the pack's [`Compounds::ranks`] most written ranks: `statuscode`,
+    /// `sectionmissing`. Only the most written make one, since a typo seldom splits into two of
+    /// them. Asked by the engine where code joins words, of a word nothing else accepted: prose
+    /// writes `everytime` for `every time`, the commonest of such mistakes on GitHub (47 of 259 716
+    /// typos fixed).
+    ///
+    /// A word the dictionary has, with an ending it does not take, is that word inflected and not
+    /// two words: `feedbacks` is not `feed` and `backs`.
+    ///
+    /// English's four letters among SCOWL's two commonest sizes, on the typo sample, would hide 5
+    /// of the 1 111 typos caught (`userstand`, `guideslines`) and took 136 of the zero corpus's
+    /// 1 455 findings, 66 of them where code joins words (2026-11-09). Three letters took 205 and
+    /// hid 16; any dictionary word of four, 228 and 66.
+    pub fn compound(&self, word: &str) -> bool {
+        let (Some(compounds), Some(frequency)) = (self.compounds, &self.frequency) else {
+            return false;
+        };
+        let word = self.normalized(word);
+        let letters = compounds.letters as usize;
+        let ranks = frequency.get();
+        let common = |part: &str| {
+            part.chars().count() >= letters
+                && ranks.rank(part).is_some_and(|rank| rank < compounds.ranks)
+        };
+        let main = &self.dictionaries.get().main;
+        let inflected = word
+            .char_indices()
+            .rev()
+            .take(3)
+            .any(|(at, _)| at > 0 && main.check(&word[..at]));
+        !inflected
+            && word
+                .char_indices()
+                .skip(letters)
+                .any(|(at, _)| common(&word[..at]) && common(&word[at..]))
     }
 
     /// The fixes for `word` if it is a known typo, after normalization, whatever its case.
@@ -643,6 +706,15 @@ impl Fsts {
             .map(|dictionary| Box::new(dictionary) as Box<dyn Dictionary>)
             .map_err(|err| err.0)
     }
+}
+
+/// What two words joined must be to make one word: `compounds = { letters = 4, ranks = 2 }`.
+#[derive(Debug, Clone, Copy)]
+struct Compounds {
+    /// The fewest letters either word has.
+    letters: u32,
+    /// Either word is in one of this many of the frequency table's ranks, the most written first.
+    ranks: u32,
 }
 
 /// A pack's frequencies and the file they are read from, on the first correction asked for.

@@ -1,3 +1,4 @@
+mod compounds;
 mod dimensions;
 mod explained;
 mod generated;

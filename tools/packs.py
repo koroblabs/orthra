@@ -223,6 +223,10 @@ prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
 # A vocabulary word, which no dictionary inflects, with one of these after it is accepted the same
 # way: `datagrams`, `demuxes`, and software English's `mmap'd`, `malloc'ed`, `realloc'ing`.
 vocabulary-suffixes = ["s", "es", "'d", "'ed", "'ing"]
+# Two words written with no space between are accepted the same way when each has four letters or
+# more and is among the words written most, SCOWL's two commonest sizes: `statuscode`, joined as
+# code joins words. A typo seldom splits into two such words, and a known typo is answered first.
+compounds = { letters = 4, ranks = 2 }
 vocabulary = ["../en-US/vocabulary.txt", "../en-US/vocabulary.orthra.txt", "../en-US/vocabulary.code.txt"]
 # The names of commands, accepted as rare words are and never offered: en-US's, shared.
 rare-words = ["../en-US/commands.txt"]
@@ -266,6 +270,10 @@ prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
 # A vocabulary word, which no dictionary inflects, with one of these after it is accepted the same
 # way: `datagrams`, `demuxes`, and software English's `mmap'd`, `malloc'ed`, `realloc'ing`.
 vocabulary-suffixes = ["s", "es", "'d", "'ed", "'ing"]
+# Two words written with no space between are accepted the same way when each has four letters or
+# more and is among the words written most, SCOWL's two commonest sizes: `statuscode`, joined as
+# code joins words. A typo seldom splits into two such words, and a known typo is answered first.
+compounds = { letters = 4, ranks = 2 }
 typos = "typos.tsv"
 # How often words are written, by SCOWL's sizes: among corrections as near, a common word first
 # (`leter` gets `letter` before `leper`).

@@ -59,8 +59,8 @@ Things that are never words are never checked:
   names and terms of software from
   [cspell-dicts](https://github.com/streetsidesoftware/cspell-dicts) (`rustup`, `kubectl`, `Gitea`,
   `PostgreSQL`), 5 000 names of commands from [tldr-pages](https://github.com/tldr-pages/tldr)
-  (`journalctl`, `wipefs`), SCOWL's uncommon words, and the prefixes and plurals software English
-  makes (`unconfigured`, `datagrams`).
+  (`journalctl`, `wipefs`), SCOWL's uncommon words, the prefixes and plurals software English makes
+  (`unconfigured`, `datagrams`), and, where code joins words, two common ones joined (`statuscode`).
 - `uk-UA` (from [dict_uk](https://github.com/brown-uk/dict_uk)) is installed on first use. orthra
   compiles it to a 3.9 MB index of all its 3.6 million word forms.
 - Words are routed by script, word by word, so Ukrainian comments next to English names need no
