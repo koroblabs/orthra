@@ -5,5 +5,5 @@
 # is the diff somebody reads.
 
 [counts]
-"known-typo" = 77
+"known-typo" = 76
 "unknown-word" = 405

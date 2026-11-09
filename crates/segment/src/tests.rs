@@ -249,7 +249,6 @@ fn a_glob_is_not_words() {
             > Match *.rs and [Mm]akefile, or src/** and *.{c,h}; why? Because.
               ^^^^^ title
                          ^^^ lower
-                                 ^^^^^^^ lower
                                                     ^^^ lower
                                                                  ^^^ lower
                                                                       ^^^^^^^ title
@@ -442,6 +441,27 @@ fn a_backslash_takes_only_the_letters_of_its_escape() {
                                                                              ^^^ lower
                                                                                   ^^^^^^^^^ title
                                                                                             ^^^ lower
+        "#]],
+    );
+}
+
+/// A glob whose character class opens it is a glob too, and a footnote or an index after a word
+/// leaves the word.
+#[test]
+fn a_class_that_opens_a_glob_is_a_glob() {
+    check(
+        "Match [Mm]akefile and *.[ch]pp, see the docs[1]. and items[i], not [Qq]zxvfile.",
+        false,
+        expect![[r#"
+            > Match [Mm]akefile and *.[ch]pp, see the docs[1]. and items[i], not [Qq]zxvfile.
+              ^^^^^ title
+                                ^^^ lower
+                                              ^^^ lower
+                                                  ^^^ lower
+                                                      ^^^^ lower
+                                                               ^^^ lower
+                                                                   ^^^^^ lower
+                                                                             ^^^ lower
         "#]],
     );
 }

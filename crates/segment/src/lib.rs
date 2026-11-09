@@ -160,7 +160,7 @@ impl Scratch {
                     // `.gitattributes`, `(.rgignore)`, `` `.gir` ``. An ellipsis is not one.
                     let dotted =
                         slice[s..s + lead].ends_with('.') && !slice[s..s + lead].ends_with("..");
-                    if core.is_empty() || dotted || never_a_word(core) {
+                    if core.is_empty() || dotted || class_glob(&slice[s..i]) || never_a_word(core) {
                         continue;
                     }
                     Splitter {
@@ -184,6 +184,16 @@ fn trim_punctuation(chunk: &str) -> (usize, &str) {
     let core = chunk.trim_start_matches(is_edge);
     let lead = chunk.len() - core.len();
     (lead, core.trim_end_matches(is_edge))
+}
+
+/// A character class with a name going on after it, `[Mm]akefile`, `*.[ch]pp`: a glob, read on the
+/// chunk before its punctuation is trimmed, which would cut a class that opens it off. A footnote
+/// or an index ends there, `docs[1].`, `items[i]`, and stays words.
+fn class_glob(chunk: &str) -> bool {
+    chunk
+        .find('[')
+        .and_then(|open| chunk[open..].find(']').map(|close| open + close))
+        .is_some_and(|close| chunk[close + 1..].starts_with(char::is_alphanumeric))
 }
 
 /// Chunks that are never words, whatever letters they hold.
