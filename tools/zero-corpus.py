@@ -29,7 +29,7 @@ ZERO = os.path.join(corpuslib.CACHE, "zero")
 PROJECTS = {
     "phrost": {
         "git": os.path.join(os.path.dirname(corpuslib.ROOT), "phrost"),
-        "rev": "de013033dab612c44aee781e50973a0273347676",
+        "rev": "5d141fa540958b5b7a55519cf96d11debf6ea756",  # v0.1.0, public; the history before it was squashed
         "paths": ["Cargo.toml", "README.md", "CLAUDE.md", "docs", "crates"],
         "license": "MIT OR Apache-2.0",
         # phrost is written in British English: `modelled`, `judgement`, `colour`.

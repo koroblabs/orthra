@@ -559,6 +559,10 @@ which is not. A planted rise fails it; a planted slack is lowered and written ba
   findings and hidden 5 of the 1 111 typos caught; asked where code joins words, they took 59 and
   hid none.
 
+  phrost's pin then moved to its public `v0.1.0`, since the commit it named had been squashed out of
+  phrost's history and no checkout could fetch it: at `v0.1.0`, 391 unknown words and 35 known
+  typos, which `just zero` holds it to from here.
+
 - **GitHub Typo Corpus.** Real typo fixes from commits: code, comments and docs. `just typo-eval`
   reports recall (did we flag the typo?), suggestion top-1 and top-5 (was the fix our first, or in
   our first five?), and false positives on the corrected side of each edit.
