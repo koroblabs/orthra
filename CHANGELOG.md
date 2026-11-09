@@ -18,7 +18,18 @@ names the tag's version.
   `foundryd` is no finding in the project that builds it;
 - takes after a backslash only the letters its escape takes: `\Generator` in a Python raw string is
   `Generator`, no longer a typo of `generator` with its first letter cut off;
-- accepts `dialogs`, `lossy`, `natively`, `browseable`, `exportfs` and `unparseable`.
+- accepts `dialogs`, `lossy`, `natively`, `browseable`, `exportfs` and `unparseable`, and a software
+  word with `'d`, `'ed` or `'ing` after it: `mmap'd`, `chmod'd`, `malloc'ed`;
+- leaves a Rust `cfg` predicate's strings alone, `#[cfg(target_os = "emscripten")]`: they name
+  targets and features;
+- leaves a file a tool wrote alone whatever its name: one with a line longer than 10 000 characters,
+  as a minified bundle is, or larger than 2 MB, as a parser's generated tables are. A 2 MB bundle
+  took 3.4 s to check, and a keystroke in it half a second;
+- keeps its memory bounded on a huge workspace: on the cargo registry, 36 000 files, the server's
+  peak went from 5 GB to 313 MB and its first diagnostic from 89 s to 37 s;
+- stops reporting on a document whose change it could not apply, a column inside a character, until
+  the editor sends it whole: what it had published would have been at the wrong places, and a fix
+  applied there would have edited somewhere else.
 
 ## 0.2.0
 
