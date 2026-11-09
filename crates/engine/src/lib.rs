@@ -271,6 +271,10 @@ impl Engine {
         strings: Strings,
         parsed: Option<&mut Parsed>,
     ) -> Vec<Finding> {
+        // What a generator says it wrote is not checked, and still declares what it declares.
+        if tool_output::says_generated(text) {
+            return Vec::new();
+        }
         let Some((host, words, places)) = self.words(language_id, text, parsed) else {
             return Vec::new();
         };
