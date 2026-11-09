@@ -277,7 +277,10 @@ name, and en-GB names en-US's known typos and vocabulary. Before they shared the
   compiled; the slowest correction is 2.4 to 3.1 ms, where it was 16 to 18 before they were. Every
   budget was met; on one run of an earlier build, Ruby's query loaded in 53 ms against 50, where
   every other run took 25. Not on Linux, where glibc already gives it back and mimalloc's defaults
-  held 4.5 MB more.
+  held 4.5 MB more. 0.2.1 on the Mac (2026-11-10) met every budget too, with the footprint where it
+  was (8.6 helix, 8.1 ripgrep, 8.8 phrost, 7.2 composer, 6.0 starter workflows): cold 3.2 to 9.4 ms
+  per 2 000 lines, composer's the nearest its 10; keystroke p95 0.15 to 1.38 ms; the slowest grammar
+  Ruby's, 27 ms.
 
 - **The known typos are read where they are embedded,** as an offset per entry, and never copied. As
   a hash map of owned strings, en-US's 96 000 entries were 9 MB of heap in 288 000 allocations, and
