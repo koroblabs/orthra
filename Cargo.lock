@@ -1432,6 +1432,7 @@ name = "orthra-project"
 version = "0.2.0"
 dependencies = [
  "expect-test",
+ "lspkit-heap",
  "lspkit-walk",
  "orthra-engine",
  "serde_json",

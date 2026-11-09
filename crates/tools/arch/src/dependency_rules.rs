@@ -66,7 +66,13 @@ const RULES: &[Rule] = &[
     // editor would (`CLAUDE.md` §8.3).
     Rule::new(
         "orthra-project",
-        &["orthra-engine", "orthra-text", "lspkit-walk"],
+        &[
+            // To give back what a long pass's parses free as it goes, not only once it is done.
+            "lspkit-heap",
+            "orthra-engine",
+            "orthra-text",
+            "lspkit-walk",
+        ],
     ),
     Rule::new(
         "orthra-engine",

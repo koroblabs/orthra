@@ -74,3 +74,34 @@ fn a_line_no_person_writes_is_a_tools_output() {
     "#]]
     .assert_eq(&(found.join("\n") + "\n"));
 }
+
+/// A parser's generated tables run to tens of megabytes in lines of ordinary length. A file of 2 MiB
+/// is still somebody's; one byte more is not.
+#[test]
+fn a_file_larger_than_anyone_writes_is_a_tools_output() {
+    let mut engine = Engine::with_packs(packs());
+    let file = |bytes: usize| {
+        let mut text = String::from("Seperates teh greeting.\n");
+        while text.len() + 6 <= bytes {
+            text.push_str("a, b.\n");
+        }
+        text.push_str(&" ".repeat(bytes - text.len()));
+        text
+    };
+    let found: Vec<String> = [
+        ("2 MiB", file(2 << 20)),
+        ("a byte more", file((2 << 20) + 1)),
+    ]
+    .iter()
+    .map(|(what, text)| {
+        let findings =
+            engine.check_document("tables.txt", "plaintext", text, &mut Parsed::default());
+        format!("{what}: {}", findings.len())
+    })
+    .collect();
+    expect![[r#"
+        2 MiB: 2
+        a byte more: 0
+    "#]]
+    .assert_eq(&(found.join("\n") + "\n"));
+}

@@ -48,7 +48,8 @@ Things that are never words are never checked:
   `Author: ...`;
 - test data: `fixtures/`, `*-fixtures/`, `__fixtures__/` and `testdata/`;
 - generated files: `*.min.js`, `*.pb.go`, `*.g.dart`, `*.Designer.cs`, lock files, and any file with
-  a line longer than 10 000 characters, as a minified bundle is under any name;
+  a line longer than 10 000 characters, as a minified bundle is under any name, or larger than 2 MB,
+  as a parser's generated tables are;
 - the text of a translation into a language you have not enabled: `locales/de.json`, Android's
   `res/values-de/`, `de.lproj/`, `Strings.de.resx`, `messages_de.properties`.
 

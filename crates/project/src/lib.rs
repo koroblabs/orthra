@@ -30,6 +30,13 @@ mod tests;
 /// one before.
 const THREADS: usize = 4;
 
+/// How much text the threads read, together, between two calls to give back what their parses
+/// freed. glibc keeps what a thread frees in that thread's arena: on the cargo registry's 36 409
+/// files, 1.3 GB, four threads reached 4 GB of RSS where one arena held 400 MB (2026-11-09). A
+/// project smaller than this is given it back once, after the pass, as it was.
+const RELEASE_EVERY: usize = RELEASE_MB << 20;
+const RELEASE_MB: usize = 32;
+
 /// The files of a project that a host claims, with their language, and the paths it was found
 /// from.
 #[derive(Debug)]
@@ -128,8 +135,12 @@ impl Project {
                 Ok(text) => {
                     let findings = fork.check_file(&file.to_string_lossy(), &text);
                     found(at, file, Some((&text, findings)));
+                    text.len()
                 }
-                Err(_) => found(at, file, None),
+                Err(_) => {
+                    found(at, file, None);
+                    0
+                }
             },
         );
     }
@@ -147,9 +158,11 @@ impl Project {
         }
         let shared: &Engine = engine;
         let read = self.on_threads(Declared::default, |declared, at, file| {
-            if let Ok(text) = fs::read_to_string(file) {
-                shared.declarations(self.documents[at].1, &text, declared);
-            }
+            let Ok(text) = fs::read_to_string(file) else {
+                return 0;
+            };
+            shared.declarations(self.documents[at].1, &text, declared);
+            text.len()
         });
         for declared in read {
             engine.declare(declared);
@@ -157,14 +170,16 @@ impl Project {
     }
 
     /// Hands every file to `work` on [`THREADS`] threads, each taking the next file as it is free,
-    /// with a state of its own that `start` makes. The states, once every file is done.
+    /// with a state of its own that `start` makes; `work` says how many bytes it read. The states,
+    /// once every file is done.
     fn on_threads<T: Send>(
         &self,
         start: impl Fn() -> T + Sync,
-        work: impl Fn(&mut T, usize, &Path) + Sync,
+        work: impl Fn(&mut T, usize, &Path) -> usize + Sync,
     ) -> Vec<T> {
         let threads = thread::available_parallelism().map_or(1, NonZero::get);
         let next = AtomicUsize::new(0);
+        let read = AtomicUsize::new(0);
         thread::scope(|scope| {
             let workers: Vec<_> = (0..threads.min(THREADS))
                 .map(|_| {
@@ -175,7 +190,11 @@ impl Project {
                             let Some((file, _)) = self.documents.get(at) else {
                                 return state;
                             };
-                            work(&mut state, at, file);
+                            let bytes = work(&mut state, at, file);
+                            if read.fetch_add(bytes, Ordering::Relaxed) + bytes >= RELEASE_EVERY {
+                                read.store(0, Ordering::Relaxed);
+                                lspkit_heap::release_freed();
+                            }
                         }
                     })
                 })
