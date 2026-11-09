@@ -268,7 +268,9 @@ name, and en-GB names en-US's known typos and vocabulary. Before they shared the
   after `perf` 25, 27 and 21 MB on ripgrep, helix and composer where it was 34, 37 and 30. Linux
   also gives back what tree-sitter frees only when glibc is asked (`release_freed` after a pass and
   a close); macOS 26's allocator gives back nothing, which is why the compiled dictionaries mattered
-  there.
+  there. On macOS, mimalloc is the process's `malloc` (`lspkit-heap`'s `override`, lspkit 0.1.1),
+  and `release_freed` gives back what tree-sitter frees: the footprint on helix went from 28 MB
+  to 14. Not on Linux, where glibc already gives it back and mimalloc's defaults held 4.5 MB more.
 
 - **The known typos are read where they are embedded,** as an offset per entry, and never copied. As
   a hash map of owned strings, en-US's 96 000 entries were 9 MB of heap in 288 000 allocations, and

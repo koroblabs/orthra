@@ -31,6 +31,8 @@ names the tag's version.
 - English's dictionaries are compiled to FSTs when orthra is built: 12.8 MB less memory, a faster
   start, and corrections ranked by how common a word is, so `leter` gets `later` and `letter` before
   `leer` and `lefter`; the right correction comes first a point more often on real typos;
+- gives back on macOS what its parsers free, with mimalloc as the process's allocator there: about
+  half the memory on a large project;
 - English is either spelling until a setting names one: en-US and en-GB are built in, and
   `languages = ["en-US"]` makes a project American only;
 - test data is not checked: `fixtures/`, `*-fixtures/`, `__fixtures__/` and `testdata/` in every

@@ -24,6 +24,14 @@ orthra-project.workspace = true
 orthra-text.workspace = true
 toml.workspace = true
 
+# On macOS, mimalloc as the process's `malloc`, under `Heap` and under tree-sitter's C, so that what
+# a parser frees leaves the process when `release_freed` asks: macOS's allocator never gives it
+# back. The footprint after `orthra perf` on the helix checkout went from 28 MB to 14 (lspkit
+# 0.1.1). Not on Linux, where glibc gives it back when asked and mimalloc's defaults held more: RSS
+# after `orthra perf` on helix 27.3 MB to 31.9, and 27.9 with its purging made eager (2026-11-09).
+[target.'cfg(target_os = "macos")'.dependencies]
+lspkit-heap = { workspace = true, features = ["override"] }
+
 [features]
 # The context tier's model, in process (`docs/04-context.md`): candle, 2.8 MB of a 27 MB binary
 # (2026-11-06). And "Rewrite sentence (local model)" through an endpoint the user runs: ureq is in
