@@ -60,8 +60,8 @@ impl Judge<'_> {
         };
         // A words file's words, the file's own `orthra: ignore` list, and the host's words are
         // words wherever they are written. So is the directive itself. What a person listed is a
-        // word in every part of a run it names whole: `TruStage` is cut into `Stage` and `Tru`,
-        // which alone is a known typo of `true`, and a list can only name what it was written as.
+        // word in every part of a run it names whole: `TruStage` is cut in two, its first part
+        // alone is a known typo of `true`, and a list can only name what it was written as.
         // The run is lower-cased only for a word cut from one that a list does not name itself.
         let run = OnceCell::new();
         let listed = |list: &FxHashSet<Box<str>>| {

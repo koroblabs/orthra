@@ -88,8 +88,8 @@ fn a_directive_ignores_the_next_line() {
     .assert_eq(&Annotation::render(text, &annotations));
 }
 
-/// A listed word is a word in every part of a run it names whole: `TruStage` is cut into `Stage`
-/// and `Tru`, and the list can only name it as written. `Tru` alone is still a typo.
+/// A listed word is a word in every part of a run it names whole: `TruStage` is cut in two, and
+/// the list can only name it as written. Its first part alone is still a typo.
 #[test]
 fn a_words_file_word_is_a_word_in_every_part() {
     let text = "Tru alone is a typo.\nTruStage's rates, from TruStage.\n";

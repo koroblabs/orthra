@@ -6,8 +6,8 @@ names the tag's version.
 ## Unreleased
 
 - accepts a word a words file or an `orthra: ignore` directive lists in every part orthra cuts it
-  into, and before a possessive: `TruStage` in `.orthra/words.txt` no longer leaves `Tru` reported
-  as a typo of `true`, in `TruStage` or in `TruStage's`.
+  into, and before a possessive: `TruStage` in `.orthra/words.txt` no longer has its first part
+  reported as a typo of `true`, in `TruStage` or in `TruStage's`.
 
 ## 0.2.0
 

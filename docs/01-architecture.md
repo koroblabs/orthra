@@ -533,8 +533,8 @@ ignore = ["crates/hosts/src/*/vocabulary.txt"]  # gitignore patterns: files that
 - **A words file's word is a word everywhere,** a declaration and a known typo included: somebody
   wrote it down on purpose. It is checked before the verdict cache, so nothing cached goes stale. It
   is a word in every part of a run it names whole, as a word of an `orthra: ignore` directive is:
-  `TruStage` is cut into `Stage` and `Tru`, which alone is a known typo of `true`. A run ends before
-  a possessive, so `TruStage's` is that run too.
+  `TruStage` is cut in two, and its first part alone is a known typo of `true`. A run ends before a
+  possessive, so `TruStage's` is that run too.
 - **A project's root** is the nearest directory with an `orthra.toml` or a `.git`, then the nearest
   with a manifest. A member of a Cargo workspace has a manifest of its own, and the repository's
   settings are still its settings.
