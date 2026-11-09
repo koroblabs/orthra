@@ -10,6 +10,7 @@ use std::fmt;
 pub mod compiled;
 pub mod edits;
 pub mod hunspell;
+pub mod ranks;
 
 pub trait Dictionary: Send + Sync + fmt::Debug {
     /// Whether the dictionary accepts `word` as it is written, case included: a Hunspell dictionary

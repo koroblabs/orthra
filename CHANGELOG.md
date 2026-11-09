@@ -30,7 +30,8 @@ names the tag's version.
 - leaves a name qualified by its module unchecked, `os.path.join`, `Vec::new`: it refers to code;
 - English's dictionaries are compiled to FSTs when orthra is built: 12.8 MB less memory, a faster
   start, and corrections ranked by how common a word is, so `leter` gets `later` and `letter` before
-  `leer` and `lefter`; the right correction comes first a point more often on real typos;
+  `leer` and `lefter`; the right correction comes first a point more often on real typos; how common
+  each word is is compiled too, so the first correction asked for comes as fast as the next;
 - gives back on macOS what its parsers free, with mimalloc as the process's allocator there: 7 to 10
   MB after checking a large project;
 - English is either spelling until a setting names one: en-US and en-GB are built in, and

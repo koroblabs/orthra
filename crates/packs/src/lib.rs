@@ -4,7 +4,6 @@
 //! Adding a language is a directory, not a diff: a pack is read from its `pack.toml` and the files
 //! it names, and nothing here knows which language it is reading.
 
-mod frequency;
 pub mod installed;
 pub mod locale_path;
 pub mod pack;

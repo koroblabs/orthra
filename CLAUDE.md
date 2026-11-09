@@ -265,7 +265,9 @@ name, and en-GB names en-US's known typos and vocabulary. Before they shared the
 
 - **English is compiled when orthra is** (2026-11-09, `01-architecture.md` §7): FSTs read where they
   are embedded, 0.7 MB of live heap after the packs where spellbook's tables were 12.8, and RSS
-  after `perf` 25, 27 and 21 MB on ripgrep, helix and composer where it was 34, 37 and 30. Linux
+  after `perf` 25, 27 and 21 MB on ripgrep, helix and composer where it was 34, 37 and 30. Its
+  frequencies too: parsed on the first correction asked for, they took 20 ms of its 24 and held 2
+  MB; compiled, the first takes 4 ms, and RSS after `perf` is 3 MB lower again (helix 24.3). Linux
   also gives back what tree-sitter frees only when glibc is asked (`release_freed` after a pass and
   a close); macOS 26's allocator gives back nothing, which is why the compiled dictionaries mattered
   there. On macOS, mimalloc is the process's `malloc` (`lspkit-heap`'s `override`, lspkit 0.1.1),

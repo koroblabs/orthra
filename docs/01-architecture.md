@@ -419,7 +419,11 @@ the hidden capitalized form Hunspell adds for a word of mixed case, so `GITHUB` 
 `Github` is not. The three dictionaries compile in 0.3 s to 0.9 MB of FSTs, embedded, and the `.dic`
 files are not. English's corrections are ranked by SCOWL's sizes as frequencies (`frequency.txt`,
 sizes 10 to 50), and a correction one edit away is offered without those two away, as Hunspell does.
-Measured on the slow VM, against spellbook:
+The frequencies are compiled with the dictionaries, to an FST of each word's rank (`orthra-dict`'s
+`ranks`), embedded in place of the text: parsed into a sorted table on the first correction asked
+for, they had made that one take 24 ms on the slow VM against 1 for the next, and held 2 MB of heap.
+An installed pack's frequency file is compiled to the same table on its first correction. Measured
+on the slow VM, against spellbook:
 
 |                                               |       spellbook |                compiled |
 | --------------------------------------------- | --------------: | ----------------------: |

@@ -11,16 +11,18 @@ use orthra_dict::{
     Candidate, Dictionary,
     compiled::{Bytes, CompiledDict},
     hunspell::HunspellDict,
+    ranks::Ranks,
 };
 use orthra_text::script::Script;
 
+#[cfg(test)]
+mod builtin_frequencies;
 #[cfg(test)]
 mod compiled_english;
 #[cfg(test)]
 mod tests;
 
 use crate::{
-    frequency::Frequencies,
     installed::{self, Install},
     typos::{Fixes, KnownTypos},
     vocabulary::Vocabulary,
@@ -128,6 +130,16 @@ impl Pack {
     /// A built-in file, named relative to pack `tag`'s directory: `typos.tsv`, or a neighbor's
     /// `../en-US/typos.tsv`.
     fn builtin_file(tag: &str, name: &str) -> Option<&'static str> {
+        let key = Pack::builtin_key(tag, name)?;
+        crate::builtin::FILES
+            .iter()
+            .find(|(path, _)| *path == key)
+            .map(|(_, text)| *text)
+    }
+
+    /// Where a file named relative to pack `tag`'s directory is among the built-in files:
+    /// `en-GB/../en-US/typos.tsv` is `en-US/typos.tsv`.
+    fn builtin_key(tag: &str, name: &str) -> Option<String> {
         let mut parts = vec![tag];
         for part in name.split('/') {
             match part {
@@ -138,16 +150,13 @@ impl Pack {
                 part => parts.push(part),
             }
         }
-        let key = parts.join("/");
-        crate::builtin::FILES
-            .iter()
-            .find(|(path, _)| *path == key)
-            .map(|(_, text)| *text)
+        Some(parts.join("/"))
     }
 
-    /// A built-in pack's compiled dictionary `name`, compiled when orthra was: `en_US.fst`.
+    /// A built-in pack's file compiled when orthra was: a dictionary, `en_US.fst`, or a frequency
+    /// table, under its text's name, `../en-US/frequency.txt`.
     fn builtin_compiled(tag: &str, name: &str) -> Option<&'static [u8]> {
-        let key = format!("{tag}/{name}");
+        let key = Pack::builtin_key(tag, name)?;
         crate::builtin::COMPILED
             .iter()
             .find(|(path, _)| *path == key)
@@ -638,14 +647,26 @@ impl Fsts {
 
 /// A pack's frequencies and the file they are read from, on the first correction asked for.
 struct LazyFrequencies {
+    /// A built-in pack's, compiled when orthra was; an installed pack's, its text.
     text: Text,
-    loaded: OnceLock<Frequencies>,
+    loaded: OnceLock<Ranks>,
 }
 
 impl LazyFrequencies {
-    fn get(&self) -> &Frequencies {
-        self.loaded
-            .get_or_init(|| Frequencies::parse(self.text.read()))
+    fn get(&self) -> &Ranks {
+        self.loaded.get_or_init(|| {
+            let ranks = match &self.text {
+                Text::Compiled(bytes) => Ranks::new(Bytes::Embedded(bytes)),
+                text => Ranks::compile(&text.read())
+                    .and_then(|compiled| Ranks::new(Bytes::Owned(compiled))),
+            };
+            ranks.unwrap_or_else(|err| {
+                panic!(
+                    "a frequency table that does not read, which a built-in pack's test refuses: \
+                     {err}"
+                )
+            })
+        })
     }
 }
 
