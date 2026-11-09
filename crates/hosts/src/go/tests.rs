@@ -33,7 +33,7 @@ func (g *Greeter) Greet(person string, extra ...string) string {
         expect![[r#"
             go
             > // Package main greets whoever asks.
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ doccomment
             > package main
                       ^^^^ declaration
             >
@@ -44,7 +44,7 @@ func (g *Greeter) Greet(person string, extra ...string) string {
             > )
             >
             > // Greeter says hello.
-              ^^^^^^^^^^^^^^^^^^^^^^ comment
+                 ^^^^^^^^^^^^^^^^^^^ doccomment
             > type Greeter struct {
                    ^^^^^^^ declaration
             > 	Name  string `json:"user_name,omitempty"`
@@ -54,7 +54,7 @@ func (g *Greeter) Greet(person string, extra ...string) string {
             > }
             >
             > /* Greet builds the greeting. */
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ doccomment
             > func (g *Greeter) Greet(person string, extra ...string) string {
                     ^ declaration
                                 ^^^^^ declaration
@@ -73,6 +73,37 @@ func (g *Greeter) Greet(person string, extra ...string) string {
             > 		fmt.Println(index, item)
             > 	}
             > 	return str.ToUpper(message + raw)
+            > }
+        "#]],
+    );
+}
+
+/// A directive is not prose, a doc comment's code block indented by a tab is code, and a comment
+/// in a body stays a comment.
+#[test]
+fn go_directives_and_doc_code_are_not_prose() {
+    crate::tests::check(
+        "/src/p.go",
+        "//go:build linux || qzxvtag\n\n// Package p does things. For example:\n//\n//\tqzxvcode := run(qzxvarg)\n//\n// Then qzxvprose follows.\npackage p\n\n//go:generate go run qzxvgen.go\nfunc f() {\n\t// A comment in a body: qzxvbody.\n}\n",
+        expect_test::expect![[r#"
+            go
+            > //go:build linux || qzxvtag
+            >
+            > // Package p does things. For example:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ doccomment
+            > //
+            > //	qzxvcode := run(qzxvarg)
+            > //
+            > // Then qzxvprose follows.
+                 ^^^^^^^^^^^^^^^^^^^^^^^ doccomment
+            > package p
+                      ^ declaration
+            >
+            > //go:generate go run qzxvgen.go
+            > func f() {
+                   ^ declaration
+            > 	// A comment in a body: qzxvbody.
+              	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment
             > }
         "#]],
     );

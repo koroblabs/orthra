@@ -105,8 +105,9 @@ impl Loaded {
             // doc's own indentation. Markdown wants a blank line before it, which is not carried
             // here: a list item's continuation indented that far goes unchecked, and none is
             // misread as a word.
+            // gofmt indents a Go doc comment's code by a tab after the marker.
             let indented = if marked.len() < unindented.len() {
-                marked.starts_with("     ")
+                marked.starts_with("     ") || marked.starts_with('\t') || marked.starts_with(" \t")
             } else {
                 number > 0 && base.is_some_and(|base| line.len() - unindented.len() >= base + 4)
             };

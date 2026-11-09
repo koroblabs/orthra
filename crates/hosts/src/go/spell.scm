@@ -1,5 +1,18 @@
-; Where prose lives in Go. Captures: @comment, @string, @declaration, @skip (`tree_sitter_host.rs`).
-; Go has no doc-comment syntax: a doc comment is a comment that precedes a declaration.
+; Where prose lives in Go. Captures: @comment, @doc, @string, @declaration, @skip
+; (`tree_sitter_host.rs`).
+
+; A directive to the toolchain, not prose: `//go:build linux || shbe`, `//go:generate go run
+; gen.go`, `//go:linkname`, the old `// +build`, `//line`, `//export`, a linter's `//nolint`. In the
+; standard library they were 95 findings, `shbe`, `gojs`, `decgen` (2026-11-09).
+((comment) @skip
+  (#match? @skip "^//(go:|line |export |extern |nolint|lint:| ?\\+build )"))
+
+; A doc comment is the comments that precede a declaration, and gofmt writes its code blocks
+; indented by a tab: `//\tx := f()`, which the doc's rules leave out.
+((comment)+ @doc
+  .
+  [(package_clause) (function_declaration) (method_declaration) (type_declaration)
+   (const_declaration) (var_declaration)])
 
 (comment) @comment
 
