@@ -7,9 +7,15 @@ use std::{
     sync::{Arc, OnceLock},
 };
 
-use orthra_dict::{Candidate, Dictionary, compiled::CompiledDict, hunspell::HunspellDict};
+use orthra_dict::{
+    Candidate, Dictionary,
+    compiled::{Bytes, CompiledDict},
+    hunspell::HunspellDict,
+};
 use orthra_text::script::Script;
 
+#[cfg(test)]
+mod compiled_english;
 #[cfg(test)]
 mod tests;
 
@@ -104,10 +110,13 @@ impl Pack {
         };
         let file = |name: &str| match Pack::builtin_file(tag, name) {
             Some(text) => Some(Text::Embedded(text)),
-            None => installed
-                .as_deref()
-                .and_then(|dir| installed::file(dir, name))
-                .map(Text::Installed),
+            None => match Pack::builtin_compiled(tag, name) {
+                Some(bytes) => Some(Text::Compiled(bytes)),
+                None => installed
+                    .as_deref()
+                    .and_then(|dir| installed::file(dir, name))
+                    .map(Text::Installed),
+            },
         };
         let toml = Pack::builtin_file(tag, "pack.toml")
             .expect("the build script embeds pack.toml with every pack");
@@ -134,6 +143,15 @@ impl Pack {
             .iter()
             .find(|(path, _)| *path == key)
             .map(|(_, text)| *text)
+    }
+
+    /// A built-in pack's compiled dictionary `name`, compiled when orthra was: `en_US.fst`.
+    fn builtin_compiled(tag: &str, name: &str) -> Option<&'static [u8]> {
+        let key = format!("{tag}/{name}");
+        crate::builtin::COMPILED
+            .iter()
+            .find(|(path, _)| *path == key)
+            .map(|(_, bytes)| *bytes)
     }
 
     /// A pack from its `pack.toml` and a way to read the files it names. Built-in and installed
@@ -173,7 +191,7 @@ impl Pack {
         // only a dictionary is installed.
         let embedded = |name: &str| match read(name)? {
             Text::Embedded(text) => Ok(text),
-            Text::Installed(_) => Err(PackError(format!(
+            Text::Installed(_) | Text::Compiled(_) => Err(PackError(format!(
                 "{name} is installed, and only a dictionary may be"
             ))),
         };
@@ -204,21 +222,24 @@ impl Pack {
                 },
             },
             (None, Some(base)) => {
-                if dictionary("rare").is_some() {
-                    return Err(PackError(
-                        "`dictionary.rare` is read with `hunspell`, not `compiled`".to_owned(),
-                    ));
-                }
-                let compiled = read(&format!("{base}.fst"))?;
-                if let Text::Embedded(_) = compiled {
-                    return Err(PackError(format!(
-                        "{base}.fst is compiled when the pack is installed, and a built-in pack \
-                         is not installed"
-                    )));
-                }
+                // Compiled when the pack is installed, or when orthra is for a built-in pack, and
+                // never a text: a `.fst` among a pack's files is not one to read.
+                let compiled = |name: &str| -> Result<Fsts, PackError> {
+                    let forms = read(&format!("{name}.fst"))?;
+                    if let Text::Embedded(_) = forms {
+                        return Err(PackError(format!(
+                            "{name}.fst is compiled from {name}.dic, not written by hand"
+                        )));
+                    }
+                    Ok(Fsts {
+                        forms,
+                        marks: file(&format!("{name}.marks.fst")),
+                    })
+                };
                 Source::Compiled {
                     aff: read(&format!("{base}.aff"))?,
-                    compiled,
+                    main: compiled(base)?,
+                    rare: dictionary("rare").map(compiled).transpose()?,
                 }
             }
             _ => {
@@ -427,23 +448,44 @@ impl Pack {
             .suggest(&normalized, &mut candidates);
         let from_dictionary = candidates.len();
         self.vocabulary_near(&normalized, &mut candidates);
-        // The nearest first; among those as near, the dictionary's before the vocabulary's, each in
-        // its own order, or the most written first where the pack knows how often words are.
+        // The nearest first; among those as near, one in the case the word is written in before a
+        // name (`leter` gets `letter` before `Lester`), the most written first where the pack knows
+        // how often words are, one that keeps the word's first letter, which a typo seldom
+        // changes, and the dictionary's before the vocabulary's, each in its own order.
         let frequencies = self.frequency.as_ref().map(LazyFrequencies::get);
+        let lower = word.chars().next().is_some_and(char::is_lowercase);
+        let first = normalized.chars().next().map(|c| c.to_lowercase().next());
         let mut ranked: Vec<(usize, Candidate)> = candidates.into_iter().enumerate().collect();
         ranked.sort_by_cached_key(|(at, candidate)| {
             (
                 candidate.edits,
                 candidate.word.contains(' '),
+                lower
+                    && candidate
+                        .word
+                        .chars()
+                        .next()
+                        .is_some_and(char::is_uppercase),
                 frequencies.map_or(0, |frequencies| {
                     frequencies.rank(&candidate.word).unwrap_or(u32::MAX)
                 }),
+                candidate
+                    .word
+                    .chars()
+                    .next()
+                    .map(|c| c.to_lowercase().next())
+                    != first,
                 *at >= from_dictionary,
                 *at,
             )
         });
+        // A correction one edit away is offered without the ones two away, as Hunspell does:
+        // `Schedulor` gets `Scheduler`, not `Schedules` and three more beside it. On the typo
+        // sample it cost one typo's right fix in the first five, of 1 618 (2026-11-09).
+        let nearest = ranked.first().map(|(_, candidate)| candidate.edits);
         let mut corrections: Vec<String> = ranked
             .into_iter()
+            .filter(|(_, candidate)| nearest != Some(1) || candidate.edits == 1)
             .take(limit)
             .map(|(_, candidate)| candidate.word)
             .collect();
@@ -547,7 +589,8 @@ impl Pack {
 /// A pack's dictionaries, read on the first word of the pack's script and not before, so a language
 /// a project enables and no document writes in costs nothing. uk-UA's compiled dictionary is 3.9 MB
 /// and 0.02 s to read, where its Hunspell files were 37 MB and half a second (measured
-/// 2026-11-06); en-US's, 2 to 5 MB and 14 ms.
+/// 2026-11-06). English's are compiled when orthra is and read where they are embedded: no heap,
+/// where spellbook's tables for en-US and en-GB were 12.8 MB of it (2026-11-09).
 ///
 /// The texts are a built-in pack's, embedded and tested by its smoke test, so reading them cannot
 /// fail at runtime; a pack installed from a file is read once when it is installed, for the same
@@ -566,9 +609,31 @@ enum Source {
         /// Read with the main dictionary's affixes: its words are lines of the same family.
         rare: Option<Text>,
     },
-    /// The forms a Hunspell dictionary makes, compiled when the pack was installed, and the `.aff`
-    /// for what a checked word goes through first.
-    Compiled { aff: Text, compiled: Text },
+    /// The forms a Hunspell dictionary makes, compiled when the pack was installed or, for a
+    /// built-in pack, when orthra was, and the `.aff` for what a checked word goes through first.
+    Compiled {
+        aff: Text,
+        main: Fsts,
+        rare: Option<Fsts>,
+    },
+}
+
+/// One compiled dictionary's files: its forms, and its forms' marks if any has one.
+struct Fsts {
+    forms: Text,
+    marks: Option<Text>,
+}
+
+impl Fsts {
+    fn read(&self, aff: &str) -> Result<Box<dyn Dictionary>, String> {
+        let bytes = |text: &Text| match text {
+            Text::Compiled(bytes) => Bytes::Embedded(bytes),
+            text => Bytes::Owned(text.read_bytes()),
+        };
+        CompiledDict::new(aff, bytes(&self.forms), self.marks.as_ref().map(bytes))
+            .map(|dictionary| Box::new(dictionary) as Box<dyn Dictionary>)
+            .map_err(|err| err.0)
+    }
 }
 
 /// A pack's frequencies and the file they are read from, on the first correction asked for.
@@ -596,6 +661,8 @@ impl fmt::Debug for LazyFrequencies {
 #[derive(Debug, Clone)]
 pub(crate) enum Text {
     Embedded(&'static str),
+    /// A built-in pack's compiled dictionary, compiled when orthra was and embedded.
+    Compiled(&'static [u8]),
     Installed(PathBuf),
 }
 
@@ -603,14 +670,16 @@ impl Text {
     fn read(&self) -> Cow<'static, str> {
         match self {
             Text::Embedded(text) => Cow::Borrowed(text),
+            Text::Compiled(bytes) => String::from_utf8_lossy(bytes),
             Text::Installed(path) => Cow::Owned(installed::read(path)),
         }
     }
 
-    /// An installed file's bytes; an embedded one's text as bytes.
+    /// An installed file's bytes; an embedded one's as they are.
     fn read_bytes(&self) -> Vec<u8> {
         match self {
             Text::Embedded(text) => text.as_bytes().to_vec(),
+            Text::Compiled(bytes) => bytes.to_vec(),
             Text::Installed(path) => installed::read_bytes(path),
         }
     }
@@ -650,12 +719,13 @@ impl Lazy {
                     rare: rare.as_ref().map(read).transpose()?,
                 })
             }
-            Source::Compiled { aff, compiled } => Ok(Dictionaries {
-                main: Box::new(
-                    CompiledDict::new(&aff.read(), compiled.read_bytes()).map_err(|err| err.0)?,
-                ),
-                rare: None,
-            }),
+            Source::Compiled { aff, main, rare } => {
+                let aff = aff.read();
+                Ok(Dictionaries {
+                    main: main.read(&aff)?,
+                    rare: rare.as_ref().map(|rare| rare.read(&aff)).transpose()?,
+                })
+            }
         }
     }
 }

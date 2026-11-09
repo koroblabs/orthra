@@ -143,8 +143,14 @@ fn install_with(
             &read(format!("{base}.dic"))?,
         )
         .map_err(|err| failed(format!("{base} does not compile: {}", err.0)))?;
-        fs::write(partial.join(&file), compiled)
-            .map_err(|err| failed(format!("{}: {err}", partial.join(&file).display())))?;
+        let marks = install.marks_file().filter(|_| !compiled.marks.is_empty());
+        for (file, bytes) in [(Some(file), compiled.forms), (marks, compiled.marks)] {
+            let Some(file) = file else {
+                continue;
+            };
+            fs::write(partial.join(&file), bytes)
+                .map_err(|err| failed(format!("{}: {err}", partial.join(&file).display())))?;
+        }
     }
     if target.exists() {
         fs::remove_dir_all(&target)

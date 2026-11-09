@@ -91,7 +91,7 @@ fn an_installed_pack_is_read_from_its_directory_on_its_first_word() {
     );
     fs::write(
         installed.join("uk_UA.fst"),
-        super::compile(aff, dic).unwrap(),
+        super::compile(aff, dic).unwrap().forms,
     )
     .unwrap();
     assert!(uk.is_installed(&dir));

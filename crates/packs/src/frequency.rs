@@ -1,6 +1,7 @@
 //! How often each word is written, to put the likeliest correction first.
 //!
-//! A pack's `frequency` file is `word count` per line, most frequent first, lower case. A
+//! A pack's `frequency` file is `word count` per line, most frequent first, lower case, and words
+//! of one count are equals: English's counts are SCOWL's sizes, a class each. A
 //! dictionary's corrections come in the order of the edits that made them, and the likeliest word
 //! is often third or fourth: `сюда` gets `юда, слюда, сода, сюди`. Ordered by how often each is
 //! written, `сюди` comes first. Read on the first correction asked for, since only a code action
@@ -21,16 +22,21 @@ impl Frequencies {
     pub(crate) fn parse(text: Cow<'static, str>) -> Frequencies {
         let mut words = Vec::new();
         let mut at = 0usize;
-        for (rank, line) in text.split_inclusive('\n').enumerate() {
+        // The rank goes up when the count goes down.
+        let (mut rank, mut count) = (0usize, None);
+        for line in text.split_inclusive('\n') {
             let start = at;
             at += line.len();
-            let word = line
-                .trim_end()
-                .rsplit_once(' ')
-                .map_or("", |(word, _)| word);
+            let Some((word, written)) = line.trim_end().rsplit_once(' ') else {
+                continue;
+            };
             if word.is_empty() {
                 continue;
             }
+            if count.is_some_and(|count| count != written) {
+                rank += 1;
+            }
+            count = Some(written);
             let (Ok(start), Ok(len), Ok(rank)) = (
                 u32::try_from(start),
                 u32::try_from(word.len()),

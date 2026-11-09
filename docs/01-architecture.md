@@ -372,9 +372,8 @@ phrost's part of the zero corpus could not be taken on the machine this was meas
 sample lost five words: `autofocuss` and `flatpack` are typos, `accessors`, `jedis` and `autotools`
 are not. The megabyte is the pages of the lists a lookup reads.
 
-`FstDict` is not built for English, then, because nothing measured asks for it. Two things could
-still make it worth building: Ukrainian (Phase 4), and spellbook's MPL-2.0, which `deny.toml`
-carries as a named exception.
+`FstDict` was not built for English then, because nothing measured asked for it; macOS's memory did
+on 2026-11-09, below.
 
 **Measure both on uk-UA in Phase 4:** load time, RSS, check ns/word, suggest p95, and suggestion
 quality (`just ua-gec`). For Ukrainian it is the deciding case. Its morphology is rich enough that
@@ -406,9 +405,36 @@ ranks for both:
   s for dict_uk. The forms are made in passes of about 8 MB, so the 86 MB of them are never held at
   once. The FST's type is its format, and a new format comes with a new version of every compiled
   pack, so the next start installs it again.
-- **What it cannot hold, it refuses**: prefixes, compounding, a suffix with further affixes, and the
-  flags that make a form need an affix, forbid it or fix its case. Such a pack keeps `hunspell`.
-  That is why en-US stays on spellbook: SCOWL's `.aff` has prefixes and `COMPOUNDRULE`.
+- **What it cannot hold, it refuses**: compounding but of numbers, a suffix with further affixes,
+  and the flags that make a form need an affix, forbid it or fix its case. Such a pack keeps
+  `hunspell`.
+
+**Decided for English, 2026-11-09: `CompiledDict`, compiled when orthra is**
+(`dictionary = { compiled = "en_US", rare = "en_US-rare" }`, and `en_GB`). On macOS, where the
+system allocator gives nothing back, spellbook's tables were what kept RSS over its 40 MB budget on
+ripgrep and helix (44.6 and 46.4 MB). The compiler learned what SCOWL's `.aff` needs: prefixes, with
+a suffix where both say `Y`; `NOSUGGEST`, a word never offered; `COMPOUNDRULE` and `ONLYINCOMPOUND`,
+which SCOWL uses for ordinals written with digits, that the segmenter never hands a dictionary; and
+the hidden capitalized form Hunspell adds for a word of mixed case, so `GITHUB` is a word and
+`Github` is not. The three dictionaries compile in 0.3 s to 0.9 MB of FSTs, embedded, and the `.dic`
+files are not. English's corrections are ranked by SCOWL's sizes as frequencies (`frequency.txt`,
+sizes 10 to 50), and a correction one edit away is offered without those two away, as Hunspell does.
+Measured on the slow VM, against spellbook:
+
+|                                               |       spellbook |                compiled |
+| --------------------------------------------- | --------------: | ----------------------: |
+| words of the three `.dic` files and the typos |                 | 0 disagree of 1 109 730 |
+| live heap after the packs                     |         12.8 MB |                  0.7 MB |
+| RSS after `perf`: ripgrep / helix / composer  | 34 / 37 / 30 MB |         25 / 27 / 21 MB |
+| pack load                                     |           52 ms |                   32 ms |
+| typo sample recall, code / prose              |   82.2 / 80.4 % |           82.2 / 80.4 % |
+| typo sample top-1, code / prose               |   70.7 / 70.7 % |           72.0 / 71.2 % |
+| typo sample top-5, code / prose               |   76.3 / 75.5 % |           77.0 / 75.8 % |
+| suggest p95                                   |         0.96 ms |                 1.70 ms |
+
+The zero corpus's findings are the same. `crates/packs/src/pack/compiled_english.rs` holds the
+embedded dictionaries to spellbook's verdict on every third stem in four casings and every third
+known typo.
 
 ---
 

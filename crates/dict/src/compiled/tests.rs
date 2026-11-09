@@ -1,4 +1,4 @@
-use super::{CompiledDict, FORMAT, build, build_in, within::Within};
+use super::{Bytes, CompiledDict, FORMAT, build, build_in, within::Within};
 use crate::{Dictionary, hunspell::HunspellDict};
 use fst::{IntoStreamer, Set, Streamer};
 
@@ -48,7 +48,11 @@ const DIC: &str = "9
 
 fn both() -> (CompiledDict, HunspellDict) {
     (
-        CompiledDict::new(AFF, build(AFF, DIC).unwrap()).unwrap(),
+        {
+            let built = build(AFF, DIC).unwrap();
+            let marks = (!built.marks.is_empty()).then_some(Bytes::Owned(built.marks));
+            CompiledDict::new(AFF, Bytes::Owned(built.forms), marks).unwrap()
+        },
         HunspellDict::new(AFF, DIC).unwrap(),
     )
 }
@@ -95,10 +99,14 @@ fn it_lists_every_form_the_stems_and_suffixes_make() {
 #[test]
 fn building_in_passes_of_any_size_makes_the_same_dictionary() {
     let whole = build_in(AFF, DIC, usize::MAX).unwrap();
+    let whole = (whole.forms, whole.marks);
     // A pass per key, and a pass that a single stem's forms overflow.
     for pass_bytes in [0, 1, 16, 40] {
         assert!(
-            build_in(AFF, DIC, pass_bytes).unwrap() == whole,
+            build_in(AFF, DIC, pass_bytes)
+                .map(|built| (built.forms, built.marks))
+                .unwrap()
+                == whole,
             "passes of {pass_bytes} bytes"
         );
     }
@@ -234,7 +242,7 @@ fn what_a_list_of_forms_cannot_hold_is_refused_by_name() {
         Err(err) => err.0,
     };
     let got = [
-        refused("PFX A Y 1\nPFX A 0 не .\n", "1\nвода/A\n"),
+        refused("COMPOUNDRULE 1\nCOMPOUNDRULE n*\n", "1\nвода/n\n"),
         refused("COMPOUNDFLAG X\n", "1\nвода\n"),
         refused("SFX A Y 1\nSFX A 0 и/B .\n", "1\nвода/A\n"),
         refused("SET ISO8859-1\n", "1\nвода\n"),
@@ -243,9 +251,9 @@ fn what_a_list_of_forms_cannot_hold_is_refused_by_name() {
         refused("", "1\nвода\\/рука\n"),
     ];
     expect_test::expect![[r#"
-        .aff line 1: PFX is not something a compiled dictionary can hold; use `dictionary.hunspell`
+        .dic line 2: "вода" is in a compound rule, which is compiled only for numbers; use `dictionary.hunspell`
         .aff line 1: COMPOUNDFLAG is not something a compiled dictionary can hold; use `dictionary.hunspell`
-        .aff line 2: SFX и/B: a suffix that takes further affixes is not compiled; use `dictionary.hunspell`
+        .aff line 2: SFX и/B: an affix that takes further affixes is not compiled; use `dictionary.hunspell`
         .aff line 1: SET ISO8859-1: only UTF-8 is read
         .aff line 1: SFX has too few rows
         .dic line 2: "вода po:noun" has a space, a backslash or a leading slash, which is not compiled
@@ -256,7 +264,8 @@ fn what_a_list_of_forms_cannot_hold_is_refused_by_name() {
 fn a_compiled_dictionary_of_another_format_is_refused() {
     let mut builder = fst::raw::Builder::new_type(Vec::new(), FORMAT + 1).unwrap();
     builder.add("вода").unwrap();
-    let err = CompiledDict::new(AFF, builder.into_inner().unwrap()).unwrap_err();
+    let err =
+        CompiledDict::new(AFF, Bytes::Owned(builder.into_inner().unwrap()), None).unwrap_err();
     expect_test::expect![
         "a compiled dictionary of format 2, and this orthra reads 1: install the pack again"
     ]
@@ -314,4 +323,109 @@ fn a_query_too_long_for_a_row_of_bits_finds_nothing_rather_than_wrong_words() {
     assert!(Within::new(&"а".repeat(super::within::LONGEST), 2).is_some());
     assert!(Within::new(&"а".repeat(super::within::LONGEST + 1), 2).is_none());
     assert!(Within::new("а", super::within::MOST_EDITS + 1).is_none());
+}
+
+/// English's shape, as SCOWL writes it: a prefix that combines with a suffix (`Y`) and one that
+/// does not, a suffix that does not, words never offered (`!`), ordinals that compound from digits
+/// with a part that is never a word alone (`c`), and a word of mixed case.
+const AFF_EN: &str = "SET UTF-8
+TRY esianrtolcdugmphbyfvkwz
+ICONV 1
+ICONV ’ '
+NOSUGGEST !
+COMPOUNDMIN 1
+ONLYINCOMPOUND c
+COMPOUNDRULE 2
+COMPOUNDRULE n*1t
+COMPOUNDRULE n*mp
+WORDCHARS 0123456789
+
+PFX A Y 1
+PFX A 0 re .
+
+PFX U N 1
+PFX U 0 un .
+
+SFX D Y 2
+SFX D 0 d e
+SFX D 0 ed [^ey]
+
+SFX S N 1
+SFX S 0 s .
+";
+
+const DIC_EN: &str = "9
+do/AU
+use/ADS
+work/AD
+GitHub/S
+damn/!S
+1/n1
+0th/pt
+1st/p
+1th/tc
+";
+
+fn both_en() -> (CompiledDict, HunspellDict) {
+    let built = build(AFF_EN, DIC_EN).unwrap();
+    let marks = (!built.marks.is_empty()).then_some(Bytes::Owned(built.marks));
+    (
+        CompiledDict::new(AFF_EN, Bytes::Owned(built.forms), marks).unwrap(),
+        HunspellDict::new(AFF_EN, DIC_EN).unwrap(),
+    )
+}
+
+/// The forms: a prefix on the stem and on its suffixed forms where both combine (`reused`, not
+/// `reuses`), a prefix that does not combine on the stem alone (`undo`), the ordinals' parts but
+/// `1th`, which is only ever inside a compound, and `damn`, a word.
+#[test]
+fn english_prefixes_combine_with_suffixes_where_both_say_so() {
+    let (compiled, _) = both_en();
+    expect_test::expect!["0th 1 1st GitHub GitHubs damn damns do redo reuse reused rework reworked undo use used uses work worked"].assert_eq(&forms(&compiled).join(" "));
+}
+
+/// spellbook's verdict on every form in every casing, on what the cross product leaves out, on
+/// `Github`, which only `GITHUB` makes a word of, and on a word never offered. Words with digits
+/// are left to spellbook's compounding: the segmenter never hands a dictionary one.
+#[test]
+fn english_is_accepted_as_spellbook_accepts_it() {
+    let (compiled, hunspell) = both_en();
+    let mut words: Vec<String> = forms(&compiled)
+        .iter()
+        .filter(|form| !form.starts_with(|c: char| c.is_ascii_digit()))
+        .flat_map(|form| [form.clone(), form.to_uppercase(), super::title(form)])
+        .collect();
+    words.extend(
+        [
+            "reuses", "unused", "reworks", "undid", "Github", "GITHUB", "GITHUBS", "Damn", "DAMNS",
+        ]
+        .map(str::to_owned),
+    );
+    let disagree: Vec<String> = words
+        .iter()
+        .filter(|word| compiled.check(word) != hunspell.check(word))
+        .map(|word| format!("{word:?}: spellbook {}", hunspell.check(word)))
+        .collect();
+    assert!(disagree.is_empty(), "{}", disagree.join("\n"));
+}
+
+/// A word never offered is a word, and no correction offers it: `dams` is near `damn` and `damns`
+/// alone, and gets nothing, where `worke` gets the words near it.
+#[test]
+fn a_word_never_offered_is_accepted_and_not_offered() {
+    let (compiled, _) = both_en();
+    let offered = |word: &str| {
+        let mut offered = Vec::new();
+        compiled.suggest(word, &mut offered);
+        offered
+            .into_iter()
+            .map(|candidate| candidate.word)
+            .collect::<Vec<_>>()
+    };
+    expect_test::expect![[r#"true [] ["work", "worked"]"#]].assert_eq(&format!(
+        "{} {:?} {:?}",
+        compiled.check("damns"),
+        offered("dams"),
+        offered("worke")
+    ));
 }

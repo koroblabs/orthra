@@ -74,7 +74,9 @@ async fn an_installed_pack_is_checked_with_after_the_next_pass() {
             .dir(packs);
         fs::create_dir_all(&dir).map_err(|err| err.to_string())?;
         let (aff, dic) = ("SET UTF-8\n", "1\nпривіт\n");
-        let compiled = orthra_install::compile(aff, dic).map_err(|err| err.0)?;
+        let compiled = orthra_install::compile(aff, dic)
+            .map_err(|err| err.0)?
+            .forms;
         for (file, bytes) in [
             ("uk_UA.aff", aff.as_bytes()),
             ("uk_UA.dic", dic.as_bytes()),

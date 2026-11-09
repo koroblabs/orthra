@@ -24,7 +24,11 @@ fn with_ukrainian() -> (Packs, PathBuf) {
     fs::write(at.join("uk_UA.aff"), aff).unwrap();
     fs::write(at.join("uk_UA.dic"), dic).unwrap();
     fs::write(at.join("uk_50k.txt"), "привіт 1\n").unwrap();
-    fs::write(at.join("uk_UA.fst"), installed::compile(aff, dic).unwrap()).unwrap();
+    fs::write(
+        at.join("uk_UA.fst"),
+        installed::compile(aff, dic).unwrap().forms,
+    )
+    .unwrap();
     let (packs, missing) = Packs::load(&["en-US", "uk-UA"], Some(&dir)).unwrap();
     assert!(missing.is_empty());
     (packs, dir)

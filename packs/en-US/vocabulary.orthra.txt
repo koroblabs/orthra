@@ -149,6 +149,8 @@ rewriters
 roxygen
 scaladoc
 screenful
+segmenter
+segmenters
 severities
 sigil
 sigils

@@ -122,6 +122,14 @@ impl Install {
         self.sources.iter().flat_map(Source::files).collect()
     }
 
+    /// The file the compiled dictionary's marks are written to, when a form has one:
+    /// `uk_UA.marks.fst`. A pack compiled before marks were has none, and reads as it did.
+    pub fn marks_file(&self) -> Option<String> {
+        self.compiled
+            .as_ref()
+            .map(|base| format!("{base}.marks.fst"))
+    }
+
     /// The file the compiled dictionary is written to, if the pack has one: `uk_UA.fst`.
     pub fn compiled_file(&self) -> Option<String> {
         self.compiled.as_ref().map(|base| format!("{base}.fst"))
@@ -212,11 +220,13 @@ fn compiled(tag: &str) -> Result<Option<String>, PackError> {
 }
 
 /// The forms a Hunspell dictionary makes, compiled to what a `compiled` pack reads: what an
-/// install writes beside the files it fetched. About a second for dict_uk, and never all the forms
-/// in memory at once.
-pub fn compile(aff: &str, dic: &str) -> Result<Vec<u8>, PackError> {
+/// install writes beside the files it fetched, `<base>.fst`, and `<base>.marks.fst` when a form
+/// has a mark. About a second for dict_uk, and never all the forms in memory at once.
+pub fn compile(aff: &str, dic: &str) -> Result<Compiled, PackError> {
     orthra_dict::compiled::build(aff, dic).map_err(|err| PackError(err.0))
 }
+
+pub use orthra_dict::compiled::Compiled;
 
 /// The installed pack's file `name` in `dir`, if it is there.
 pub(crate) fn file(dir: &Path, name: &str) -> Option<PathBuf> {

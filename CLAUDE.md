@@ -263,6 +263,13 @@ name, and en-GB names en-US's known typos and vocabulary. Before they shared the
   from 2 481 findings to 2 248 (precision 1.80 → 1.94 % by `just compare-zero`) for 0.2 to 0.4
   points of recall on the typo sample.
 
+- **English is compiled when orthra is** (2026-11-09, `01-architecture.md` §7): FSTs read where they
+  are embedded, 0.7 MB of live heap after the packs where spellbook's tables were 12.8, and RSS
+  after `perf` 25, 27 and 21 MB on ripgrep, helix and composer where it was 34, 37 and 30. Linux
+  also gives back what tree-sitter frees only when glibc is asked (`release_freed` after a pass and
+  a close); macOS 26's allocator gives back nothing, which is why the compiled dictionaries mattered
+  there.
+
 - **The known typos are read where they are embedded,** as an offset per entry, and never copied. As
   a hash map of owned strings, en-US's 96 000 entries were 9 MB of heap in 288 000 allocations, and
   `initialize` sat at 22.8 MB.

@@ -12,7 +12,7 @@
 //! allows (`Київ` as `КИЇВ`, `вода` as `Вода`, not `київ`). A dictionary that needs what a list of
 //! forms cannot say does not compile, and says why ([`aff`]).
 
-use fst::{IntoStreamer, Set, Streamer};
+use fst::{IntoStreamer, Map, Set, Streamer};
 
 use crate::{Candidate, DictError, Dictionary, edits};
 
@@ -49,27 +49,76 @@ const PASS_BYTES: usize = 8 << 20;
 const KEY_BYTES: usize = 4;
 
 pub struct CompiledDict {
-    forms: Set<Vec<u8>>,
+    forms: Set<Bytes>,
+    /// What else is known of some forms ([`UNSUGGESTED`], [`UPPER_ONLY`]).
+    marks: Option<Map<Bytes>>,
     lookup: Lookup,
 }
 
-impl CompiledDict {
-    /// The dictionary [`build`] wrote as `compiled`, with the `.aff` it was built from, whose
-    /// conversions every word checked goes through.
-    pub fn new(aff: &str, compiled: Vec<u8>) -> Result<CompiledDict, DictError> {
-        let fst = fst::raw::Fst::new(compiled)
-            .map_err(|err| DictError(format!("a compiled dictionary that does not read: {err}")))?;
-        if fst.fst_type() != FORMAT {
-            return Err(DictError(format!(
-                "a compiled dictionary of format {}, and this orthra reads {FORMAT}: install the \
-                 pack again",
-                fst.fst_type()
-            )));
+/// A mark: the form is a word and never a correction, `NOSUGGEST`'s.
+const UNSUGGESTED: u64 = 1;
+
+/// A mark: the form is not a word, and its letters all in capitals are. Hunspell and spellbook add
+/// such a form for a word of mixed case, `Github` for `GitHub`, so that `GITHUB` is a word and
+/// `Github` is not.
+const UPPER_ONLY: u64 = 2;
+
+/// What [`build`] makes: every form, and the marks of the forms that have one.
+#[derive(Debug)]
+pub struct Compiled {
+    pub forms: Vec<u8>,
+    /// Empty when no form has a mark.
+    pub marks: Vec<u8>,
+}
+
+/// A compiled dictionary's bytes: an installed pack's, read from its file, or a built-in pack's,
+/// compiled when orthra was and embedded in the binary, which costs no memory until it is read
+/// and then only the pages read.
+#[derive(Debug)]
+pub enum Bytes {
+    Owned(Vec<u8>),
+    Embedded(&'static [u8]),
+}
+
+impl AsRef<[u8]> for Bytes {
+    fn as_ref(&self) -> &[u8] {
+        match self {
+            Bytes::Owned(bytes) => bytes,
+            Bytes::Embedded(bytes) => bytes,
         }
+    }
+}
+
+impl CompiledDict {
+    /// The dictionary [`build`] wrote as `forms` and `unsuggested`, with the `.aff` it was built
+    /// from, whose conversions every word checked goes through.
+    pub fn new(aff: &str, forms: Bytes, marks: Option<Bytes>) -> Result<CompiledDict, DictError> {
+        let read = |bytes: Bytes| {
+            let fst = fst::raw::Fst::new(bytes).map_err(|err| {
+                DictError(format!("a compiled dictionary that does not read: {err}"))
+            })?;
+            if fst.fst_type() != FORMAT {
+                return Err(DictError(format!(
+                    "a compiled dictionary of format {}, and this orthra reads {FORMAT}: install \
+                     the pack again",
+                    fst.fst_type()
+                )));
+            }
+            Ok(fst)
+        };
         Ok(CompiledDict {
-            forms: Set::from(fst),
+            forms: Set::from(read(forms)?),
+            marks: marks.map(read).transpose()?.map(Map::from),
             lookup: Aff::parse(aff)?.lookup,
         })
+    }
+
+    /// Whether `form` has `mark`.
+    fn marked(&self, form: &str, mark: u64) -> bool {
+        self.marks
+            .as_ref()
+            .and_then(|marks| marks.get(form))
+            .is_some_and(|marks| marks & mark != 0)
     }
 
     /// How many forms it holds.
@@ -136,6 +185,7 @@ impl CompiledDict {
                 self.has(word)
                     || self.apostrophe_upper(word)
                     || self.has(&title(word))
+                    || self.marked(&title(word), UPPER_ONLY)
                     || self.has(&word.to_lowercase())
             }
         }
@@ -219,6 +269,7 @@ impl Dictionary for CompiledDict {
                 _ => form,
             })
             .filter(|form| *form != word)
+            .filter(|form| !self.marked(form, UNSUGGESTED))
             .map(|form| Candidate {
                 edits: edits::between(&word, &form),
                 word: form,
@@ -246,22 +297,35 @@ impl std::fmt::Debug for CompiledDict {
 /// range only, and the other passes skip it whole, so the stems are expanded about twice in all:
 /// dict_uk compiles in 1.9 s (2026-11-06), 4.2 s before that and before its suffixes were tested
 /// in groups.
-pub fn build(aff: &str, dic: &str) -> Result<Vec<u8>, DictError> {
+pub fn build(aff: &str, dic: &str) -> Result<Compiled, DictError> {
     build_in(aff, dic, PASS_BYTES)
 }
 
 /// [`build`], in passes of about `pass_bytes`.
-fn build_in(aff: &str, dic: &str, pass_bytes: usize) -> Result<Vec<u8>, DictError> {
+fn build_in(aff: &str, dic: &str, pass_bytes: usize) -> Result<Compiled, DictError> {
     let aff = Aff::parse(aff)?;
     let failed = |err: fst::Error| DictError(format!("the forms do not compile: {err}"));
 
-    // How many bytes of forms start with each key, to cut the passes.
+    // How many bytes of forms start with each key, to cut the passes, and the marks, which are
+    // few: the forms of the stems never offered, and a mixed-case form's capitalized one.
     let mut sizes: std::collections::HashMap<u32, usize> = std::collections::HashMap::new();
+    let mut unsuggested = std::collections::BTreeSet::new();
+    let mut marks: std::collections::BTreeMap<String, u64> = std::collections::BTreeMap::new();
     aff.forms(
         dic,
         |_, _| true,
-        |form| *sizes.entry(key(form)).or_default() += form.len(),
+        |form, offered| {
+            *sizes.entry(key(form)).or_default() += form.len();
+            if !offered {
+                unsuggested.insert(form.to_owned());
+            }
+            if Casing::of(form) == Casing::Mixed {
+                *marks.entry(title(form)).or_default() |= UPPER_ONLY;
+            }
+        },
     )?;
+    // A form another stem makes, and offers, is offered.
+    let mut offered_too = std::collections::HashSet::new();
     let mut keys: Vec<(u32, usize)> = sizes.into_iter().collect();
     keys.sort_unstable();
     let mut passes: Vec<(u32, u32)> = Vec::new();
@@ -289,7 +353,10 @@ fn build_in(aff: &str, dic: &str, pass_bytes: usize) -> Result<Vec<u8>, DictErro
         aff.forms(
             dic,
             |stem, reach| stem.len() < KEY_BYTES + reach || range.contains(&key(stem)),
-            |form| {
+            |form, offered| {
+                if offered && unsuggested.contains(form) {
+                    offered_too.insert(form.to_owned());
+                }
                 if range.contains(&key(form)) {
                     let start = text.len();
                     text.push_str(form);
@@ -306,7 +373,24 @@ fn build_in(aff: &str, dic: &str, pass_bytes: usize) -> Result<Vec<u8>, DictErro
             builder.add(span(*at)).map_err(failed)?;
         }
     }
-    builder.into_inner().map_err(failed)
+    for form in unsuggested
+        .iter()
+        .filter(|form| !offered_too.contains(*form))
+    {
+        *marks.entry(form.clone()).or_default() |= UNSUGGESTED;
+    }
+    let mut marked = fst::raw::Builder::new_type(Vec::new(), FORMAT).map_err(failed)?;
+    for (form, mark) in &marks {
+        marked.insert(form.as_bytes(), *mark).map_err(failed)?;
+    }
+    Ok(Compiled {
+        forms: builder.into_inner().map_err(failed)?,
+        marks: if marks.is_empty() {
+            Vec::new()
+        } else {
+            marked.into_inner().map_err(failed)?
+        },
+    })
 }
 
 /// The leading bytes of `form` that choose its pass, as a number whose order is the forms' order.

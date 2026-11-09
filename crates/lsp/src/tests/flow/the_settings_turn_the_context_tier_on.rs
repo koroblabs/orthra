@@ -101,7 +101,7 @@ async fn turned_on_the_model_is_installed_loaded_and_reorders() {
     expect![[r#"
         installed? small, install small, load small
         orthra: the context tier is on, with model small: 0.0 MB
-        `later` `liter` `lefter` `letter` `leer`"#]]
+        `meter` `deter` `liter` `letter` `later`"#]]
     .assert_eq(&format!(
         "{}\n{}\n{order}",
         models.asked.lock().unwrap().join(", "),
@@ -120,8 +120,8 @@ async fn off_or_with_auto_install_off_nothing_is_installed_and_the_order_is_lexi
     let (off_order, manual_order) = (offered(&mut off).await, offered(&mut manual).await);
     let asked = |models: &Pretend| models.asked.lock().unwrap().join(", ");
     expect![[r#"
-        off: [] `leer` `letter` `lefter` `liter` `later`
-        auto-install off: [installed? small] `leer` `letter` `lefter` `liter` `later`
+        off: [] `later` `letter` `liter` `deter` `meter`
+        auto-install off: [installed? small] `later` `letter` `liter` `deter` `meter`
         orthra: model small is not installed, and auto-install is off: install it with `orthra model install small`. The context tier stays off."#]].assert_eq(&format!(
         "off: [{}] {}\nauto-install off: [{}] {}\n{}",
         asked(&off_models),
@@ -180,9 +180,9 @@ async fn left_unasked_the_model_is_unloaded_and_the_next_asked_action_loads_it_a
     log.push(models.asked.lock().unwrap().join(", "));
     log.push(said(&server));
     expect![[r#"
-        on: `later` `liter` `lefter` `letter` `leer`
-        unloaded, asked: `leer` `letter` `lefter` `liter` `later`
-        loaded again, asked: `later` `liter` `lefter` `letter` `leer`
+        on: `meter` `deter` `liter` `letter` `later`
+        unloaded, asked: `later` `letter` `liter` `deter` `meter`
+        loaded again, asked: `meter` `deter` `liter` `letter` `later`
         installed? small, install small, load small, installed? small, load small
         orthra: the context tier is on, with model small: 0.0 MB
         orthra: model small unloaded after 60 s unasked (0.0 MB); the next code action asked loads it again

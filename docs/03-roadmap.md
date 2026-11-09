@@ -118,7 +118,7 @@ Nothing in this phase checks a word. It builds everything that will judge the wo
   findings per 1 000 lines against 142 and 163). The causes are measured, and Phase 2 starts with
   them.
 - The dictionary is decided: spellbook, edit suggestions only, and no `FstDict` for English
-  (`01-architecture.md` §7).
+  (`01-architecture.md` §7). Revised 2026-11-09: English is compiled too, for memory.
 - `orthra check`, `orthra explain` and `orthra perf` exist.
 
 ---
@@ -355,7 +355,9 @@ The phases end here. The next task is the top of a list ranked by the instrument
 
 ## Open questions — each settled by a measurement or a user, not an argument
 
-1. **spellbook vs fst as the default dictionary.** Phase 1, by the §7 table.
+1. **spellbook vs fst as the default dictionary.** Phase 1, by the §7 table. Settled: compiled for
+   uk-UA (2026-11-06) and English (2026-11-09); spellbook stays for a pack whose `.aff` a list of
+   forms cannot hold.
 2. **What a fix means for an identifier.** "Replace in file", or "name the fix and let the
    language's server rename it". JetBrains does a real rename, with every use, and that is the
    target. orthra has no semantic model, so the question is how close an LSP server can get, for

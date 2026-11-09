@@ -2,8 +2,10 @@
 tag = "en-US"
 script = "Latn"
 # `rare` holds what SCOWL size 70 adds to the size-60 dictionary: accepted only when the known typos
-# do not name the word, since uncommon words are also common misspellings.
-dictionary = { hunspell = "en_US", rare = "en_US-rare" }
+# do not name the word, since uncommon words are also common misspellings. Both are compiled when
+# orthra is, to every form the `.aff` and `.dic` make: FSTs read where they are embedded, where
+# spellbook's tables for them were 8.8 MB of memory.
+dictionary = { compiled = "en_US", rare = "en_US-rare" }
 # Words accepted as the rare words are and never offered as a correction: what size 80 adds, and the
 # names of commands, which as corrections were noise (`kubctl` got `busctl` and `keyctl`).
 rare-words = ["en_US-huge.txt", "commands.txt"]
@@ -14,6 +16,9 @@ prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
 # way: `datagrams`, `demuxes`.
 vocabulary-suffixes = ["s", "es"]
 typos = "typos.tsv"
+# How often words are written, by SCOWL's sizes: among corrections as near, a common word first
+# (`leter` gets `letter` before `leper`).
+frequency = "frequency.txt"
 # Words accepted whatever their case, beside the dictionary: technical vocabulary. Each is accepted
 # alike; among corrections as near, an earlier file's come first: names and software terms, then
 # the words of programming languages.

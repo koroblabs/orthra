@@ -211,9 +211,12 @@ EN_GB_TOML = """\
 # en-GB: built by tools/packs.py from the sources in SOURCES.md. Do not edit by hand.
 tag = "en-GB"
 script = "Latn"
-dictionary = { hunspell = "en_GB" }
-# English's known typos and technical vocabulary are en-US's: shared, not copied.
+# Compiled when orthra is, to every form the `.aff` and `.dic` make: an FST read where it is
+# embedded, which spellbook's tables, 4 MB of memory, are not.
+dictionary = { compiled = "en_GB" }
+# English's known typos, technical vocabulary and frequencies are en-US's: shared, not copied.
 typos = "../en-US/typos.tsv"
+frequency = "../en-US/frequency.txt"
 # A word the pack accepts, of four letters or more, with one of these before it is accepted as a
 # rare word is: `unconfigured`, `refetched`, `subpool`, `multihost`.
 prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
@@ -227,10 +230,10 @@ word-internal = ["'", "\u2019"]
 normalize = { "\u2019" = "'" }
 # A comment line that starts with one of these and a colon names people, not prose:
 # `# Author: Jens Getreu <...>`.
-name-labels = ["author", "authors", "contributor", "contributors", "credits", "maintainer", "maintainers", "original author"]
+name-labels = ["author", "authors", "contributor", "contributors", "credits", "maintainer", "maintainers", "original author", "written by"]
 # A comment line that starts with one of these, colon or not, names people too: `Copyright (c)
-# 2009 Salvatore Sanfilippo`.
-name-lines = ["copyright"]
+# 2009 Salvatore Sanfilippo`, and Xcode's `Created by Olivier Poitrey on 9/21/09.`
+name-lines = ["copyright", "created by"]
 """
 EN_GB_SOURCES = """\
 # en-GB — sources
@@ -250,8 +253,10 @@ PACK_TOML = """\
 tag = "en-US"
 script = "Latn"
 # `rare` holds what SCOWL size 70 adds to the size-60 dictionary: accepted only when the known typos
-# do not name the word, since uncommon words are also common misspellings.
-dictionary = { hunspell = "en_US", rare = "en_US-rare" }
+# do not name the word, since uncommon words are also common misspellings. Both are compiled when
+# orthra is, to every form the `.aff` and `.dic` make: FSTs read where they are embedded, where
+# spellbook's tables for them were 8.8 MB of memory.
+dictionary = { compiled = "en_US", rare = "en_US-rare" }
 # Words accepted as the rare words are and never offered as a correction: what size 80 adds, and the
 # names of commands, which as corrections were noise (`kubctl` got `busctl` and `keyctl`).
 rare-words = ["en_US-huge.txt", "commands.txt"]
@@ -262,6 +267,9 @@ prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]
 # way: `datagrams`, `demuxes`.
 vocabulary-suffixes = ["s", "es"]
 typos = "typos.tsv"
+# How often words are written, by SCOWL's sizes: among corrections as near, a common word first
+# (`leter` gets `letter` before `leper`).
+frequency = "frequency.txt"
 # Words accepted whatever their case, beside the dictionary: technical vocabulary. Each is accepted
 # alike; among corrections as near, an earlier file's come first: names and software terms, then
 # the words of programming languages.
@@ -271,10 +279,10 @@ word-internal = ["'", "’"]
 normalize = { "’" = "'" }
 # A comment line that starts with one of these and a colon names people, not prose:
 # `# Author: Jens Getreu <...>`.
-name-labels = ["author", "authors", "contributor", "contributors", "credits", "maintainer", "maintainers", "original author"]
+name-labels = ["author", "authors", "contributor", "contributors", "credits", "maintainer", "maintainers", "original author", "written by"]
 # A comment line that starts with one of these, colon or not, names people too: `Copyright (c)
-# 2009 Salvatore Sanfilippo`.
-name-lines = ["copyright"]
+# 2009 Salvatore Sanfilippo`, and Xcode's `Created by Olivier Poitrey on 9/21/09.`
+name-lines = ["copyright", "created by"]
 """
 
 SOURCES = """\
@@ -291,6 +299,7 @@ by SHA-256 before it is written.
 | `en_US-huge.txt`                        | [SCOWL](http://wordlist.aspell.net/) `scowl-2020.12.07.tar.gz` from SourceForge: what size 80 adds (`final/english-words.80`, `american-words.80`, `english-upper.80`, `american-upper.80`, `english-contractions.80`), without known typos, British spellings, plurals `en_US.dic` refuses, and words one edit from a word of size 70 or less                                                                                                                                                                                                                  | SCOWL's, the same terms as `LICENSE.rare`                                        |
 | `commands.txt`                          | [tldr-pages](https://github.com/tldr-pages/tldr) `v2.3`, `tldr-pages.en.zip`: the names of its pages for Unix, Linux, macOS and Windows, split at `-` and `.`, the parts of four letters or more, without known typos and British spellings. Only the names, never a page's text                                                                                                                                                                                                                                                                                | CC-BY-4.0, in `LICENSE.commands`                                                 |
 | `vocabulary.orthra.txt`                 | orthra's own additions, kept by hand: general software English the zero corpus showed missing                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | orthra's                                                                         |
+| `frequency.txt`                         | [SCOWL](http://wordlist.aspell.net/) `scowl-2020.12.07.tar.gz` from SourceForge: every word of sizes 10 to 50 (`final/english-words.N`, `american-words.N`, `british-words.N` and their `-upper` and contraction lists), lower-cased, with 100 less its size as its count                                                                                                                                                                                                                                                                                       | SCOWL's, the same terms as `LICENSE.rare`                                        |
 | `typos.tsv`                             | [crate-ci/typos](https://github.com/crate-ci/typos) `v1.52.0`, `crates/typos-dict/assets/words.csv`, re-written as tab-separated `typo<TAB>fix…`                                                                                                                                                                                                                                                                                                                                                                                                                | MIT OR Apache-2.0; the MIT text is in `LICENSE.typos`                            |
 """
 
@@ -339,6 +348,9 @@ def en_us():
         f.write("# What SCOWL size 80 adds to size 70 (see SOURCES.md): accepted as the rare words are,\n")
         f.write("# never offered. Sorted by the word in lower case, one spelling of each.\n")
         f.writelines(f"{word}\n" for word in huge)
+    frequency = scowl_frequency()
+    with open(os.path.join(out, "frequency.txt"), "w", encoding="utf-8") as f:
+        f.writelines(f"{word} {count}\n" for word, count in frequency)
     commands, tldr_license = tldr_commands(typos, british)
     with open(os.path.join(out, "commands.txt"), "w", encoding="utf-8") as f:
         f.write("# The names of commands, from tldr-pages' page names (see SOURCES.md). Sorted by the word\n")
@@ -359,7 +371,7 @@ def en_us():
         f.write(PACK_TOML)
     with open(os.path.join(out, "SOURCES.md"), "w", encoding="utf-8") as f:
         f.write(SOURCES)
-    print(f"{out}: dictionary, {len(rare)} rare words and {len(huge)} more, {rows} known typos, {len(terms)} + {len(code)} vocabulary words, {len(commands)} commands, pack.toml, licenses, SOURCES.md")
+    print(f"{out}: dictionary, {len(rare)} rare words and {len(huge)} more, {rows} known typos, {len(terms)} + {len(code)} vocabulary words, {len(commands)} commands, {len(frequency)} frequencies, pack.toml, licenses, SOURCES.md")
 
 
 # A word as segmentation makes one: letters, then letters, digits, apostrophes or hyphens. An
@@ -418,6 +430,38 @@ def scowl_huge(typos, british, refused):
             ):
                 forms.setdefault(lower, set()).add(word)
     return [sorted(forms[lower], key=lambda w: (w != lower, w))[0] for lower in sorted(forms)]
+
+
+# SCOWL's sizes as how often a word is written: size 10 holds the commonest words, 50 the last of
+# the ones most dictionaries carry. A correction that is a size-10 word comes before one of size 35
+# as near, and words of one size are equals.
+FREQUENCY_SIZES = (10, 20, 35, 40, 50)
+FREQUENCY_KINDS = (
+    "english-words", "american-words", "british-words", "english-upper", "american-upper",
+    "british-upper", "english-contractions",
+)
+
+
+def scowl_frequency():
+    """Every word of SCOWL up to size 50, lower-cased, with 100 less its size as its count, the
+    commonest first: what the pack ranks corrections by among those as near."""
+    import tarfile
+
+    archive = tarfile.open(fileobj=io.BytesIO(get(*SCOWL)), mode="r:gz")
+    names = set(archive.getnames())
+    seen, rows = set(), []
+    for size in FREQUENCY_SIZES:
+        words = set()
+        for kind in FREQUENCY_KINDS:
+            name = f"scowl-2020.12.07/final/{kind}.{size}"
+            if name in names:
+                text = archive.extractfile(name).read().decode("iso-8859-1")
+                words.update(word.lower() for word in text.split())
+        for word in sorted(words - seen):
+            if SHAPE.match(word):
+                rows.append((word, 100 - size))
+        seen |= words
+    return rows
 
 
 def one_edit_from(word, words):

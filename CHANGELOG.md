@@ -28,6 +28,9 @@ names the tag's version.
 - reads a handle or a name as a name: `TODO(nweiz)`, code review's `CR rgrinberg:`, and what follows
   `(c)`, `©`, `Copyright` anywhere in a line, `Created by` and `Written by:`;
 - leaves a name qualified by its module unchecked, `os.path.join`, `Vec::new`: it refers to code;
+- English's dictionaries are compiled to FSTs when orthra is built: 12.8 MB less memory, a faster
+  start, and corrections ranked by how common a word is, so `leter` gets `later` and `letter` before
+  `leer` and `lefter`; the right correction comes first a point more often on real typos;
 - English is either spelling until a setting names one: en-US and en-GB are built in, and
   `languages = ["en-US"]` makes a project American only;
 - test data is not checked: `fixtures/`, `*-fixtures/`, `__fixtures__/` and `testdata/` in every

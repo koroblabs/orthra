@@ -68,10 +68,10 @@ async fn asked_for_the_actions_the_fake_scorer_turns_the_corrections_around() {
     ]
     .map(|(when, order)| format!("{when}: {order}"));
     expect![[r#"
-        lexical: `leer` `letter` `lefter` `liter` `later`
-        asked: `later` `liter` `lefter` `letter` `leer`
-        asked by an older client: `later` `liter` `lefter` `letter` `leer`
-        the cursor moved: `leer` `letter` `lefter` `liter` `later`"#]]
+        lexical: `later` `letter` `liter` `deter` `meter`
+        asked: `meter` `deter` `liter` `letter` `later`
+        asked by an older client: `meter` `deter` `liter` `letter` `later`
+        the cursor moved: `later` `letter` `liter` `deter` `meter`"#]]
     .assert_eq(&got.join("\n"));
 }
 
@@ -129,9 +129,9 @@ async fn a_scorer_slower_than_its_budget_or_broken_leaves_the_lexical_order_and_
     assert_eq!(broken_order, again);
 
     expect![[r#"
-        slow: `leer` `letter` `lefter` `liter` `later`
+        slow: `later` `letter` `liter` `deter` `meter`
         orthra: the context tier took longer than 80 ms
-        broken: `leer` `letter` `lefter` `liter` `later`
+        broken: `later` `letter` `liter` `deter` `meter`
         orthra: the context tier could not score: the model is not loaded"#]]
     .assert_eq(&format!(
         "slow: {slow_order}\n{}\nbroken: {broken_order}\n{}",

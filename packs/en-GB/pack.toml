@@ -1,9 +1,12 @@
 # en-GB: built by tools/packs.py from the sources in SOURCES.md. Do not edit by hand.
 tag = "en-GB"
 script = "Latn"
-dictionary = { hunspell = "en_GB" }
-# English's known typos and technical vocabulary are en-US's: shared, not copied.
+# Compiled when orthra is, to every form the `.aff` and `.dic` make: an FST read where it is
+# embedded, which spellbook's tables, 4 MB of memory, are not.
+dictionary = { compiled = "en_GB" }
+# English's known typos, technical vocabulary and frequencies are en-US's: shared, not copied.
 typos = "../en-US/typos.tsv"
+frequency = "../en-US/frequency.txt"
 # A word the pack accepts, of four letters or more, with one of these before it is accepted as a
 # rare word is: `unconfigured`, `refetched`, `subpool`, `multihost`.
 prefixes = ["auto", "multi", "non", "over", "pre", "re", "sub", "un", "under"]

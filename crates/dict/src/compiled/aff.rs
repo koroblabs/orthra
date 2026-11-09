@@ -3,34 +3,39 @@
 //! looked up.
 //!
 //! A directive that changes what is accepted in a way a list of forms cannot say is refused, with
-//! its name: compounding, prefixes, a suffix that takes further affixes, and the flags that make a
-//! form need an affix, forbid it, or fix its case. The pack keeps `hunspell` then. What only
+//! its name: compounding but of numbers, a suffix that takes further affixes, and the flags that
+//! make a form need an affix, forbid it, or fix its case. The pack keeps `hunspell` then. What only
 //! shapes spellbook's suggestions (`TRY`, `REP`, `MAP`, `KEY`) is read by no one here, since a
 //! compiled dictionary suggests by edit distance.
+//!
+//! English's dictionaries compile (2026-11-09): prefixes, with a suffix where both say `Y`, as
+//! Hunspell combines them; `NOSUGGEST`, whose forms are words that are never offered; and
+//! `COMPOUNDRULE`, which SCOWL's use only for ordinals (`1st`, `22nd`), written with digits, which
+//! the segmenter never hands a dictionary. A word in a compound rule that is not a number is
+//! refused, and so is `ONLYINCOMPOUND`'s word on its own, as spellbook never accepts it alone.
 
-use std::{borrow::Cow, collections::HashMap};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, HashSet},
+};
 
 use crate::DictError;
 
 /// Directives a compiled dictionary refuses, because the forms it lists would accept what
 /// spellbook does not, or miss what it accepts.
 const REFUSED: &[&str] = &[
-    "PFX",
     "AF",
     "COMPOUNDFLAG",
     "COMPOUNDBEGIN",
     "COMPOUNDMIDDLE",
     "COMPOUNDEND",
     "COMPOUNDLAST",
-    "COMPOUNDRULE",
-    "ONLYINCOMPOUND",
     "NEEDAFFIX",
     "PSEUDOROOT",
     "CIRCUMFIX",
     "FORBIDDENWORD",
     "KEEPCASE",
     "CHECKSHARPS",
-    "NOSUGGEST",
     "FORBIDWARN",
     "OCONV",
 ];
@@ -84,14 +89,23 @@ impl Default for Breaks {
     }
 }
 
-/// An `.aff` read whole: the lookup, and the suffixes the forms are made with.
+/// An `.aff` read whole: the lookup, and the affixes the forms are made with.
 pub(crate) struct Aff {
     pub(crate) lookup: Lookup,
     flags: Flags,
     suffixes: HashMap<u64, Flagged>,
+    prefixes: HashMap<u64, Flagged>,
+    /// The flags whose affixes combine with the other side's: `Y` in an affix's header.
+    cross: HashSet<u64>,
+    /// `NOSUGGEST`: a word with it is a word, and never a correction.
+    unsuggested: Option<u64>,
+    /// `ONLYINCOMPOUND`: a word with it is only a part of a compound, never a word alone.
+    compound_only: Option<u64>,
+    /// The flags `COMPOUNDRULE`s name, which only a number may carry.
+    compound_rules: HashSet<u64>,
 }
 
-/// The suffixes of one flag.
+/// The affixes of one flag.
 #[derive(Default)]
 struct Flagged {
     groups: Vec<Suffixes>,
@@ -114,9 +128,10 @@ enum Flags {
     Num,
 }
 
-/// Suffixes of one flag that strip the same text under the same condition, so a stem is tested
+/// Affixes of one flag that strip the same text under the same condition, so a stem is tested
 /// once for all of them: dict_uk writes `ів еви [^жшщ]ів`, `ів евих [^жшщ]ів` and so on, and
-/// testing each of its 5 802 suffixes on its own was most of what compiling it cost.
+/// testing each of its 5 802 suffixes on its own was most of what compiling it cost. A prefix's
+/// strip and condition are at the start of the stem, a suffix's at its end.
 struct Suffixes {
     strip: String,
     condition: Condition,
@@ -142,8 +157,14 @@ impl Aff {
         let mut lookup = Lookup::default();
         let mut breaks: Option<Vec<&str>> = None;
         let mut flags = Flags::Short;
-        // Suffix lines in the order written, read once the flag type is known.
-        let mut suffix_lines: Vec<(usize, Vec<&str>)> = Vec::new();
+        // Affix lines in the order written, read once the flag type is known, with whether the
+        // header said they combine.
+        let mut suffix_lines: Vec<(usize, Vec<&str>, bool)> = Vec::new();
+        let mut prefix_lines: Vec<(usize, Vec<&str>, bool)> = Vec::new();
+        // Flags named before the flag type may be known: `NOSUGGEST`, `ONLYINCOMPOUND`, and the
+        // rules.
+        let mut named: Vec<(usize, &str, &str)> = Vec::new();
+        let mut rules: Vec<(usize, &str)> = Vec::new();
         let mut lines = text.lines().enumerate().peekable();
         while let Some((at, line)) = lines.next() {
             let words: Vec<&str> = line.split_whitespace().collect();
@@ -222,20 +243,50 @@ impl Aff {
                         }
                     }
                 }
-                "SFX" => {
+                "SFX" | "PFX" => {
                     let count: usize = words
                         .get(3)
                         .and_then(|count| count.parse().ok())
-                        .ok_or_else(|| fail(at, "an SFX header with no row count".to_owned()))?;
+                        .ok_or_else(|| {
+                            fail(at, format!("a {directive} header with no row count"))
+                        })?;
+                    let cross = words.get(2) == Some(&"Y");
                     for _ in 0..count {
                         let (at, row) = lines
                             .next()
-                            .ok_or_else(|| fail(at, "SFX has too few rows".to_owned()))?;
+                            .ok_or_else(|| fail(at, format!("{directive} has too few rows")))?;
                         let row: Vec<&str> = row.split_whitespace().collect();
-                        if row.first() != Some(&"SFX") || row.get(1) != words.get(1) {
-                            return Err(fail(at, "not a row of the SFX above it".to_owned()));
+                        if row.first() != Some(&directive) || row.get(1) != words.get(1) {
+                            return Err(fail(at, format!("not a row of the {directive} above it")));
                         }
-                        suffix_lines.push((at, row));
+                        if directive == "SFX" {
+                            suffix_lines.push((at, row, cross));
+                        } else {
+                            prefix_lines.push((at, row, cross));
+                        }
+                    }
+                }
+                "NOSUGGEST" | "ONLYINCOMPOUND" => {
+                    let flag = words
+                        .get(1)
+                        .ok_or_else(|| fail(at, format!("{directive} names no flag")))?;
+                    named.push((at, directive, flag));
+                }
+                "COMPOUNDRULE" => {
+                    // A count, then the rules, each on its own line.
+                    if let Some(count) = words.get(1).and_then(|count| count.parse::<usize>().ok())
+                        && words.len() == 2
+                    {
+                        for _ in 0..count {
+                            let (at, row) = lines.next().ok_or_else(|| {
+                                fail(at, "COMPOUNDRULE has too few rows".to_owned())
+                            })?;
+                            let row: Vec<&str> = row.split_whitespace().collect();
+                            if row.first() != Some(&"COMPOUNDRULE") || row.len() < 2 {
+                                return Err(fail(at, "not a COMPOUNDRULE row".to_owned()));
+                            }
+                            rules.push((at, row[1]));
+                        }
                     }
                 }
                 _ => {}
@@ -249,72 +300,110 @@ impl Aff {
             lookup.breaks = Breaks::new(&breaks);
         }
 
-        let mut suffixes: HashMap<u64, Flagged> = HashMap::new();
-        for (at, row) in suffix_lines {
-            let [_, flag, strip, add, ..] = row[..] else {
+        let mut cross = HashSet::new();
+        let mut affixes = |lines: Vec<(usize, Vec<&str>, bool)>, side: &str| {
+            let mut grouped: HashMap<u64, Flagged> = HashMap::new();
+            for (at, row, combines) in lines {
+                let [_, flag, strip, add, ..] = row[..] else {
+                    return Err(fail(
+                        at,
+                        format!("a {side} row with fewer than three fields"),
+                    ));
+                };
+                let flag = parse_flag(flags, flag).map_err(|why| fail(at, why))?;
+                if combines {
+                    cross.insert(flag);
+                }
+                if add.contains('/') {
+                    return Err(fail(
+                        at,
+                        format!(
+                            "{side} {add}: an affix that takes further affixes is not compiled; \
+                             use `dictionary.hunspell`"
+                        ),
+                    ));
+                }
+                let strip = if strip == "0" { "" } else { strip };
+                let add: String = if add == "0" { "" } else { add }
+                    .chars()
+                    .filter(|c| !lookup.ignore.contains(c))
+                    .collect();
+                let written = match row.get(4) {
+                    Some(&".") | None => "",
+                    Some(condition) => condition,
+                };
+                let flagged = grouped.entry(flag).or_default();
+                flagged.longest_strip = flagged.longest_strip.max(strip.len());
+                match flagged
+                    .groups
+                    .iter_mut()
+                    .find(|group| group.strip == strip && group.written == written)
+                {
+                    Some(group) => group.adds.push(add),
+                    None => flagged.groups.push(Suffixes {
+                        strip: strip.to_owned(),
+                        condition: Condition::parse(written).map_err(|why| fail(at, why))?,
+                        written: written.to_owned(),
+                        adds: vec![add],
+                    }),
+                }
+            }
+            Ok(grouped)
+        };
+        let suffixes = affixes(suffix_lines, "SFX")?;
+        let prefixes = affixes(prefix_lines, "PFX")?;
+        let (mut unsuggested, mut compound_only) = (None, None);
+        for (at, directive, flag) in named {
+            let flag = Some(parse_flag(flags, flag).map_err(|why| fail(at, why))?);
+            if directive == "NOSUGGEST" {
+                unsuggested = flag;
+            } else {
+                compound_only = flag;
+            }
+        }
+        let mut compound_rules = HashSet::new();
+        for (at, rule) in rules {
+            if !matches!(flags, Flags::Short | Flags::Utf8) {
                 return Err(fail(
                     at,
-                    "an SFX row with fewer than three fields".to_owned(),
-                ));
-            };
-            let flag = parse_flag(flags, flag).map_err(|why| fail(at, why))?;
-            if add.contains('/') {
-                return Err(fail(
-                    at,
-                    format!(
-                        "SFX {add}: a suffix that takes further affixes is not compiled; \
-                         use `dictionary.hunspell`"
-                    ),
+                    "a COMPOUNDRULE of long or numbered flags is not compiled".to_owned(),
                 ));
             }
-            let strip = if strip == "0" { "" } else { strip };
-            let add: String = if add == "0" { "" } else { add }
-                .chars()
-                .filter(|c| !lookup.ignore.contains(c))
-                .collect();
-            let written = match row.get(4) {
-                Some(&".") | None => "",
-                Some(condition) => condition,
-            };
-            let flagged = suffixes.entry(flag).or_default();
-            flagged.longest_strip = flagged.longest_strip.max(strip.len());
-            match flagged
-                .groups
-                .iter_mut()
-                .find(|group| group.strip == strip && group.written == written)
-            {
-                Some(group) => group.adds.push(add),
-                None => flagged.groups.push(Suffixes {
-                    strip: strip.to_owned(),
-                    condition: Condition::parse(written).map_err(|why| fail(at, why))?,
-                    written: written.to_owned(),
-                    adds: vec![add],
-                }),
-            }
+            let mut named = Vec::new();
+            let written: String = rule.chars().filter(|c| !"*?()".contains(*c)).collect();
+            parse_flags(flags, &written, &mut named).map_err(|why| fail(at, why))?;
+            compound_rules.extend(named);
         }
         Ok(Aff {
             lookup,
             flags,
             suffixes,
+            prefixes,
+            cross,
+            unsuggested,
+            compound_only,
+            compound_rules,
         })
     }
 
-    /// Calls `each` with every form `dic` makes from the stems `stem` keeps: each stem, and each
-    /// stem with each suffix its flags allow, in the dictionary's order and with repeats. `stem` is
-    /// given the most bytes a suffix of the stem's may strip: a stem longer than that by `n` bytes
-    /// begins every form it makes with its own first `n` bytes.
+    /// Calls `each` with every form `dic` makes from the stems `stem` keeps, and whether it may be
+    /// offered as a correction: each stem, each stem with each suffix and each prefix its flags
+    /// allow, and with both where both combine, in the dictionary's order and with repeats. `stem`
+    /// is given the most bytes a suffix of the stem's may strip: a stem longer than that by `n`
+    /// bytes begins every form it makes with its own first `n` bytes. A stem with a prefix begins
+    /// its forms with anything, and is given more than any stem is long.
     pub(crate) fn forms(
         &self,
         dic: &str,
         mut stem: impl FnMut(&str, usize) -> bool,
-        mut each: impl FnMut(&str),
+        mut each: impl FnMut(&str, bool),
     ) -> Result<(), DictError> {
         let mut form = String::new();
         let mut flags = Vec::new();
         // The first line is the entry count.
         for (at, line) in dic.lines().enumerate().skip(1) {
-            let (word, written) =
-                entry(line).map_err(|why| DictError(format!(".dic line {}: {why}", at + 1)))?;
+            let fail = |why: String| DictError(format!(".dic line {}: {why}", at + 1));
+            let (word, written) = entry(line).map_err(fail)?;
             let word: Cow<'_, str> = if word.contains(self.lookup.ignore.as_slice()) {
                 Cow::Owned(
                     word.chars()
@@ -328,32 +417,89 @@ impl Aff {
                 continue;
             }
             flags.clear();
-            parse_flags(self.flags, written, &mut flags)
-                .map_err(|why| DictError(format!(".dic line {}: {why}", at + 1)))?;
-            let reach = flags
-                .iter()
-                .filter_map(|flag| self.suffixes.get(flag))
-                .map(|flagged| flagged.longest_strip)
-                .max()
-                .unwrap_or(0);
+            parse_flags(self.flags, written, &mut flags).map_err(fail)?;
+            if self.compound_only.is_some_and(|flag| flags.contains(&flag)) {
+                continue;
+            }
+            if flags.iter().any(|flag| self.compound_rules.contains(flag))
+                && !word.starts_with(|c: char| c.is_ascii_digit())
+            {
+                return Err(fail(format!(
+                    "{word:?} is in a compound rule, which is compiled only for numbers; use \
+                     `dictionary.hunspell`"
+                )));
+            }
+            let offered = !self.unsuggested.is_some_and(|flag| flags.contains(&flag));
+            let prefixed = flags.iter().any(|flag| self.prefixes.contains_key(flag));
+            let reach = if prefixed {
+                usize::MAX / 2
+            } else {
+                flags
+                    .iter()
+                    .filter_map(|flag| self.suffixes.get(flag))
+                    .map(|flagged| flagged.longest_strip)
+                    .max()
+                    .unwrap_or(0)
+            };
             if !stem(&word, reach) {
                 continue;
             }
-            each(&word);
-            for flagged in flags.iter().filter_map(|flag| self.suffixes.get(flag)) {
+            each(&word, offered);
+            let suffixed =
+                |each: &mut dyn FnMut(&str, bool), form: &mut String, only_cross: bool| {
+                    for (flag, flagged) in flags
+                        .iter()
+                        .filter_map(|flag| Some((flag, self.suffixes.get(flag)?)))
+                    {
+                        if only_cross && !self.cross.contains(flag) {
+                            continue;
+                        }
+                        for group in &flagged.groups {
+                            let Some(kept) = word.strip_suffix(group.strip.as_str()) else {
+                                continue;
+                            };
+                            if !group.condition.matches_end(&word) {
+                                continue;
+                            }
+                            for add in &group.adds {
+                                form.clear();
+                                form.push_str(kept);
+                                form.push_str(add);
+                                if !form.is_empty() {
+                                    each(form, offered);
+                                }
+                            }
+                        }
+                    }
+                };
+            suffixed(&mut each, &mut form, false);
+            if !prefixed {
+                continue;
+            }
+            for (flag, flagged) in flags
+                .iter()
+                .filter_map(|flag| Some((flag, self.prefixes.get(flag)?)))
+            {
                 for group in &flagged.groups {
-                    let Some(kept) = word.strip_suffix(group.strip.as_str()) else {
-                        continue;
-                    };
-                    if !group.condition.matches_end(&word) {
+                    if !word.starts_with(group.strip.as_str())
+                        || !group.condition.matches_start(&word)
+                    {
                         continue;
                     }
                     for add in &group.adds {
-                        form.clear();
-                        form.push_str(kept);
-                        form.push_str(add);
-                        if !form.is_empty() {
-                            each(&form);
+                        // The prefix on the stem, and on each of its suffixed forms where both
+                        // combine: Hunspell's cross product.
+                        let mut prefixed = |form: &str, offered: bool| {
+                            if let Some(rest) = form.strip_prefix(group.strip.as_str()) {
+                                let whole = format!("{add}{rest}");
+                                if !whole.is_empty() {
+                                    each(&whole, offered);
+                                }
+                            }
+                        };
+                        prefixed(&word, offered);
+                        if self.cross.contains(flag) {
+                            suffixed(&mut prefixed, &mut String::new(), true);
                         }
                     }
                 }
@@ -465,6 +611,15 @@ impl Condition {
         Ok(Condition(elements))
     }
 
+    /// Whether the start of `stem` matches: its first characters, one per element, in order.
+    fn matches_start(&self, stem: &str) -> bool {
+        stem.chars().count() >= self.0.len()
+            && stem
+                .chars()
+                .zip(&self.0)
+                .all(|(c, element)| element.matches(c))
+    }
+
     /// Whether the end of `stem` matches: its last characters, one per element, in order.
     fn matches_end(&self, stem: &str) -> bool {
         let wanted = self.0.len();
@@ -476,11 +631,17 @@ impl Condition {
         stem[start..]
             .chars()
             .zip(&self.0)
-            .all(|(c, element)| match element {
-                Element::Any => true,
-                Element::Char(wanted) => c == *wanted,
-                Element::In(set) => set.contains(&c),
-                Element::NotIn(set) => !set.contains(&c),
-            })
+            .all(|(c, element)| element.matches(c))
+    }
+}
+
+impl Element {
+    fn matches(&self, c: char) -> bool {
+        match self {
+            Element::Any => true,
+            Element::Char(wanted) => c == *wanted,
+            Element::In(set) => set.contains(&c),
+            Element::NotIn(set) => !set.contains(&c),
+        }
     }
 }

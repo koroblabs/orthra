@@ -22,9 +22,9 @@ fn corrections_come_from_the_dictionary_and_the_vocabulary_nearest_first() {
     })
     .collect();
     expect_test::expect![[r#"
-        clodebase -> codebase, codebases
-        Clodebase -> Codebase, Codebases
-        leter -> leer, letter, lefter, liter, later
+        clodebase -> codebase
+        Clodebase -> Codebase
+        leter -> later, letter, liter, deter, meter
         kubctl -> kubectl"#]]
     .assert_eq(&got.join("\n"));
 }
@@ -51,6 +51,6 @@ fn a_plain_word_from_the_vocabulary_waits_for_nothing_nearer_and_a_name_is_offer
     expect_test::expect![[r#"
         Schedulor -> Scheduler
         javascrpt -> JavaScript
-        Githb -> GitHub, Gitdb, FITB, Giphy, Git"#]]
+        Githb -> GitHub, Gitdb"#]]
     .assert_eq(&got.join("\n"));
 }
