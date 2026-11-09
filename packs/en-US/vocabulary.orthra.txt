@@ -10,6 +10,7 @@ autolinks
 azurecr
 bashrc
 blockable
+browseable
 caddy
 changelist
 changelists
@@ -40,6 +41,7 @@ dequantize
 dequantized
 dequantizes
 devuan
+dialogs
 disjointness
 dnssec
 docblocks
@@ -50,6 +52,7 @@ encodings
 endunless
 esac
 ethernet
+exportfs
 fallbacks
 fastpath
 filelog
@@ -86,6 +89,7 @@ logprobs
 lookahead
 lookback
 lossily
+lossy
 lzma
 macbook
 matcher
@@ -100,6 +104,7 @@ modtime
 monomorphization
 multiline
 nagle
+natively
 netboot
 netlink
 newtype
@@ -181,6 +186,7 @@ tradeoff
 uefi
 unintuitive
 unparsable
+unparseable
 unresolvable
 uuencoded
 vendored
