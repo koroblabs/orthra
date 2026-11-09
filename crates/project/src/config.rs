@@ -37,10 +37,20 @@ const BUILT_IN: &[&str] = &["en-US", "en-GB"];
 
 /// Directories of test data in every language, ignored before any layer's patterns: what a tool
 /// printed, captured for a test (`fixtures/`, `api-fixtures/`), Jest's `__fixtures__/`, Go's
-/// `testdata/`. None of it is anybody's prose, and some of it is misspelled on purpose. Whole files,
-/// not only their strings: captured output in a `.txt` has no strings, it is all data. On the
-/// projects beside orthra, such directories held 1 330 of the 3 876 words reported (2026-11-08).
-const BUILT_IN_IGNORE: &[&str] = &["fixtures/", "*-fixtures/", "__fixtures__/", "testdata/"];
+/// `testdata/`, and the `tests/data/` of Rust's and Python's projects. None of it is anybody's
+/// prose, and some of it is misspelled on purpose. Whole files, not only their strings: captured
+/// output in a `.txt` has no strings, it is all data. On the projects beside orthra, such
+/// directories held 1 330 of the 3 876 words reported (2026-11-08); ripgrep's `tests/data/`, 93 of
+/// its 230 on the zero corpus, all of them a Sherlock Holmes story searched in its tests
+/// (2026-11-09). In the cargo registry, 28 crates' `tests/data/` hold keys, blobs and tables.
+const BUILT_IN_IGNORE: &[&str] = &[
+    "fixtures/",
+    "*-fixtures/",
+    "__fixtures__/",
+    "testdata/",
+    "**/tests/data/",
+    "**/test/data/",
+];
 
 #[derive(Debug, Clone)]
 pub struct Config {

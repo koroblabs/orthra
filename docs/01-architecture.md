@@ -551,9 +551,10 @@ ignore = ["crates/hosts/src/*/vocabulary.txt"]  # gitignore patterns: files that
 - **The instruments run `--isolated`,** built-in settings only, so the corpora's numbers do not
   depend on whose machine or which checkout they run in.
 - **Test data is ignored in the built-in layer,** before any layer's patterns: `fixtures/`,
-  `*-fixtures/`, `__fixtures__/` and `testdata/`, whole files and in every language. Captured output
-  in a `.txt` has no strings to leave out, it is all data. On the projects beside orthra, such
-  directories held 1 330 of the 3 876 words reported (2026-11-08).
+  `*-fixtures/`, `__fixtures__/`, `testdata/`, and `tests/data/` and `test/data/` at any depth,
+  whole files and in every language. Captured output in a `.txt` has no strings to leave out, it is
+  all data. On the projects beside orthra, such directories held 1 330 of the 3 876 words reported
+  (2026-11-08); ripgrep's `tests/data/`, 93 of its 230 on the zero corpus (2026-11-09).
 - **The editor's layer** is `initialization_options`: `languages` and `severity`.
 
 ---

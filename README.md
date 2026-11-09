@@ -46,7 +46,7 @@ Things that are never words are never checked:
 - Markdown link targets and front matter;
 - people's handles and names in a comment's conventions: `TODO(nweiz)`, `Copyright (c) ...`,
   `Author: ...`;
-- test data: `fixtures/`, `*-fixtures/`, `__fixtures__/` and `testdata/`;
+- test data: `fixtures/`, `*-fixtures/`, `__fixtures__/`, `testdata/` and `tests/data/`;
 - generated files: `*.min.js`, `*.pb.go`, `*.g.dart`, `*.Designer.cs`, lock files, and any file with
   a line longer than 10 000 characters, as a minified bundle is under any name, or larger than 2 MB,
   as a parser's generated tables are;

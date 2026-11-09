@@ -136,8 +136,13 @@ fn test_data_is_ignored_in_every_language() {
             "web/api-fixtures/capabilities.json",
             "src/__fixtures__/page.md",
             "cmd/parse/testdata/input.go",
+            "tests/data/sherlock.txt",
+            "crates/core/tests/data/keys.pem",
+            "test/data/sample.json",
             "src/fixtures.rs",
             "tests/fixture_test.rs",
+            "tests/data.rs",
+            "src/data/tests/notes.md",
         ],
         expect![[r#"
             languages ["en-US", "en-GB"]
@@ -147,8 +152,13 @@ fn test_data_is_ignored_in_every_language() {
             ignored web/api-fixtures/capabilities.json
             ignored src/__fixtures__/page.md
             ignored cmd/parse/testdata/input.go
+            ignored tests/data/sherlock.txt
+            ignored crates/core/tests/data/keys.pem
+            ignored test/data/sample.json
             read    src/fixtures.rs
             read    tests/fixture_test.rs
+            read    tests/data.rs
+            read    src/data/tests/notes.md
         "#]],
     );
 }
