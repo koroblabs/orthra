@@ -212,3 +212,48 @@ fn a_word_is_added_in_order_and_once() {
     "#]]
     .assert_eq(&written);
 }
+
+/// A words file an editor saved with a byte-order mark keeps its first word.
+#[test]
+fn a_byte_order_mark_is_not_part_of_the_first_word() {
+    check(
+        &[(
+            "project/.orthra/words.txt",
+            "\u{feff}qzxvfirst\nqzxvsecond\n",
+        )],
+        &[],
+        expect![[r#"
+            languages ["en-US", "en-GB"]
+            words ["qzxvfirst", "qzxvsecond"]
+            problems []
+
+        "#]],
+    );
+}
+
+/// A word is added as the check reads the file: past a byte-order mark, and once, whatever comment
+/// follows a word already there.
+#[test]
+fn a_word_is_added_as_the_file_is_read() {
+    let dir = std::env::temp_dir().join(format!("orthra-words-read-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&dir);
+    let file = dir.join(".orthra/words.txt");
+    fs::create_dir_all(file.parent().unwrap()).unwrap();
+    fs::write(
+        &file,
+        "\u{feff}# the project's words\nphrost  # the sibling\nqzxv\n",
+    )
+    .unwrap();
+    for word in ["phrost", "abcq"] {
+        super::add_word(&file, word).unwrap();
+    }
+    let written = fs::read_to_string(&file).unwrap();
+    let _ = fs::remove_dir_all(&dir);
+    expect![[r#"
+        # the project's words
+        abcq
+        phrost  # the sibling
+        qzxv
+    "#]]
+    .assert_eq(&written);
+}

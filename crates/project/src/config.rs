@@ -311,16 +311,31 @@ impl Config {
 
     /// A words file's words: one per line, `#` starting a comment.
     fn read_words(&mut self, file: &Path) {
-        let Ok(text) = fs::read_to_string(file) else {
+        let Some(text) = words_text(file) else {
             return;
         };
         self.words.extend(
             text.lines()
-                .map(|line| line.split('#').next().unwrap_or_default().trim())
+                .map(entry)
                 .filter(|word| !word.is_empty())
                 .map(str::to_owned),
         );
     }
+}
+
+/// A words file's text, without the byte-order mark some editors write first: read with it, the
+/// first word was `\u{feff}word`, and matched nothing.
+fn words_text(file: &Path) -> Option<String> {
+    let text = fs::read_to_string(file).ok()?;
+    Some(match text.strip_prefix('\u{feff}') {
+        Some(rest) => rest.to_owned(),
+        None => text,
+    })
+}
+
+/// The word a words file's line holds, without its comment: `phrost  # the sibling` is `phrost`.
+fn entry(line: &str) -> &str {
+    line.split('#').next().unwrap_or_default().trim()
 }
 
 /// Whether two language tags name the same language, whatever their region or script: their
@@ -336,7 +351,7 @@ fn same_language(a: &str, b: &str) -> bool {
 /// sorted ignoring case, each once, so that two branches that each add a word merge without a
 /// conflict. Comment lines stay at the top. A word already there, in any case, is left as it is.
 pub fn add_word(file: &Path, word: &str) -> std::io::Result<()> {
-    let text = fs::read_to_string(file).unwrap_or_default();
+    let text = words_text(file).unwrap_or_default();
     let (mut comments, mut words) = (Vec::new(), Vec::new());
     for line in text.lines() {
         if line.trim_start().starts_with('#') {
@@ -345,12 +360,16 @@ pub fn add_word(file: &Path, word: &str) -> std::io::Result<()> {
             words.push(line.trim().to_owned());
         }
     }
+    // A line is the word it holds, as the check reads it: `phrost  # the sibling` is `phrost`.
     let lower = word.to_lowercase();
-    if words.iter().any(|known| known.to_lowercase() == lower) {
+    if words
+        .iter()
+        .any(|known| entry(known).to_lowercase() == lower)
+    {
         return Ok(());
     }
     words.push(word.to_owned());
-    words.sort_by_key(|word| word.to_lowercase());
+    words.sort_by_key(|line| entry(line).to_lowercase());
     if let Some(dir) = file.parent() {
         fs::create_dir_all(dir)?;
     }
