@@ -178,3 +178,29 @@ fn reads() {
         "#]],
     );
 }
+
+/// A `cfg` predicate's strings name targets and features: values, never text. The attribute's
+/// item is still read.
+#[test]
+fn a_cfg_predicate_is_not_prose() {
+    check(
+        "/src/platform.rs",
+        r#"#[cfg_attr(any(target_os = "emscripten", feature = "qzxvfeat"), ignore)]
+#[cfg(not(target_os = "qzxvos"))]
+fn platform() -> &'static str {
+    if cfg!(feature = "qzxvstd") { "with the library" } else { "without it" }
+}
+"#,
+        expect![[r#"
+            rust
+            > #[cfg_attr(any(target_os = "emscripten", feature = "qzxvfeat"), ignore)]
+            > #[cfg(not(target_os = "qzxvos"))]
+            > fn platform() -> &'static str {
+                 ^^^^^^^^ declaration
+            >     if cfg!(feature = "qzxvstd") { "with the library" } else { "without it" }
+                                                  ^^^^^^^^^^^^^^^^ string
+                                                                              ^^^^^^^^^^ string
+            > }
+        "#]],
+    );
+}

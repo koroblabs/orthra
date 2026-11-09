@@ -10,6 +10,13 @@
 (string_literal (string_content) @string)
 (raw_string_literal (string_content) @string)
 
+; A `cfg` predicate names targets and features, `#[cfg(target_os = "emscripten")]` and
+; `cfg!(feature = "std")`: values, not text. A feature is checked where `Cargo.toml` declares it.
+((attribute (identifier) @_cfg arguments: (token_tree) @skip)
+  (#any-of? @_cfg "cfg" "cfg_attr"))
+((macro_invocation macro: (identifier) @_cfg (token_tree) @skip)
+  (#eq? @_cfg "cfg"))
+
 ; Names being declared, never a use: `use serde_json::from_str;` and `from_str(raw)` are somebody
 ; else's to fix.
 (function_item name: (identifier) @declaration)
